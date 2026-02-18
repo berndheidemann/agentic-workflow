@@ -1,12 +1,59 @@
 /// <reference path="../node_modules/pocketbase/jsvm.d.ts" />
 
 // REQ-003: PocketBase Schema — Collections, Fields, Indexes, API Rules
-// Collections created in order: classes → users (auth) → course_unlocks → progress
+// PocketBase 0.36+: "users" auth collection exists by default — we extend it.
+// Collections created: classes, course_unlocks, progress (+ users extended)
 // Sync: TypeScript types in packages/shared/src/schema/collections.ts must match this schema.
 
 migrate(
   (app) => {
-    // ─── 1. classes ────────────────────────────────────────────────────────────
+    // ─── 1. Extend default "users" auth collection ──────────────────────────────
+    // PocketBase 0.36 ships with a default "users" auth collection.
+    // We add our custom fields: role, class_id, display_name.
+    const users = app.findCollectionByNameOrId("users");
+
+    // Set API rules
+    users.listRule = '@request.auth.id != ""';
+    users.viewRule = 'id = @request.auth.id || @request.auth.role = "teacher"';
+    users.createRule = "";
+    users.updateRule = 'id = @request.auth.id || @request.auth.role = "teacher"';
+    users.deleteRule = null;
+
+    // Add custom fields (in addition to built-in: id, email, etc.)
+    // PB 0.36: "username" is NOT a default field on auth collections.
+    // We add it explicitly so it can be used as an identity field.
+    users.fields.add(
+      new TextField({
+        name: "username",
+        required: true,
+        primaryKey: false,
+      }),
+      new SelectField({
+        name: "role",
+        required: true,
+        values: ["student", "teacher"],
+        maxSelect: 1,
+      }),
+      new TextField({
+        name: "display_name",
+        required: false,
+      }),
+    );
+
+    // Add unique index on username (required for identityFields)
+    users.addIndex("idx_users_username", true, "username", "");
+
+    // Save fields first — identityFields validation needs the fields to exist
+    app.save(users);
+
+    // Now configure password auth with both identity fields
+    const usersWithFields = app.findCollectionByNameOrId("users");
+    usersWithFields.passwordAuth.enabled = true;
+    usersWithFields.passwordAuth.identityFields = ["username", "email"];
+
+    app.save(usersWithFields);
+
+    // ─── 2. classes ─────────────────────────────────────────────────────────────
     const classes = new Collection({
       type: "base",
       name: "classes",
@@ -40,69 +87,29 @@ migrate(
           type: "relation",
           name: "created_by",
           required: true,
-          // Will be patched after users collection exists
-          collectionId: "_pb_users_auth_",
+          collectionId: users.id,
           maxSelect: 1,
           cascadeDelete: false,
         },
       ],
-      indexes: ["CREATE UNIQUE INDEX idx_classes_join_code ON classes (join_code)"],
+      indexes: [
+        "CREATE UNIQUE INDEX idx_classes_join_code ON classes (join_code)",
+      ],
     });
     app.save(classes);
 
-    // ─── 2. users (Auth Collection) ─────────────────────────────────────────────
-    // PocketBase Auth collections have built-in: id, email, emailVisibility,
-    // verified, password, tokenKey, username, created, updated
-    // We add: role, class_id, display_name
-    const users = new Collection({
-      type: "auth",
-      name: "users",
-      // Auth rules — students can view/update their own record; teachers see all
-      listRule: '@request.auth.id != ""',
-      viewRule: 'id = @request.auth.id || @request.auth.role = "teacher"',
-      createRule: "",
-      updateRule: 'id = @request.auth.id || @request.auth.role = "teacher"',
-      deleteRule: null,
-      fields: [
-        {
-          type: "select",
-          name: "role",
-          required: true,
-          values: ["student", "teacher"],
-          maxSelect: 1,
-        },
-        {
-          type: "relation",
-          name: "class_id",
-          required: false,
-          collectionId: classes.id,
-          maxSelect: 1,
-          cascadeDelete: false,
-        },
-        {
-          type: "text",
-          name: "display_name",
-          required: false,
-        },
-      ],
-      // Auth options: username + password login (PINs for students, passwords for teachers)
-      // minPasswordLength = 4 to allow 4-digit PINs for students
-      passwordAuth: {
-        enabled: true,
-        identityFields: ["username", "email"],
-      },
-      indexes: [],
-    });
-    app.save(users);
-
-    // Patch classes.created_by to point to the real users collection id
-    const classesCollection = app.findCollectionByNameOrId("classes");
-    for (const field of classesCollection.fields) {
-      if (field.name === "created_by") {
-        field.collectionId = users.id;
-      }
-    }
-    app.save(classesCollection);
+    // Now add class_id relation to users (needs classes.id)
+    const usersUpdated = app.findCollectionByNameOrId("users");
+    usersUpdated.fields.add(
+      new RelationField({
+        name: "class_id",
+        required: false,
+        collectionId: classes.id,
+        maxSelect: 1,
+        cascadeDelete: false,
+      }),
+    );
+    app.save(usersUpdated);
 
     // ─── 3. course_unlocks ──────────────────────────────────────────────────────
     const courseUnlocks = new Collection({
@@ -230,7 +237,6 @@ migrate(
           required: false,
         },
       ],
-      // UNIQUE constraint: one progress record per user/course/lesson/exercise
       indexes: [
         "CREATE UNIQUE INDEX idx_progress_unique ON progress (user_id, course, lesson, exercise)",
       ],
@@ -240,13 +246,28 @@ migrate(
 
   // ─── DOWN (rollback) ─────────────────────────────────────────────────────────
   (app) => {
-    for (const name of ["progress", "course_unlocks", "users", "classes"]) {
+    // Delete custom collections (order matters: dependants first)
+    for (const name of ["progress", "course_unlocks", "classes"]) {
       try {
         const col = app.findCollectionByNameOrId(name);
         app.delete(col);
       } catch (_) {
         // collection may not exist — skip
       }
+    }
+
+    // Remove custom fields from users (don't delete the collection itself)
+    try {
+      const users = app.findCollectionByNameOrId("users");
+      for (const fieldName of ["role", "class_id", "display_name"]) {
+        const field = users.fields.getByName(fieldName);
+        if (field) {
+          users.fields.removeById(field.getId());
+        }
+      }
+      app.save(users);
+    } catch (_) {
+      // users collection may be in unexpected state — skip
     }
   },
 );

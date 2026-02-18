@@ -17,6 +17,7 @@ Du bist ein autonomer Entwicklungs-Agent für die Lernplattform. Du arbeitest **
    - Alle `Abhängig von`-REQs müssen in `.agent/status.json` Status `done` haben
    - **Hinweis:** `.agent/status.json` ist die autoritative Quelle für REQ-Status — nicht PRD.md
 5. **S-Batching:** Wenn das gewählte REQ Größe `S` hat, prüfe ob das nächste REQ (gleiche Priorität, keine Abhängigkeit auf das erste) ebenfalls `S` ist. Falls ja, bearbeite beide in dieser Iteration. Max 3 S-REQs pro Iteration.
+   - **Fehler-Isolation:** Wenn ein REQ im Batch fehlschlägt, wird nur dieses REQ `blocked`. Die anderen REQs im Batch können unabhängig `done` werden. Jedes REQ im Batch bekommt seinen eigenen Status.
 6. Wenn kein offenes REQ verfügbar → gib Status-Block aus und beende
 
 **Output:** "Nächstes REQ: REQ-XXX — [Titel]" (bei Batch: "Batch: REQ-XXX + REQ-YYY")
@@ -26,10 +27,12 @@ Du bist ein autonomer Entwicklungs-Agent für die Lernplattform. Du arbeitest **
 ## Phase 2: Preflight
 
 1. Prüfe ob die Projektstruktur existiert (relevante Verzeichnisse/Dateien)
+1b. Falls `package.json` existiert aber `node_modules/` fehlt: `npm install` ausführen
 2. Falls Build-Tools vorhanden: `npm run build` muss erfolgreich sein
 3. Falls Tests vorhanden: `npx vitest run` muss grün sein
 4. Falls Linter vorhanden: `npm run lint` muss erfolgreich sein (Warnungen ok, Fehler nicht)
-5. **Verifikationsumgebung prüfen (PFLICHT):**
+5. **Verifikationsumgebung prüfen (PFLICHT — außer bei `SANDBOX_MODE=1`):**
+   - **Wenn `SANDBOX_MODE=1`** (Umgebungsvariable): Docker- und Playwright-Checks überspringen. Verifikation erfolgt nur über Build + Unit-Tests + Lint. Smoke-Tests entfallen. Weiter mit Phase 3.
    - **Docker:** `docker compose ps` — PocketBase und Nginx müssen laufen. Falls nicht: `docker compose up -d` und warten bis healthy.
    - **Playwright MCP:** `browser_snapshot` aufrufen — Browser muss erreichbar sein.
    - **Wenn Docker ODER Playwright nicht verfügbar → SOFORT STOPPEN.** Kein REQ bearbeiten. Meldung:
@@ -40,6 +43,8 @@ Du bist ein autonomer Entwicklungs-Agent für die Lernplattform. Du arbeitest **
      notes: Verifikationsumgebung fehlt: [Docker nicht verfügbar | Playwright MCP nicht erreichbar]. Kein REQ kann ohne funktionierende Verifikation als done markiert werden.
      ===END_STATUS===
      ```
+
+   **ACHTUNG — Keine Ausnahmen:** Dieser Check gilt für ALLE REQs — egal ob UI-REQ, Backend-REQ, Infrastruktur-REQ oder Hook/Library-REQ. Die Unterscheidung "UI-REQ vs. Nicht-UI-REQ" existiert NUR in Phase 4.2 (Smoke-Tests). Hier in Phase 2 gibt es diese Unterscheidung NICHT. Wenn Docker nicht erreichbar ist, wird NICHT implementiert — Punkt. Rationalisierungen wie "ist ja kein UI-REQ, also brauche ich kein Docker" sind explizit verboten.
 
 ### Preflight-Failure → Regressions-Check
 
@@ -147,9 +152,25 @@ Task(subagent_type="general-purpose", model="opus", prompt="
 4. `npm run format:check` — Code ist formatiert (falls konfiguriert; sonst `npm run format`)
 5. `npx playwright test` — E2E-Tests müssen grün sein (falls vorhanden)
 
-### 4.2 Für UI-REQs: Smoke-Test gegen echten Stack (PFLICHT)
+### 4.1b Akzeptanzkriterien-Gate (Pflicht vor `done`)
 
-**Jedes REQ das UI erzeugt oder ändert muss diesen Smoke-Test bestehen.** Kein `done` ohne Smoke-Test.
+Bevor ein REQ als `done` markiert wird, prüfe **jedes** Akzeptanzkriterium aus PRD.md einzeln:
+
+1. Lies die Akzeptanzkriterien des REQs aus PRD.md
+2. Für jedes Kriterium: Verifiziere dass es erfüllt ist (Code existiert, Test besteht, Verhalten stimmt)
+3. **Wenn auch nur ein Kriterium nicht erfüllt ist → REQ ist NICHT `done`**
+   - Entweder: fehlende Kriterien nachimplementieren und Phase 4.1 wiederholen
+   - Oder: `blocked` mit Begründung welche Kriterien fehlen
+
+Kein REQ wird `done` ohne dass alle Akzeptanzkriterien explizit abgehakt sind.
+
+### 4.2 Für UI-REQs: Smoke-Test gegen echten Stack
+
+**Definition UI-REQ:** Ein REQ ist ein UI-REQ wenn es sichtbare Benutzeroberfläche erzeugt oder ändert (HTML, React-Komponenten, CSS, Layouts, Formulare, Buttons, Navigation). Reine Backend-/Config-/Infrastruktur-REQs (Docker, PocketBase-Schema, Nginx-Config, npm-Packages ohne UI) sind KEINE UI-REQs.
+
+**Bei `SANDBOX_MODE=1`:** Diesen gesamten Abschnitt überspringen. Verifikation erfolgt nur über Phase 4.1 (Build + Tests + Lint). REQs können trotzdem `done` werden.
+
+**Ohne SANDBOX_MODE:** Jedes UI-REQ muss diesen Smoke-Test bestehen. Kein `done` ohne Smoke-Test.
 
 **Voraussetzung — Docker-Stack muss laufen:**
 
@@ -161,17 +182,17 @@ docker compose up -d
 for i in $(seq 1 30); do curl -s http://localhost:8090/api/health > /dev/null 2>&1 && break; sleep 1; done
 ```
 
-**Dev-Server starten:**
+**Dev-Server starten (Port 3572 — einziger erreichbarer Preview-Port):**
 
 ```bash
-npm run dev &
+npm run dev -- --port 3572 &
 DEV_PID=$!
-for i in $(seq 1 30); do curl -s http://localhost:5173 > /dev/null 2>&1 && break; sleep 1; done
+for i in $(seq 1 30); do curl -s http://localhost:3572 > /dev/null 2>&1 && break; sleep 1; done
 ```
 
 **Smoke-Test via Playwright MCP (~5 Tool-Calls):**
 
-1. `browser_navigate` zur relevanten Seite
+1. `browser_navigate` zur relevanten Seite (Port 3572)
 2. `browser_snapshot` — prüfe ob die Kernelemente sichtbar sind
 3. Klicke auf das Hauptelement des REQs — prüfe ob es reagiert
 4. Prüfe dass keine Console-Errors vorliegen (`browser_console_messages`)
@@ -185,7 +206,7 @@ Das REQ bekommt Status `blocked` mit Begründung "Verifikationsumgebung fehlt: P
 
 ```bash
 kill $DEV_PID 2>/dev/null || true
-lsof -ti:5173,5174,4321,3000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3572,5173,5174,4321,3000 | xargs kill -9 2>/dev/null || true
 ```
 
 ### 4.3 Full Verification (alle 3 Iterationen oder Security-REQ)
@@ -248,7 +269,9 @@ Bei CHANGES_NEEDED: Fixes implementieren, Phase 4.1 wiederholen.
 ### 4.5 Fehlerbehandlung
 
 - **Verify-Fehler** (Build/Tests/Lint) → beheben (max 3 Versuche)
-- **Playwright/Docker nicht verfügbar** → REQ ist `blocked` mit Begründung "Verifikationsumgebung fehlt: [Details]". **Nicht** überspringen, **nicht** als `done` markieren.
+- **Playwright/Docker nicht verfügbar:**
+  - **Bei `SANDBOX_MODE=1`:** Kein Blocker. REQ wird über Build + Unit-Tests + Lint verifiziert.
+  - **Ohne SANDBOX_MODE:** REQ ist `blocked` mit Begründung "Verifikationsumgebung fehlt: [Details]". **Nicht** überspringen, **nicht** als `done` markieren. Dies gilt für ALLE REQ-Typen — auch für Backend- und Library-REQs. (Hinweis: Wenn Docker im Preflight fehlte, hätte Phase 2 bereits gestoppt. Dieser Fall tritt nur ein wenn Docker während der Iteration ausfällt.)
 - **UI-Fehler** (sichtbar in Snapshot/Screenshot) → beheben (max 3 Versuche)
 - **Nicht behebbar** → Status `blocked`, Begründung, Screenshot als Beleg
 
@@ -256,13 +279,9 @@ Bei CHANGES_NEEDED: Fixes implementieren, Phase 4.1 wiederholen.
 
 ## Phase 5: Persist
 
-### 5.1 Artefakte aktualisieren
+**Wichtig — Schreib-Reihenfolge:** status.json wird ZULETZT geschrieben (nach Git Commit). Bei Timeout vor dem Commit bleibt das REQ auf `in_progress` → Loop wiederholt sicher statt zu skippen.
 
-**`.agent/status.json` aktualisieren** (autoritativ für REQ-Status):
-
-- Setze den Status des REQs auf `done` (oder `blocked` bei Failure)
-- Verwende `jq` oder schreibe die Datei direkt — Hauptsache das JSON bleibt valide
-- **Dies ist die wichtigste Status-Quelle** — loop.sh liest nur aus status.json
+### 5.1 Artefakte aktualisieren (OHNE status.json)
 
 **`.agent/context.md` komplett neu schreiben** (max 50 Zeilen):
 
@@ -295,12 +314,12 @@ Bei CHANGES_NEEDED: Fixes implementieren, Phase 4.1 wiederholen.
 - Hake alle erfüllten Akzeptanzkriterien ab
 - **Hinweis:** loop.sh liest Status aus `.agent/status.json`, nicht aus PRD.md. PRD.md ist für menschliche Lesbarkeit — Formatierungsfehler hier sind nicht kritisch.
 
-### 5.3 Git Commit
+### 5.3 Git Commit (OHNE finales status.json-Update)
 
-Erstelle einen finalen Commit. **Kein `--amend`** — der WIP-Checkpoint bleibt in der History (wird beim Merge/PR ggf. gesquasht):
+Erstelle einen finalen Commit **bevor** status.json auf `done` gesetzt wird. `.agent/status.json` zeigt zu diesem Zeitpunkt noch `in_progress`:
 
 ```bash
-git add [geänderte Dateien]
+git add [geänderte Dateien, inkl. context.md, learnings.md, architecture.md, PRD.md]
 git commit -m "REQ-XXX: [Kurzbeschreibung]
 
 - [Was implementiert]
@@ -312,7 +331,6 @@ git commit -m "REQ-XXX: [Kurzbeschreibung]
 
 - Kein `git add -A`! Nur die Dateien die du erstellt oder geändert hast. Prüfe `git status` und stage explizit.
 - **Kein `git commit --amend`!** Der WIP-Checkpoint könnte bereits gepusht sein. Amend nach Push erfordert Force-Push und kann Arbeit zerstören.
-- `.agent/status.json` muss immer mitcommittet werden wenn sich der REQ-Status geändert hat.
 
 Bei S-Batch:
 
@@ -324,7 +342,22 @@ git commit -m "REQ-XXX + REQ-YYY: [Kurzbeschreibung]
 - REQ-YYY: [Was]"
 ```
 
-### 5.4 Status-Block ausgeben
+### 5.4 status.json finalisieren (LETZTER Schritt — nach Commit)
+
+**Erst NACH erfolgreichem Git Commit** den REQ-Status auf `done` setzen:
+
+```bash
+jq '.["REQ-XXX"].status = "done"' .agent/status.json > .agent/status.json.tmp && \
+  mv .agent/status.json.tmp .agent/status.json
+git add .agent/status.json
+git commit -m "REQ-XXX: status → done"
+```
+
+- **Atomic Write:** Temp-Datei + `mv` verhindert Korruption bei Timeout/Crash
+- **Dies ist die wichtigste Status-Quelle** — loop.sh liest nur aus status.json
+- Bei `blocked`: gleicher Ablauf, aber `.status = "blocked"` + `.notes = "[Begründung]"`
+
+### 5.5 Status-Block ausgeben
 
 Maschinenlesbar, für loop.sh:
 
@@ -344,11 +377,11 @@ Bei S-Batch: einen Status-Block pro REQ.
 
 **Checkliste vor Status-Block:**
 
-- [ ] `.agent/status.json` aktualisiert (autoritativ!)
+- [ ] Git Commit erstellt (Code + Artefakte, kein amend!)
+- [ ] `.agent/status.json` finalisiert und committet (NACH dem Code-Commit!)
 - [ ] `PRD.md` aktualisiert (best-effort)
 - [ ] `.agent/context.md` neu geschrieben
 - [ ] `.agent/learnings.md` ergänzt (falls Erkenntnisse)
-- [ ] Finaler Commit erstellt (kein amend!)
 
 ---
 
@@ -385,13 +418,15 @@ Bei S-Batch: einen Status-Block pro REQ.
 6. **architecture.md nur appenden** — niemals bestehende ADRs ändern oder löschen
 7. **learnings.md nur appenden** — persistente Erkenntnisse die über eine Iteration hinaus gelten
 8. **context.md immer neu schreiben** — max 50 Zeilen
-9. **status.json ist autoritativ** — immer zuerst status.json aktualisieren, dann PRD.md (best-effort)
+9. **status.json ist autoritativ** — wird ZULETZT geschrieben (nach Git Commit, siehe Phase 5.4). PRD.md ist best-effort.
 10. **Status-Block immer ausgeben** — auch bei Failure/Blocked
 11. **Preflight muss grün sein** bevor Implementation beginnt
 12. **Bei Failure:** `blocked` in status.json + PRD.md, Begründung, Commit, Status-Block, beenden
-13. **Kein `done` ohne Smoke-Test** — Unit-Tests allein reichen nicht. Jedes UI-REQ braucht einen bestandenen Smoke-Test gegen den echten Stack (Docker + Playwright MCP).
-14. **Docker + Playwright sind Voraussetzungen** — fehlt eines, ist das REQ `blocked` mit Begründung "Verifikationsumgebung fehlt". Kein Überspringen, kein Ignorieren.
+13. **Kein `done` ohne Smoke-Test für UI-REQs** — außer bei `SANDBOX_MODE=1`. Ohne Sandbox: Jedes UI-REQ braucht einen bestandenen Smoke-Test gegen den echten Stack (Docker + Playwright MCP).
+14. **Docker + Playwright sind Preflight-Voraussetzungen für ALLE REQs** — außer bei `SANDBOX_MODE=1`. Ohne Sandbox: Wenn Docker oder Playwright im Preflight (Phase 2) nicht verfügbar sind, wird KEIN REQ bearbeitet — weder UI-REQs noch Backend-/Infrastruktur-/Library-REQs. Die gesamte Iteration stoppt sofort. Es gibt keine Selbst-Ausnahmen basierend auf REQ-Typ.
 15. **Mocks nur für externe APIs** — PocketBase SDK Calls, fetch, localStorage dürfen gemockt werden. Eigene Module (CookieAuthStore, Provider, Hook-Komposition) werden real getestet oder per Integrations-Test abgedeckt.
 16. **CLAUDE.md lesen** für Konventionen und Projektkontext
 17. **REQUIREMENTS.md konsultieren** bei Detailfragen zu einem REQ
 18. **Repo-Zugriff prüfen:** Wenn ein REQ einen `Hinweis`-Eintrag hat der externe Repos erwähnt, prüfe ob diese vorhanden sind. Falls nicht → `blocked` mit "Repo nicht verfügbar"
+19. **Scope-Guard — geschützte Dateien:** Diese Dateien darf der Agent NICHT verändern: `AGENT.md`, `VALIDATOR.md`, `loop.sh`, `CLAUDE.md`, `REQUIREMENTS.md`. Nur `PRD.md` (Status-Updates) und `.agent/`-Artefakte werden geschrieben.
+20. **Turn-Budget:** Du hast ~100 Turns pro Iteration. Plane deine Arbeit danach. Ab Turn 80: nur noch abschließen, committen, Status-Block ausgeben. Keine neuen Features starten.

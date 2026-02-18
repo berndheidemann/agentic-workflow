@@ -244,9 +244,9 @@ describe('Migration file structure', () => {
     expect(migrationSource).toContain('"progress"');
   });
 
-  it('defines users as auth collection type', () => {
-    // The users collection must have type: "auth"
-    expect(migrationSource).toContain('type: "auth"');
+  it('extends default users auth collection', () => {
+    // PB 0.36+: users auth collection exists by default, we extend it via findCollectionByNameOrId
+    expect(migrationSource).toContain('findCollectionByNameOrId("users")');
   });
 
   it('contains UNIQUE index on progress (user_id, course, lesson, exercise)', () => {

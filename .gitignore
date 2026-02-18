@@ -44,9 +44,10 @@ test-results/
 .tmp/
 *.tmp
 
-# Agent lock file
+# Agent lock file + logs
 .agent/loop.lock
 .agent/status.json.bak
+.agent/logs/
 .sandbox-ports
 
 # Sites (separate repos, not submodules)

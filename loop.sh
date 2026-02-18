@@ -14,8 +14,9 @@
 
 set -euo pipefail
 
-# ── Lock file (Fix #5) ────────────────────────────────────────
-LOCKFILE="/tmp/lernplattform-loop.lock"
+# ── Lock file (in .agent/ — survives /tmp cleanup) ──────────────
+mkdir -p .agent
+LOCKFILE=".agent/loop.lock"
 exec 200>"$LOCKFILE"
 flock -n 200 || { echo "Error: Loop already running (lockfile: $LOCKFILE)"; exit 1; }
 
@@ -40,9 +41,16 @@ MODEL="sonnet"
 PROMPT_FILE="AGENT.md"
 ITER_TIMEOUT="${ITER_TIMEOUT:-1800}"  # 30 min default, override via env
 SAFE_BRANCH="${SAFE_BRANCH:-1}"       # Auto-create agent branch (Fix #1)
+SANDBOX_MODE="${SANDBOX_MODE:-0}"     # Skip Docker/Playwright checks
+FULL_VERIFY_OVERRIDE="${FULL_VERIFY:-0}"  # Save user override before loop resets it
 STATUS_JSON=".agent/status.json"
 ORIGINAL_BRANCH=""
 AGENT_BRANCH=""
+VALIDATOR_PROMPT_FILE="VALIDATOR.md"
+VALIDATOR_MODEL="opus"
+VALIDATE_INTERVAL=5              # Default: validate every 5 iterations
+ITERS_SINCE_VALIDATION=0         # Counter since last validation
+VALIDATOR_TIMEOUT="${VALIDATOR_TIMEOUT:-2400}"  # 40 min for validator (longer than normal)
 
 for arg in "$@"; do
   case "$arg" in
@@ -65,6 +73,12 @@ for arg in "$@"; do
       echo "  5. Updated PRD.md + .agent/ Artefakte, finaler Commit + Tag"
       echo "  → Push → nächste Iteration"
       echo ""
+      echo -e "${BOLD}Opus Validation Loop:${RESET}"
+      echo "  Alle 5 Iterationen (dynamisch: 3 nach Problemen) prüft Opus:"
+      echo "  - Ob done-REQs wirklich funktionieren (Docker + Playwright)"
+      echo "  - Ob der Agent Regeln umgangen hat (Log-Analyse)"
+      echo "  - Kann REQs zurücksetzen (done → open) oder blocken"
+      echo ""
       echo -e "${BOLD}Output:${RESET}"
       echo "  Kompakter Stream mit farbcodierten Tool-Calls:"
       echo -e "    ${GREEN}Read/Glob/Grep${RESET}  ${YELLOW}Edit/Write/Bash${RESET}  ${MAGENTA}Playwright${RESET}"
@@ -83,9 +97,13 @@ for arg in "$@"; do
       echo "  ITER_TIMEOUT=N     Timeout pro Iteration in Sekunden (Standard: 1800)"
       echo "  SAFE_BRANCH=0      Agent-Branch-Erstellung deaktivieren"
       echo "  FULL_VERIFY=1      Full Verification erzwingen"
+      echo "  SANDBOX_MODE=1     Docker/Playwright-Checks überspringen (für Sandboxen)"
+      echo "  VALIDATOR_TIMEOUT=N Timeout für Validierung in Sekunden (Standard: 2400)"
       echo ""
       echo -e "${BOLD}Dateien:${RESET}"
       echo "  AGENT.md                Loop-Instruktionen für den Agent"
+      echo "  VALIDATOR.md            Opus-Validierungs-Prompt"
+      echo "  .agent/logs/            Stream-JSON Logs pro Iteration"
       echo "  PRD.md                  Requirements mit Status + Abhängigkeiten"
       echo "  .agent/status.json      Maschinenlesbarer REQ-Status (autoritativ)"
       echo "  .agent/context.md       Kurzer Projektkontext (50 Zeilen, Rewrite)"
@@ -190,6 +208,26 @@ count_in_progress_reqs() {
   jq '[.[] | select(.status == "in_progress")] | length' "$STATUS_JSON" 2>/dev/null || echo "0"
 }
 
+# ── Status JSON validation (protect against crash corruption) ─
+validate_status_json() {
+  [ -f "$STATUS_JSON" ] && jq empty "$STATUS_JSON" 2>/dev/null
+}
+
+recover_status_json() {
+  if ! validate_status_json; then
+    echo -e "  ${RED}status.json corrupted — attempting recovery${RESET}"
+    # Try git checkout
+    if git checkout HEAD -- "$STATUS_JSON" 2>/dev/null && validate_status_json; then
+      echo -e "  ${GREEN}Recovered status.json from last commit${RESET}"
+    else
+      # Last resort: reinitialize from PRD.md
+      echo -e "  ${YELLOW}Reinitializing status.json from PRD.md${RESET}"
+      rm -f "$STATUS_JSON"
+      init_status_json
+    fi
+  fi
+}
+
 # ── Temp files for extraction from pipeline subshell ──────────
 COST_FILE=$(mktemp)
 TOOLS_FILE=$(mktemp)
@@ -197,6 +235,8 @@ STATUS_FILE=$(mktemp)
 EXIT_FILE=$(mktemp)
 ITER_LOG=".agent/iterations.jsonl"
 CONTEXT_FILE=".agent/context.md"
+LOG_DIR=".agent/logs"
+mkdir -p "$LOG_DIR"
 
 # ── Crash recovery ───────────────────────────────────────────
 # Reset any in_progress REQs from crashed previous iterations
@@ -280,13 +320,52 @@ build_agent_prompt() {
   fi
 }
 
+# ── Validator prompt builder ──────────────────────────────────
+build_validator_prompt() {
+  cat "$VALIDATOR_PROMPT_FILE"
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Injizierter Kontext (von loop.sh)"
+  echo ""
+  echo "### Letzte $ITERS_SINCE_VALIDATION Iterationen — Log-Zusammenfassungen"
+  echo ""
+
+  # Summarize the last N iteration logs
+  local count=0
+  for logfile in $(ls -t "$LOG_DIR"/iter-*.jsonl 2>/dev/null | head -"$ITERS_SINCE_VALIDATION" | sort); do
+    if [ -f "$logfile" ]; then
+      echo "---"
+      echo ""
+      bash scripts/summarize-log.sh "$logfile" 2>/dev/null || echo "_Log-Zusammenfassung fehlgeschlagen für $logfile_"
+      echo ""
+      count=$((count + 1))
+    fi
+  done
+
+  if [ "$count" -eq 0 ]; then
+    echo "_Keine Iteration-Logs vorhanden._"
+  fi
+
+  echo ""
+  echo "### Volle Logs bei Bedarf"
+  echo ""
+  echo "Die vollen stream-json Logs liegen in \`$LOG_DIR/\`. Nutze das Read-Tool um Details nachzulesen."
+  echo ""
+  echo "### Aktueller Status"
+  echo ""
+  echo "REQs done: $(count_done_reqs)/$(count_total_reqs)"
+  echo "REQs open: $(count_open_reqs)"
+  echo ""
+}
+
 # ── Dev server cleanup ───────────────────────────────────────
 kill_dev_servers() {
   # Kill any leftover dev server processes from previous iterations
   local pids
-  pids=$(lsof -ti:5173,5174,4321,3000 2>/dev/null || true)
+  pids=$(lsof -ti:3572,5173,5174,4321,3000 2>/dev/null || true)
   if [ -n "$pids" ]; then
-    echo -e "  ${DIM}Cleaning up leftover dev servers (ports 5173/5174/4321/3000)${RESET}"
+    echo -e "  ${DIM}Cleaning up leftover dev servers (ports 3572/5173/5174/4321/3000)${RESET}"
     echo "$pids" | xargs kill -9 2>/dev/null || true
     sleep 1
   fi
@@ -386,6 +465,8 @@ return_to_original_branch() {
 cleanup() {
   echo ""
   echo -e "${YELLOW}Interrupted.${RESET}"
+  # Kill any running Claude subprocess before cleanup
+  pkill -P $$ -f "claude" 2>/dev/null || true
   kill_dev_servers
   print_summary
   return_to_original_branch
@@ -563,7 +644,9 @@ parse_progress() {
 
 # ── Header ──────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}Lernplattform Agent Loop${RESET}  ${DIM}model=${MODEL}  max=$([ "$MAX_ITERATIONS" -eq 0 ] && echo '∞' || echo "$MAX_ITERATIONS")  timeout=$(format_duration "$ITER_TIMEOUT")${RESET}"
+SANDBOX_LABEL=""
+[ "$SANDBOX_MODE" = "1" ] && SANDBOX_LABEL="  ${YELLOW}SANDBOX${RESET}"
+echo -e "${BOLD}Lernplattform Agent Loop${RESET}  ${DIM}model=${MODEL}  max=$([ "$MAX_ITERATIONS" -eq 0 ] && echo '∞' || echo "$MAX_ITERATIONS")  timeout=$(format_duration "$ITER_TIMEOUT")${RESET}${SANDBOX_LABEL}"
 
 # ── Pre-loop: init + recovery + branch ──────────────────────
 init_status_json
@@ -594,52 +677,88 @@ while :; do
 
   ITER_LABEL="$ITERATION$([ "$MAX_ITERATIONS" -gt 0 ] && echo "/$MAX_ITERATIONS" || true)"
 
-  # Pre-parse next REQ for display
-  NEXT_REQ_HINT=$(get_next_req_hint)
-
-  # Check if no actionable REQ found (all open REQs have unmet deps)
-  if [ -z "$NEXT_REQ_HINT" ] && [ "$local_open" -gt 0 ]; then
-    echo -e "${YELLOW}${BOLD}No actionable REQ: $local_open open but all have unmet dependencies. Stopping.${RESET}"
-    break
+  # ── Determine if this is a validation iteration ──────────────
+  # Check BEFORE REQ selection — validation doesn't need an actionable REQ
+  IS_VALIDATION=0
+  if [ "$((ITERS_SINCE_VALIDATION + 1))" -ge "$VALIDATE_INTERVAL" ] && [ -f "$VALIDATOR_PROMPT_FILE" ]; then
+    IS_VALIDATION=1
+    ITERS_SINCE_VALIDATION=$((ITERS_SINCE_VALIDATION + 1))
   fi
 
-  echo -e "${BOLD}━━ Iteration ${ITER_LABEL} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  if [ "$IS_VALIDATION" -eq 0 ]; then
+    ITERS_SINCE_VALIDATION=$((ITERS_SINCE_VALIDATION + 1))
+
+    # Pre-parse next REQ for display
+    NEXT_REQ_HINT=$(get_next_req_hint)
+
+    # Check if no actionable REQ found (all open REQs have unmet deps)
+    if [ -z "$NEXT_REQ_HINT" ] && [ "$local_open" -gt 0 ]; then
+      echo -e "${YELLOW}${BOLD}No actionable REQ: $local_open open but all have unmet dependencies. Stopping.${RESET}"
+      break
+    fi
+  fi
+
+  if [ "$IS_VALIDATION" -eq 1 ]; then
+    echo -e "${BOLD}━━ Validation ${ITER_LABEL} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "  ${MAGENTA}${BOLD}Opus Validation Loop${RESET} ${DIM}(reviewing last $ITERS_SINCE_VALIDATION iterations)${RESET}"
+    NEXT_REQ_HINT="VALIDATION"
+  else
+    echo -e "${BOLD}━━ Iteration ${ITER_LABEL} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    if [ -n "$NEXT_REQ_HINT" ]; then
+      echo -e "  ${CYAN}Next: ${NEXT_REQ_HINT#'### '}${RESET}"
+    fi
+  fi
   echo -e "${DIM}  REQs: $(count_open_reqs) open │ $(count_done_reqs)/$(count_total_reqs) done${RESET}"
-  if [ -n "$NEXT_REQ_HINT" ]; then
-    echo -e "  ${CYAN}Next: ${NEXT_REQ_HINT#'### '}${RESET}"
-  fi
+
   ITER_START=$(date +%s)
+  ITER_LOG_FILE="$LOG_DIR/iter-$(printf '%03d' $ITERATION).jsonl"
   echo "0" > "$COST_FILE"
   echo "0" > "$TOOLS_FILE"
   echo "" > "$STATUS_FILE"
-  echo "0" > "$EXIT_FILE"
+  echo "124" > "$EXIT_FILE"  # Pessimistic default (timeout) — overwritten on success
 
   # Kill leftover dev servers from previous iterations
   kill_dev_servers
 
-  # Build prompt with injected REQ context
-  AGENT_PROMPT=$(build_agent_prompt)
+  # Backup status.json before iteration (crash recovery safety net)
+  [ -f "$STATUS_JSON" ] && cp "$STATUS_JSON" "${STATUS_JSON}.bak"
 
-  # FULL_VERIFY every 3 iterations (Fix #7: was 5, now 3)
-  FULL_VERIFY="${FULL_VERIFY:-0}"
-  if [ $((ITERATION % 3)) -eq 0 ]; then
-    FULL_VERIFY=1
-    echo -e "  ${MAGENTA}Full verification enabled (iteration $ITERATION)${RESET}"
+  # Validate status.json integrity
+  recover_status_json
+
+  # Build prompt based on iteration type
+  if [ "$IS_VALIDATION" -eq 1 ]; then
+    AGENT_PROMPT=$(build_validator_prompt)
+    ITER_MODEL="$VALIDATOR_MODEL"
+    ITER_TIMEOUT_ACTUAL="$VALIDATOR_TIMEOUT"
+    ITER_MAX_TURNS=60
+  else
+    AGENT_PROMPT=$(build_agent_prompt)
+    ITER_MODEL="$MODEL"
+    ITER_TIMEOUT_ACTUAL="$ITER_TIMEOUT"
+    ITER_MAX_TURNS=100
+
+    # FULL_VERIFY: reset each iteration, enable every 3 or if user forced
+    FULL_VERIFY=0
+    if [ "$FULL_VERIFY_OVERRIDE" = "1" ] || [ $((ITERATION % 3)) -eq 0 ]; then
+      FULL_VERIFY=1
+      echo -e "  ${MAGENTA}Full verification enabled (iteration $ITERATION)${RESET}"
+    fi
   fi
 
   # Run Claude agent (Fix #11: exit code via file instead of PIPESTATUS)
   set +eo pipefail
   (
-    FULL_VERIFY=$FULL_VERIFY timeout --foreground --signal=TERM --kill-after=30 "$ITER_TIMEOUT" \
+    FULL_VERIFY=${FULL_VERIFY:-0} SANDBOX_MODE=$SANDBOX_MODE timeout --foreground --signal=TERM --kill-after=30 "$ITER_TIMEOUT_ACTUAL" \
       claude -p \
         --dangerously-skip-permissions \
         --output-format=stream-json \
-        --model "$MODEL" \
-        --max-turns 100 \
+        --model "$ITER_MODEL" \
+        --max-turns "$ITER_MAX_TURNS" \
         --verbose \
         <<< "$AGENT_PROMPT"
     echo $? > "$EXIT_FILE"
-  ) | parse_progress
+  ) | tee "$ITER_LOG_FILE" | parse_progress
   set -eo pipefail
 
   EXIT_CODE=$(cat "$EXIT_FILE" 2>/dev/null || echo "1")
@@ -695,6 +814,15 @@ while :; do
   # Tag iteration for rollback support
   tag_iteration "$ITERATION"
 
+  # ── Validation interval management ──────────────────────────
+  if [ "$IS_VALIDATION" -eq 1 ]; then
+    # Parse next_validation_interval from validator status block
+    NEXT_INTERVAL=$(grep -oP 'next_validation_interval:\s*\K[0-9]+' "$STATUS_FILE" 2>/dev/null || echo "5")
+    VALIDATE_INTERVAL="$NEXT_INTERVAL"
+    ITERS_SINCE_VALIDATION=0
+    echo -e "  ${MAGENTA}Next validation in $VALIDATE_INTERVAL iterations${RESET}"
+  fi
+
   # Push disabled — manually push when ready:
   #   git push -u origin "$AGENT_BRANCH"
 
@@ -706,6 +834,20 @@ while :; do
 
   # Append to iterations log
   append_iteration_log "$ITERATION" "$ITER_DURATION" "$iter_cost_fmt" "${ITER_TOOLS:-0}" "$EXIT_CODE"
+
+  # Repeat detection: same REQ 3 consecutive times → auto-blocked (skip for validations)
+  if [ "$IS_VALIDATION" -eq 0 ] && [ -f "$ITER_LOG" ] && [ -n "$NEXT_REQ_HINT" ]; then
+    REPEAT_REQ=$(echo "$NEXT_REQ_HINT" | grep -oP 'REQ-\d+[a-z]?' | head -1 || true)
+    if [ -n "$REPEAT_REQ" ]; then
+      REPEAT_COUNT=$(tail -3 "$ITER_LOG" | grep -c "\"req_hint\":.*$REPEAT_REQ" 2>/dev/null || echo "0")
+      if [ "$REPEAT_COUNT" -ge 3 ]; then
+        echo -e "  ${RED}${BOLD}REQ $REPEAT_REQ attempted 3 times in a row — auto-blocking${RESET}"
+        jq --arg req "$REPEAT_REQ" \
+          '.[$req].status = "blocked" | .[$req].notes = "Auto-blocked: 3 consecutive failed attempts"' \
+          "$STATUS_JSON" > "${STATUS_JSON}.tmp" && mv "${STATUS_JSON}.tmp" "$STATUS_JSON"
+      fi
+    fi
+  fi
 
   # Backoff on error
   if [ "$EXIT_CODE" -ne 0 ]; then
