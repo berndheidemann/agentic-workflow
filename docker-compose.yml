@@ -10,7 +10,9 @@ services:
     # Port binding via Nginx is used in production (Traefik handles external routing).
 
   pocketbase:
-    image: ghcr.io/muchobien/pocketbase:latest
+    build:
+      context: .
+      dockerfile: pb.Dockerfile
     restart: unless-stopped
     ports:
       - "8090:8090"

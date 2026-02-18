@@ -8,9 +8,8 @@ dist/
 build/
 *.tsbuildinfo
 
-# PocketBase data
+# PocketBase data (runtime, not versioned)
 pb_data/
-pb_migrations/
 
 # Environment
 .env
@@ -44,3 +43,14 @@ test-results/
 # Temp
 .tmp/
 *.tmp
+
+# Agent lock file
+.agent/loop.lock
+.agent/status.json.bak
+.sandbox-ports
+
+# Sites (separate repos, not submodules)
+sites/hub/
+
+# Screenshots/temp files
+req-*.png
