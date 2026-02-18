@@ -96,7 +96,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-005: AuthProvider + useAuth Hook
 
-- **Status:** open
+- **Status:** in_progress
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003, REQ-004
