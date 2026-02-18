@@ -1,0 +1,327 @@
+{
+  "REQ-001": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": []
+  },
+  "REQ-002": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-001"
+    ]
+  },
+  "REQ-003": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-004": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-001"
+    ]
+  },
+  "REQ-005": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-006": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-007": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-008": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003"
+    ]
+  },
+  "REQ-010": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-004"
+    ]
+  },
+  "REQ-011": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-010"
+    ]
+  },
+  "REQ-012": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-010"
+    ]
+  },
+  "REQ-013": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-008",
+      "REQ-010"
+    ]
+  },
+  "REQ-014": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006",
+      "REQ-011"
+    ]
+  },
+  "REQ-015": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-010"
+    ]
+  },
+  "REQ-020": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-010"
+    ]
+  },
+  "REQ-021": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-020"
+    ]
+  },
+  "REQ-022": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-003"
+    ]
+  },
+  "REQ-023a": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-023b": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-023a"
+    ]
+  },
+  "REQ-024": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-007",
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-025": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-026": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-023a"
+    ]
+  },
+  "REQ-030": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-005"
+    ]
+  },
+  "REQ-031": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-007"
+    ]
+  },
+  "REQ-032": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-007"
+    ]
+  },
+  "REQ-033": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-006"
+    ]
+  },
+  "REQ-034": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006"
+    ]
+  },
+  "REQ-035": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-011",
+      "REQ-023a"
+    ]
+  },
+  "REQ-040": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-008",
+      "REQ-023a"
+    ]
+  },
+  "REQ-050": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-051": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-050"
+    ]
+  },
+  "REQ-052": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-001"
+    ]
+  },
+  "REQ-053": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-052"
+    ]
+  },
+  "REQ-060": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-051"
+    ]
+  },
+  "REQ-061": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-051"
+    ]
+  },
+  "REQ-070": {
+    "status": "open",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-071": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-070"
+    ]
+  },
+  "REQ-073": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-002",
+      "REQ-010"
+    ]
+  }
+}

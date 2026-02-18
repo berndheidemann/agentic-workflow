@@ -1,0 +1,720 @@
+#!/bin/bash
+
+# Lernplattform Agent Loop
+# Iteriert über Requirements in PRD.md mit Claude Code
+# Sonnet implementiert, Opus wird via Task-Tool für Entscheidungen gerufen.
+#
+# Usage:
+#   ./loop.sh              # Unlimited iterations
+#   ./loop.sh 20           # Max 20 iterations
+#
+# Env vars:
+#   ITER_TIMEOUT=N         # Iteration timeout in seconds (default: 1800)
+#   SAFE_BRANCH=0          # Disable automatic agent branch creation
+
+set -euo pipefail
+
+# ── Lock file (Fix #5) ────────────────────────────────────────
+LOCKFILE="/tmp/lernplattform-loop.lock"
+exec 200>"$LOCKFILE"
+flock -n 200 || { echo "Error: Loop already running (lockfile: $LOCKFILE)"; exit 1; }
+
+# ── Colors ──────────────────────────────────────────────────────
+BOLD='\033[1m'
+DIM='\033[2m'
+GREEN='\033[0;32m'
+CYAN='\033[0;36m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+BLUE='\033[0;34m'
+RESET='\033[0m'
+
+# ── Args ────────────────────────────────────────────────────────
+MAX_ITERATIONS=0
+ITERATION=0
+TOTAL_COST=0
+LOOP_START=$(date +%s)
+PRD_FILE="PRD.md"
+MODEL="sonnet"
+PROMPT_FILE="AGENT.md"
+ITER_TIMEOUT="${ITER_TIMEOUT:-1800}"  # 30 min default, override via env
+SAFE_BRANCH="${SAFE_BRANCH:-1}"       # Auto-create agent branch (Fix #1)
+STATUS_JSON=".agent/status.json"
+ORIGINAL_BRANCH=""
+AGENT_BRANCH=""
+
+for arg in "$@"; do
+  case "$arg" in
+    [0-9]*) MAX_ITERATIONS="$arg" ;;
+    -h|--help)
+      echo -e "${BOLD}Lernplattform Agent Loop${RESET}"
+      echo ""
+      echo "Usage: ./loop.sh [N]"
+      echo ""
+      echo "Arguments:"
+      echo "  N              Max N Iterationen (Standard: unbegrenzt)"
+      echo "  -h, --help     Diese Hilfe anzeigen"
+      echo ""
+      echo -e "${BOLD}Wie es funktioniert:${RESET}"
+      echo "  1. Sonnet liest .agent/context.md + PRD.md"
+      echo "  2. Wählt das nächste offene Requirement (P0 > P1 > P2)"
+      echo "  2.5. Opus plant die Implementierung (für M-REQs)"
+      echo "  3. Implementiert es (Code, Tests) → WIP-Checkpoint-Commit"
+      echo "  4. Verifiziert (tiered: quick vs full alle 3 Iterationen)"
+      echo "  5. Updated PRD.md + .agent/ Artefakte, finaler Commit + Tag"
+      echo "  → Push → nächste Iteration"
+      echo ""
+      echo -e "${BOLD}Output:${RESET}"
+      echo "  Kompakter Stream mit farbcodierten Tool-Calls:"
+      echo -e "    ${GREEN}Read/Glob/Grep${RESET}  ${YELLOW}Edit/Write/Bash${RESET}  ${MAGENTA}Playwright${RESET}"
+      echo -e "    ${BOLD}Task${RESET} ${MAGENTA}[opus]${RESET}  ${BLUE}[sonnet]${RESET}  ${GREEN}[haiku]${RESET}"
+      echo "  + Cost-Tracking pro Iteration und kumuliert"
+      echo "  + Model-Usage-Breakdown (Tokens, Cache, Kosten)"
+      echo ""
+      echo -e "${BOLD}Automatische Stopps:${RESET}"
+      echo "  - Alle Requirements erledigt"
+      echo "  - Max Iterationen erreicht"
+      echo "  - Iteration-Timeout (Standard: 30 min, ITER_TIMEOUT=N)"
+      echo "  - 2x Low-Activity (≤5 Tools, nicht blocked) hintereinander"
+      echo "  - Ctrl+C (zeigt Summary)"
+      echo ""
+      echo -e "${BOLD}Env-Variablen:${RESET}"
+      echo "  ITER_TIMEOUT=N     Timeout pro Iteration in Sekunden (Standard: 1800)"
+      echo "  SAFE_BRANCH=0      Agent-Branch-Erstellung deaktivieren"
+      echo "  FULL_VERIFY=1      Full Verification erzwingen"
+      echo ""
+      echo -e "${BOLD}Dateien:${RESET}"
+      echo "  AGENT.md                Loop-Instruktionen für den Agent"
+      echo "  PRD.md                  Requirements mit Status + Abhängigkeiten"
+      echo "  .agent/status.json      Maschinenlesbarer REQ-Status (autoritativ)"
+      echo "  .agent/context.md       Kurzer Projektkontext (50 Zeilen, Rewrite)"
+      echo "  .agent/architecture.md  Architektur-Entscheidungen (append-only)"
+      echo "  .agent/learnings.md     Persistente Erkenntnisse (append-only)"
+      echo "  .agent/iterations.jsonl Iterations-Log (append)"
+      echo ""
+      echo -e "${BOLD}Beispiele:${RESET}"
+      echo "  ./loop.sh          # Läuft bis alle REQs done"
+      echo "  ./loop.sh 5        # Max 5 Iterationen"
+      exit 0
+      ;;
+  esac
+done
+
+if [ ! -f "$PROMPT_FILE" ]; then
+  echo -e "${RED}Error: $PROMPT_FILE not found${RESET}"
+  exit 1
+fi
+
+# ── Duration formatting ────────────────────────────────────
+format_duration() {
+  local secs=$1
+  if [ "$secs" -ge 3600 ]; then
+    printf "%dh %02dm %02ds" $((secs/3600)) $((secs%3600/60)) $((secs%60))
+  elif [ "$secs" -ge 60 ]; then
+    printf "%dm %02ds" $((secs/60)) $((secs%60))
+  else
+    printf "%ds" "$secs"
+  fi
+}
+
+# ── Status JSON helpers (Fix #4, #6) ──────────────────────────
+# status.json is the authoritative source for REQ status.
+# loop.sh reads from it; the agent writes to it.
+
+init_status_json() {
+  # Generate status.json from PRD.md if it doesn't exist
+  [ -f "$STATUS_JSON" ] && return
+  mkdir -p .agent
+
+  # Use awk file to avoid mawk inline-escaping issues
+  local awk_tmp
+  awk_tmp=$(mktemp)
+  cat > "$awk_tmp" << 'AWKEOF'
+/^### REQ-/ {
+  if (req != "") printf "%s\t%s\t%s\t%s\t%s\n", req, status, prio, size, deps
+  req = $2; sub(/:$/, "", req); sub(/:/, "", req)
+  status = "open"; prio = "P2"; size = "M"; deps = "---"
+}
+/^- [*][*]Status/ {
+  s = $0; sub(/.*Status:[*][*] */, "", s); sub(/[[:space:]]*$/, "", s); status = s
+}
+/^- [*][*]Priorit/ {
+  s = $0; sub(/.*t:[*][*] */, "", s); sub(/[[:space:]]*$/, "", s); prio = s
+}
+/^- [*][*]Gr/ {
+  s = $0; sub(/.*e:[*][*] */, "", s); sub(/[[:space:]]*$/, "", s); size = s
+}
+/^- [*][*]Abh/ {
+  s = $0; sub(/.*von:[*][*] */, "", s); sub(/[[:space:]]*$/, "", s); deps = s
+}
+END {
+  if (req != "") printf "%s\t%s\t%s\t%s\t%s\n", req, status, prio, size, deps
+}
+AWKEOF
+  awk -f "$awk_tmp" "$PRD_FILE" | jq -Rn '
+    [inputs | split("\t") | select(length >= 5)] |
+    map({
+      key: .[0],
+      value: {
+        status: .[1],
+        priority: .[2],
+        size: .[3],
+        deps: (
+          .[4] |
+          if . == "\u2014" or . == "---" or . == "-" or . == "" then []
+          else [split(",") | .[] | gsub("^\\s+|\\s+$"; "") | select(startswith("REQ-"))]
+          end
+        )
+      }
+    }) | from_entries
+  ' > "$STATUS_JSON"
+
+  rm -f "$awk_tmp"
+  echo -e "  ${DIM}Initialized $STATUS_JSON from $PRD_FILE${RESET}"
+}
+
+count_open_reqs() {
+  jq '[.[] | select(.status == "open")] | length' "$STATUS_JSON" 2>/dev/null || echo "0"
+}
+
+count_done_reqs() {
+  jq '[.[] | select(.status == "done")] | length' "$STATUS_JSON" 2>/dev/null || echo "0"
+}
+
+count_total_reqs() {
+  jq 'length' "$STATUS_JSON" 2>/dev/null || echo "0"
+}
+
+count_in_progress_reqs() {
+  jq '[.[] | select(.status == "in_progress")] | length' "$STATUS_JSON" 2>/dev/null || echo "0"
+}
+
+# ── Temp files for extraction from pipeline subshell ──────────
+COST_FILE=$(mktemp)
+TOOLS_FILE=$(mktemp)
+STATUS_FILE=$(mktemp)
+EXIT_FILE=$(mktemp)
+ITER_LOG=".agent/iterations.jsonl"
+CONTEXT_FILE=".agent/context.md"
+
+# ── Crash recovery ───────────────────────────────────────────
+# Reset any in_progress REQs from crashed previous iterations
+recover_in_progress() {
+  local count
+  count=$(count_in_progress_reqs)
+  if [ "$count" -gt 0 ]; then
+    echo -e "  ${YELLOW}Crash recovery: $count REQ(s) stuck in 'in_progress' → resetting to 'open'${RESET}"
+    # Fix status.json
+    jq 'map_values(if .status == "in_progress" then .status = "open" else . end)' \
+      "$STATUS_JSON" > "${STATUS_JSON}.tmp" && mv "${STATUS_JSON}.tmp" "$STATUS_JSON"
+    # Fix PRD.md for consistency
+    sed -i 's/^\- \*\*Status:\*\* in_progress/- **Status:** open/' "$PRD_FILE"
+    # Commit without --no-verify (Fix #12)
+    git add "$STATUS_JSON" "$PRD_FILE" && \
+      git commit -m "loop.sh: crash recovery — reset in_progress REQs to open" 2>/dev/null || true
+  fi
+}
+
+# ── PRD pre-parsing (Fix #6: dependency validation) ──────────
+# Uses status.json for status + dependency checks, PRD.md only for display text
+
+get_next_req_id() {
+  # Find next open REQ where all deps are done, sorted by priority then ID
+  jq -r '
+    . as $all |
+    to_entries |
+    map(select(.value.status == "open")) |
+    map(select(
+      .value.deps | length == 0 or all(. as $d | $all[$d].status == "done")
+    )) |
+    sort_by(
+      (.value.priority | if . == "P0" then 0 elif . == "P1" then 1 else 2 end),
+      .key
+    ) |
+    first | .key // empty
+  ' "$STATUS_JSON" 2>/dev/null
+}
+
+get_next_req_hint() {
+  local req_id
+  req_id=$(get_next_req_id)
+  [ -z "$req_id" ] && return
+  grep "^### ${req_id}:" "$PRD_FILE" 2>/dev/null | head -1
+}
+
+get_next_req_block() {
+  local hint
+  hint=$(get_next_req_hint)
+  [ -z "$hint" ] && return
+  # Extract the full block from ### REQ-... until the next ### or ---
+  awk -v title="$hint" '
+    $0 == title { found=1 }
+    found && /^(### REQ-|^---)/ && $0 != title { exit }
+    found { print }
+  ' "$PRD_FILE"
+}
+
+build_agent_prompt() {
+  cat "$PROMPT_FILE"
+  local req_block
+  req_block=$(get_next_req_block)
+  if [ -n "$req_block" ]; then
+    echo ""
+    echo "---"
+    echo ""
+    echo "## Vorbereiteter Kontext (von loop.sh injiziert)"
+    echo ""
+    echo "Das nächste offene Requirement laut PRD-Analyse (Abhängigkeiten geprüft):"
+    echo ""
+    echo "$req_block"
+    echo ""
+    # Inject context.md content
+    if [ -f "$CONTEXT_FILE" ]; then
+      echo "### Aktueller Projektkontext (.agent/context.md):"
+      echo ""
+      cat "$CONTEXT_FILE"
+      echo ""
+    fi
+    echo "Lies trotzdem .agent/context.md und PRD.md selbst — diese Vorauswahl ist ein Hinweis, keine Garantie."
+  fi
+}
+
+# ── Dev server cleanup ───────────────────────────────────────
+kill_dev_servers() {
+  # Kill any leftover dev server processes from previous iterations
+  local pids
+  pids=$(lsof -ti:5173,5174,4321,3000 2>/dev/null || true)
+  if [ -n "$pids" ]; then
+    echo -e "  ${DIM}Cleaning up leftover dev servers (ports 5173/5174/4321/3000)${RESET}"
+    echo "$pids" | xargs kill -9 2>/dev/null || true
+    sleep 1
+  fi
+}
+
+# ── Iterations log — JSONL (Fix #10: proper JSON escaping) ────
+append_iteration_log() {
+  local iter=$1 duration=$2 cost=$3 tools=$4 exit_code=$5
+  local req_hint="${NEXT_REQ_HINT:-unknown}"
+  req_hint="${req_hint#'### '}"
+  local status_content
+  status_content=$(cat "$STATUS_FILE" 2>/dev/null || echo "")
+
+  jq -nc \
+    --argjson iter "$iter" \
+    --arg timestamp "$(date -Iseconds)" \
+    --argjson duration "$duration" \
+    --arg cost "$cost" \
+    --argjson tools "$tools" \
+    --argjson exit_code "$exit_code" \
+    --arg reqs_done "$(count_done_reqs)/$(count_total_reqs)" \
+    --arg req_hint "$req_hint" \
+    --arg status_block "$status_content" \
+    '{
+      iteration: $iter,
+      timestamp: $timestamp,
+      duration_s: $duration,
+      cost: $cost,
+      tools: $tools,
+      exit_code: $exit_code,
+      reqs_done: $reqs_done,
+      req_hint: $req_hint,
+      status_block: $status_block
+    }' >> "$ITER_LOG"
+}
+
+# ── Git tags ─────────────────────────────────────────────────
+tag_iteration() {
+  local iter=$1
+  local req_hint="${NEXT_REQ_HINT:-unknown}"
+  # Extract REQ-ID from hint (e.g. "### REQ-001: ..." → "REQ-001")
+  local req_id
+  req_id=$(echo "$req_hint" | grep -oP 'REQ-\d+[a-z]?' | head -1 || echo "unknown")
+  local tag_name="iter-${iter}-${req_id}"
+  if git rev-parse --verify HEAD >/dev/null 2>&1; then
+    git tag -f "$tag_name" HEAD 2>/dev/null && \
+      echo -e "  ${DIM}Tagged: ${tag_name}${RESET}" || true
+  fi
+}
+
+# ── Agent branch setup (Fix #1) ──────────────────────────────
+setup_agent_branch() {
+  if ! git rev-parse --verify HEAD >/dev/null 2>&1; then
+    return  # Not a git repo or no commits
+  fi
+
+  ORIGINAL_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+
+  if [ "$SAFE_BRANCH" = "1" ] && { [ "$ORIGINAL_BRANCH" = "main" ] || [ "$ORIGINAL_BRANCH" = "master" ]; }; then
+    AGENT_BRANCH="agent/loop-$(date +%Y%m%d-%H%M)"
+    echo -e "  ${YELLOW}On $ORIGINAL_BRANCH — creating branch $AGENT_BRANCH for safe iteration${RESET}"
+    git checkout -b "$AGENT_BRANCH"
+  else
+    AGENT_BRANCH="$ORIGINAL_BRANCH"
+  fi
+}
+
+# ── Summary & cleanup ─────────────────────────────────────────
+print_summary() {
+  local elapsed=$(( $(date +%s) - LOOP_START ))
+  local elapsed_fmt
+  elapsed_fmt=$(format_duration "$elapsed")
+  local total_fmt
+  total_fmt=$(LC_NUMERIC=C awk "BEGIN{printf \"%.4f\", ${TOTAL_COST:-0}}")
+  echo ""
+  echo -e "${BOLD}━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  echo -e "  Iterations : ${ITERATION}"
+  echo -e "  Total cost : ${BOLD}\$${total_fmt}${RESET}"
+  echo -e "  Total time : ${elapsed_fmt}"
+  echo -e "  REQs done  : $(count_done_reqs)/$(count_total_reqs)"
+  echo -e "  REQs open  : $(count_open_reqs)"
+  if [ -n "$AGENT_BRANCH" ] && [ "$AGENT_BRANCH" != "$ORIGINAL_BRANCH" ]; then
+    echo -e "  Branch     : ${CYAN}$AGENT_BRANCH${RESET}"
+    echo -e "  ${DIM}Review and merge:${RESET}"
+    echo -e "  ${DIM}  git log $ORIGINAL_BRANCH..$AGENT_BRANCH --oneline${RESET}"
+    echo -e "  ${DIM}  git merge $AGENT_BRANCH${RESET}"
+  fi
+}
+
+return_to_original_branch() {
+  if [ -n "$ORIGINAL_BRANCH" ] && [ "$ORIGINAL_BRANCH" != "$AGENT_BRANCH" ]; then
+    git checkout "$ORIGINAL_BRANCH" 2>/dev/null || true
+    echo -e "  ${DIM}Returned to branch $ORIGINAL_BRANCH${RESET}"
+  fi
+}
+
+cleanup() {
+  echo ""
+  echo -e "${YELLOW}Interrupted.${RESET}"
+  kill_dev_servers
+  print_summary
+  return_to_original_branch
+  rm -f "$COST_FILE" "$TOOLS_FILE" "$STATUS_FILE" "$EXIT_FILE"
+  exit 130
+}
+trap cleanup INT TERM
+
+# ── Progress parser ─────────────────────────────────────────────
+# Reads stream-json from stdin, shows compact progress.
+# Writes iteration cost to $COST_FILE for the parent shell.
+parse_progress() {
+  local tool_count=0
+  local main_model=""
+  local capturing_status=0
+  local status_buf=""
+
+  while IFS= read -r line; do
+    [[ "$line" == "{"* ]] || continue
+
+    local type
+    type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null) || continue
+
+    case "$type" in
+      system)
+        main_model=$(echo "$line" | jq -r '.model // "unknown"' 2>/dev/null)
+        local model_short="$main_model"
+        case "$main_model" in
+          *opus*)   model_short="${MAGENTA}opus${RESET}" ;;
+          *sonnet*) model_short="${BLUE}sonnet${RESET}" ;;
+          *haiku*)  model_short="${GREEN}haiku${RESET}" ;;
+        esac
+        echo -e "  ${DIM}model:${RESET} ${model_short}"
+        ;;
+
+      assistant)
+        # ── Text blocks ──
+        local text
+        text=$(echo "$line" | jq -r '
+          [.message.content[]? | select(.type=="text") | .text] | join("\n")
+        ' 2>/dev/null | head -1)
+        if [ -n "$text" ]; then
+          # ── Capture ===STATUS=== blocks for iteration log ──
+          if echo "$text" | grep -q '===STATUS==='; then
+            status_buf=$(echo "$text" | sed -n '/===STATUS===/,/===END_STATUS===/p')
+            if [ -n "$status_buf" ]; then
+              echo "$status_buf" > "$STATUS_FILE"
+            fi
+          fi
+
+          # Detect blocker/blocked status in agent output
+          if echo "$text" | grep -qiE 'status:.*blocked|BLOCKER|blockiert durch'; then
+            echo ""
+            echo -e "  ${RED}${BOLD}  ⚠⚠⚠  BLOCKER DETECTED  ⚠⚠⚠${RESET}"
+            # Show more text for blocker messages
+            local display="${text:0:300}"
+            [ ${#text} -gt 300 ] && display="${display}…"
+            echo -e "  ${RED}${display}${RESET}"
+            echo ""
+          else
+            local display="${text:0:120}"
+            [ ${#text} -gt 120 ] && display="${display}…"
+            echo -e "  ${DIM}${display}${RESET}"
+          fi
+        fi
+
+        # ── Tool-use blocks (embedded in assistant content) ──
+        local tools_json
+        tools_json=$(echo "$line" | jq -c '
+          .message.content[]? | select(.type=="tool_use")
+        ' 2>/dev/null)
+
+        if [ -n "$tools_json" ]; then
+          while IFS= read -r tool_json; do
+            [ -z "$tool_json" ] && continue
+            tool_count=$((tool_count + 1))
+
+            local tool_name
+            tool_name=$(echo "$tool_json" | jq -r '.name // "?"' 2>/dev/null)
+
+            case "$tool_name" in
+              Read|Glob|Grep)
+                local summary
+                summary=$(echo "$tool_json" | jq -r '
+                  .input | (.file_path // .pattern // .path // (tostring | .[:80]))
+                ' 2>/dev/null)
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${GREEN}$tool_name${RESET} ${DIM}${summary}${RESET}"
+                ;;
+              Edit|Write)
+                local summary
+                summary=$(echo "$tool_json" | jq -r '.input.file_path // "?"' 2>/dev/null)
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${YELLOW}$tool_name${RESET} ${DIM}${summary}${RESET}"
+                ;;
+              Bash)
+                local cmd
+                cmd=$(echo "$tool_json" | jq -r '.input.command // "?"' 2>/dev/null)
+                local display="${cmd:0:100}"
+                [ ${#cmd} -gt 100 ] && display="${display}…"
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${YELLOW}Bash${RESET} ${DIM}${display}${RESET}"
+                ;;
+              Task)
+                local task_model task_type task_desc model_color
+                task_model=$(echo "$tool_json" | jq -r '.input.model // "opus"' 2>/dev/null)
+                task_type=$(echo "$tool_json" | jq -r '.input.subagent_type // "?"' 2>/dev/null)
+                task_desc=$(echo "$tool_json" | jq -r '.input.description // (.input.prompt[:60]) // "…"' 2>/dev/null)
+                case "$task_model" in
+                  haiku)  model_color="${GREEN}" ;;
+                  sonnet) model_color="${BLUE}" ;;
+                  opus)   model_color="${MAGENTA}" ;;
+                  *)      model_color="${DIM}" ;;
+                esac
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${BOLD}Task${RESET} ${model_color}[$task_model]${RESET} ${DIM}${task_type}${RESET} → ${DIM}${task_desc}${RESET}"
+                ;;
+              mcp__playwright__*)
+                local action="${tool_name#mcp__playwright__}"
+                action="${action#browser_}"
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${MAGENTA}Playwright${RESET} ${DIM}${action}${RESET}"
+                ;;
+              mcp__*)
+                local short="${tool_name#mcp__}"
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${DIM}MCP:${short}${RESET}"
+                ;;
+              *)
+                echo -e "  ${CYAN}[$tool_count]${RESET} ${DIM}$tool_name${RESET}"
+                ;;
+            esac
+          done <<< "$tools_json"
+        fi
+        ;;
+
+      result)
+        local cost duration
+        cost=$(echo "$line" | jq -r '.total_cost_usd // 0' 2>/dev/null)
+        duration=$(echo "$line" | jq -r '.duration_ms // 0' 2>/dev/null)
+        local duration_s=""
+        if [ -n "$duration" ] && [ "$duration" != "0" ]; then
+          duration_s=$(LC_NUMERIC=C awk "BEGIN{printf \"%.1f\", $duration/1000}")
+        fi
+        local cost_fmt
+        cost_fmt=$(LC_NUMERIC=C awk "BEGIN{printf \"%.4f\", ${cost:-0}}")
+        echo -e "  ${DIM}── ${tool_count} tools │ ${duration_s}s │ \$${cost_fmt}${RESET}"
+
+        # Export cost and tool count to parent shell via temp files
+        echo "${cost:-0}" > "$COST_FILE"
+        echo "${tool_count}" > "$TOOLS_FILE"
+
+        # ── Per-model usage breakdown from result.modelUsage ──
+        local has_usage
+        has_usage=$(echo "$line" | jq -r '.modelUsage | length // 0' 2>/dev/null)
+        if [ "${has_usage:-0}" -gt 0 ]; then
+          echo ""
+          echo -e "  ${BOLD}Model Usage${RESET}"
+          echo "$line" | jq -r '
+            .modelUsage | to_entries[] |
+            "\(.key)\t\(.value.costUSD // 0)\t\(.value.inputTokens // 0)\t\(.value.outputTokens // 0)\t\(.value.cacheReadInputTokens // 0)\t\(.value.cacheCreationInputTokens // 0)"
+          ' 2>/dev/null | while IFS=$'\t' read -r model mcost min mout mcache_read mcache_create; do
+            local model_short="$model"
+            local model_color="${DIM}"
+            case "$model" in
+              *opus*)   model_color="${MAGENTA}"; model_short="opus" ;;
+              *sonnet*) model_color="${BLUE}"; model_short="sonnet" ;;
+              *haiku*)  model_color="${GREEN}"; model_short="haiku" ;;
+            esac
+            local mcost_fmt
+            mcost_fmt=$(LC_NUMERIC=C awk "BEGIN{printf \"%.4f\", ${mcost:-0}}")
+            local mcache_total=$((mcache_read + mcache_create))
+            printf "  \033[0m${model_color}%-8s\033[0m  \$%-8s  \033[2min:%-6s out:%-6s cache:%-6s\033[0m\n" \
+              "$model_short" "$mcost_fmt" "$min" "$mout" "$mcache_total"
+          done
+        fi
+        ;;
+    esac
+  done
+}
+
+# ── Header ──────────────────────────────────────────────────────
+echo ""
+echo -e "${BOLD}Lernplattform Agent Loop${RESET}  ${DIM}model=${MODEL}  max=$([ "$MAX_ITERATIONS" -eq 0 ] && echo '∞' || echo "$MAX_ITERATIONS")  timeout=$(format_duration "$ITER_TIMEOUT")${RESET}"
+
+# ── Pre-loop: init + recovery + branch ──────────────────────
+init_status_json
+
+echo -e "${DIM}REQs: $(count_done_reqs)/$(count_total_reqs) done, $(count_open_reqs) open${RESET}"
+echo ""
+
+recover_in_progress
+setup_agent_branch
+
+# ── Main loop ───────────────────────────────────────────────────
+LOW_ACTIVITY_COUNT=0
+
+while :; do
+  # Check if all REQs are done
+  local_open=$(count_open_reqs)
+  local_in_progress=$(count_in_progress_reqs)
+  if [ "$local_open" -eq 0 ] && [ "$local_in_progress" -eq 0 ]; then
+    echo -e "${GREEN}${BOLD}All requirements done!${RESET}"
+    break
+  fi
+
+  if [ "$MAX_ITERATIONS" -gt 0 ] && [ "$ITERATION" -ge "$MAX_ITERATIONS" ]; then
+    echo -e "${YELLOW}Reached max iterations ($MAX_ITERATIONS). Stopping.${RESET}"
+    break
+  fi
+  ITERATION=$((ITERATION + 1))
+
+  ITER_LABEL="$ITERATION$([ "$MAX_ITERATIONS" -gt 0 ] && echo "/$MAX_ITERATIONS" || true)"
+
+  # Pre-parse next REQ for display
+  NEXT_REQ_HINT=$(get_next_req_hint)
+
+  # Check if no actionable REQ found (all open REQs have unmet deps)
+  if [ -z "$NEXT_REQ_HINT" ] && [ "$local_open" -gt 0 ]; then
+    echo -e "${YELLOW}${BOLD}No actionable REQ: $local_open open but all have unmet dependencies. Stopping.${RESET}"
+    break
+  fi
+
+  echo -e "${BOLD}━━ Iteration ${ITER_LABEL} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+  echo -e "${DIM}  REQs: $(count_open_reqs) open │ $(count_done_reqs)/$(count_total_reqs) done${RESET}"
+  if [ -n "$NEXT_REQ_HINT" ]; then
+    echo -e "  ${CYAN}Next: ${NEXT_REQ_HINT#'### '}${RESET}"
+  fi
+  ITER_START=$(date +%s)
+  echo "0" > "$COST_FILE"
+  echo "0" > "$TOOLS_FILE"
+  echo "" > "$STATUS_FILE"
+  echo "0" > "$EXIT_FILE"
+
+  # Kill leftover dev servers from previous iterations
+  kill_dev_servers
+
+  # Build prompt with injected REQ context
+  AGENT_PROMPT=$(build_agent_prompt)
+
+  # FULL_VERIFY every 3 iterations (Fix #7: was 5, now 3)
+  FULL_VERIFY="${FULL_VERIFY:-0}"
+  if [ $((ITERATION % 3)) -eq 0 ]; then
+    FULL_VERIFY=1
+    echo -e "  ${MAGENTA}Full verification enabled (iteration $ITERATION)${RESET}"
+  fi
+
+  # Run Claude agent (Fix #11: exit code via file instead of PIPESTATUS)
+  set +eo pipefail
+  (
+    FULL_VERIFY=$FULL_VERIFY timeout --foreground --signal=TERM --kill-after=30 "$ITER_TIMEOUT" \
+      claude -p \
+        --dangerously-skip-permissions \
+        --output-format=stream-json \
+        --model "$MODEL" \
+        --max-turns 100 \
+        --verbose \
+        <<< "$AGENT_PROMPT"
+    echo $? > "$EXIT_FILE"
+  ) | parse_progress
+  set -eo pipefail
+
+  EXIT_CODE=$(cat "$EXIT_FILE" 2>/dev/null || echo "1")
+
+  # Kill dev servers after iteration
+  kill_dev_servers
+
+  # Accumulate cost from subshell
+  ITER_COST=$(cat "$COST_FILE" 2>/dev/null || echo "0")
+  ITER_TOOLS=$(cat "$TOOLS_FILE" 2>/dev/null || echo "0")
+  TOTAL_COST=$(LC_NUMERIC=C awk "BEGIN{printf \"%.6f\", ${TOTAL_COST} + ${ITER_COST}}")
+
+  ITER_END=$(date +%s)
+  ITER_DURATION=$((ITER_END - ITER_START))
+
+  if [ "$EXIT_CODE" -eq 124 ]; then
+    echo -e "  ${RED}${BOLD}Iteration timed out after $(format_duration "$ITER_TIMEOUT")${RESET}"
+  elif [ "$EXIT_CODE" -ne 0 ]; then
+    echo -e "  ${RED}Claude exited with code $EXIT_CODE${RESET}"
+  fi
+
+  # Check for blocked REQs in status.json after iteration
+  BLOCKED_COUNT=$(jq '[.[] | select(.status == "blocked")] | length' "$STATUS_JSON" 2>/dev/null || echo "0")
+  if [ "$BLOCKED_COUNT" -gt 0 ]; then
+    echo ""
+    echo -e "  ${RED}${BOLD}┌──────────────────────────────────────────────────┐${RESET}"
+    echo -e "  ${RED}${BOLD}│  ⚠  $BLOCKED_COUNT BLOCKED REQUIREMENT(S)                       │${RESET}"
+    echo -e "  ${RED}${BOLD}└──────────────────────────────────────────────────┘${RESET}"
+    jq -r 'to_entries[] | select(.value.status == "blocked") | .key' "$STATUS_JSON" 2>/dev/null | while read -r req_id; do
+      local_title=$(grep "^### ${req_id}:" "$PRD_FILE" 2>/dev/null | head -1 | sed 's/^### //')
+      echo -e "  ${RED}  → ${local_title:-$req_id}${RESET}"
+    done
+    echo ""
+  fi
+
+  # Early termination: low-activity detection (Fix #8: respect blocked status)
+  if [ "${ITER_TOOLS:-0}" -le 5 ] && [ "$EXIT_CODE" -eq 0 ]; then
+    # Check if this was a blocked iteration — that's not truly low activity
+    if grep -q 'status:.*blocked' "$STATUS_FILE" 2>/dev/null; then
+      echo -e "  ${DIM}Iteration produced blocked status — not counting as low activity${RESET}"
+      LOW_ACTIVITY_COUNT=0
+    else
+      LOW_ACTIVITY_COUNT=$((LOW_ACTIVITY_COUNT + 1))
+      if [ "$LOW_ACTIVITY_COUNT" -ge 2 ]; then
+        echo -e "  ${YELLOW}Two consecutive low-activity iterations (≤5 tools, not blocked). Stopping early.${RESET}"
+        break
+      fi
+    fi
+  else
+    LOW_ACTIVITY_COUNT=0
+  fi
+
+  # Tag iteration for rollback support
+  tag_iteration "$ITERATION"
+
+  # Push disabled — manually push when ready:
+  #   git push -u origin "$AGENT_BRANCH"
+
+  iter_dur_fmt=$(format_duration "$ITER_DURATION")
+  iter_cost_fmt=$(LC_NUMERIC=C awk "BEGIN{printf \"%.4f\", ${ITER_COST}}")
+  total_fmt=$(LC_NUMERIC=C awk "BEGIN{printf \"%.4f\", ${TOTAL_COST}}")
+  echo -e "  ${BOLD}⏱  ${iter_dur_fmt}${RESET}  │  iter: \$${iter_cost_fmt}  │  total: \$${total_fmt}"
+  echo ""
+
+  # Append to iterations log
+  append_iteration_log "$ITERATION" "$ITER_DURATION" "$iter_cost_fmt" "${ITER_TOOLS:-0}" "$EXIT_CODE"
+
+  # Backoff on error
+  if [ "$EXIT_CODE" -ne 0 ]; then
+    echo -e "  ${YELLOW}Waiting 10s before next iteration...${RESET}"
+    sleep 10
+  fi
+done
+
+print_summary
+return_to_original_branch
+kill_dev_servers
+rm -f "$COST_FILE" "$TOOLS_FILE" "$STATUS_FILE" "$EXIT_FILE"
