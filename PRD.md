@@ -69,17 +69,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-003: PocketBase Schema anlegen
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-002
 - **Akzeptanzkriterien:**
-  - [ ] Collection `users` (Auth): username, role, class_id, display_name (pin_hash entfällt — PocketBase password-Feld übernimmt Hashing)
-  - [ ] Collection `classes`: name, join_code, school_year, is_active, created_by
-  - [ ] Collection `course_unlocks`: class_id, user_id (nullable, für späteres individuelles Freischalten), course, module, is_unlocked, unlocked_by, unlocked_at
-  - [ ] Collection `progress`: user_id, course, lesson, exercise, status, score, max_score, attempts, completed_at
-  - [ ] UNIQUE-Constraint auf progress (user_id, course, lesson, exercise)
-  - [ ] API Rules korrekt gesetzt (siehe REQUIREMENTS.md Abschnitt 4)
+  - [x] Collection `users` (Auth): username, role, class_id, display_name (pin_hash entfällt — PocketBase password-Feld übernimmt Hashing)
+  - [x] Collection `classes`: name, join_code, school_year, is_active, created_by
+  - [x] Collection `course_unlocks`: class_id, user_id (nullable, für späteres individuelles Freischalten), course, module, is_unlocked, unlocked_by, unlocked_at
+  - [x] Collection `progress`: user_id, course, lesson, exercise, status, score, max_score, attempts, completed_at
+  - [x] UNIQUE-Constraint auf progress (user_id, course, lesson, exercise)
+  - [x] API Rules korrekt gesetzt (siehe REQUIREMENTS.md Abschnitt 4)
 
 ### REQ-004: Shared Package Grundstruktur
 

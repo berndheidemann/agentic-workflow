@@ -1,35 +1,33 @@
 # Agent Context
 
-> Iteration 3 | 2026-02-18 | REQ-002 abgeschlossen
+> Iteration 4 | 2026-02-18 | REQ-003 abgeschlossen
 
 ## Projektstatus
 
-- Fortschritt: 4/44 REQs done (REQ-000, REQ-001, REQ-002, REQ-004)
-- Nächste REQs: REQ-003 (PocketBase Schema, P0, M, dep REQ-002), REQ-010 (P0, S, dep REQ-004)
+- Fortschritt: 5/44 REQs done (REQ-000, REQ-001, REQ-002, REQ-003, REQ-004)
+- Nächste REQs: REQ-010 (P0, S, dep REQ-004 ✓), REQ-005/006/007/008 (P0, M, dep REQ-003 ✓ + REQ-004 ✓)
 - Blocker: Keine
 
 ## Was existiert
 
 - Monorepo mit npm Workspaces: `packages/shared`, `apps/hub`
-- Root: `package.json` (workspaces), `tsconfig.json`, `.gitignore`, `.prettierrc`, `.prettierignore`
+- Root: `package.json` (workspaces + test-Script), `tsconfig.json`, `.gitignore`, `.prettierrc`, `.prettierignore`
 - ESLint flat config: `packages/shared/eslint.config.js`, `apps/hub/eslint.config.js` (ESLint v9 kompatibel)
-- `@lernplattform/shared`: tsup Build (ESM+CJS+DTS), exportiert `getGreeting()`, React 18 peer dep
+- `@lernplattform/shared`: tsup Build (ESM+CJS+DTS), exportiert `getGreeting()` + Schema-Typen (User, Class, CourseUnlock, Progress)
+- `packages/shared/src/schema/`: TypeScript-Typen für alle Collections, Collection-Konstanten (COLLECTION_*)
 - `apps/hub`: Vite + React 18 + TS + Tailwind, zeigt Shared-Import + PocketBase-Status
-- Docker Compose: PocketBase (ghcr.io/muchobien/pocketbase:latest, Port 8090, Health-Check) + Nginx (COPY-basiert)
+- Docker Compose: PocketBase (via pb.Dockerfile mit COPY pb_migrations) + Nginx (COPY-basiert)
+- `pb.Dockerfile`: PocketBase-Image + COPY pb_migrations + COPY pb_hooks
+- `pb_migrations/1708300000_create_collections.js`: Erstellt users (auth), classes, course_unlocks, progress mit API Rules + Indizes
+- `pb_hooks/.gitkeep`: Leeres Verzeichnis für spätere Server-Hooks
 - `nginx.conf`: Security Headers, Path-Routing (/api/ → PocketBase, /_/ → Admin-UI, /ap1/ → AP1-Site, / → Hub)
-- `nginx.Dockerfile`: COPY-basiert (Sandbox-Einschränkung), kopiert sites/hub + sites/ap1
-- Vite Dev-Server Proxy: `/api/*` → `http://pocketbase:8090`
-- Statische Test-Files: `sites/ap1/index.html` für Subpfad-Routing-Beweis
+- Vitest: in packages/shared installiert, 27 Unit-Tests grün
 
 ## Aktuelle Erkenntnisse
 
-- REQ-002 war bereits durch REQ-000 Spike vollständig implementiert — nur Status-Formalisierung nötig
-- Docker im Sandbox-Container nicht zugänglich (Permission Denied auf docker.sock) — Docker-Verifikation historisch via REQ-000 Spike belegt (ADR-001)
-- REQ-003 (PocketBase Schema) ist jetzt freigeschaltet: Collections users, classes, course_unlocks, progress anlegen
-- REQ-003 braucht PocketBase Admin API — Schema-Anlage via PocketBase HTTP API oder pb_hooks (Migrations-Skript)
-- ESLint v9 nutzt Flat Config (`eslint.config.js`) — `--ext .ts,.tsx` Flag in eslint-Script ist für v9 obsolet, funktioniert aber noch
-- `@eslint/js` muss v9.x sein (nicht v10) wenn eslint v9 installiert ist — Peer-Dep Konflikt sonst
-- `workspace:*` ist pnpm-Syntax — npm nutzt `*` für interne Workspace-Deps
-- tsup DTS-Build inkompatibel mit `composite: true` — entfernt
-- PocketBase SDK: Base-URL muss leer sein (`''`), Vite-Proxy leitet `/api/*` weiter
-- Docker Desktop Sandbox: Volumes nicht mountbar → COPY-Dockerfile
+- PocketBase Schema via JS-Migrations (`pb_migrations/`): versionierbar, reproduzierbar, läuft beim Start automatisch
+- `pb_migrations/` war fälschlicherweise in .gitignore — wurde entfernt (Migrations gehören ins Repo)
+- Schema-Typen in `@lernplattform/shared` als Single Source of Truth für Frontend-Code
+- vitest muss per Workspace separat installiert werden — noch nicht in root/hub vorhanden
+- Nächste P0-REQs: REQ-010 (AuthProvider Grundstruktur in shared), dann REQ-005/006/007 (Auth-Flow)
+- Docker-Verifikation für Migration erst möglich wenn Docker läuft (SANDBOX_MODE=1 in dieser Iteration)

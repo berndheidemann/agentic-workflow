@@ -33,3 +33,11 @@
 - **@eslint/js Versionskonflikt:** `@eslint/js@10.x` erfordert eslint v10 als peer dep. Wenn eslint v9 installiert ist, muss `@eslint/js@^9.0.0` verwendet werden — sonst npm-Auflösungsfehler.
 - **Prettier + generierte Dateien:** `vite.config.d.ts` und andere `.d.ts`-Build-Outputs werden von Prettier geprüft wenn `packages/**/*.{ts,tsx}` glob genutzt wird. Fix: `.prettierignore` mit `*.d.ts` Eintrag.
 - **S-Batch Strategie:** REQ-001 + REQ-004 waren inhaltlich fast identisch mit dem Spike aus REQ-000 — die Struktur war bereits vorhanden. Die Hauptarbeit war die fehlende ESLint-Konfiguration nachzuliefern.
+
+### 2026-02-18: REQ-003 PocketBase Schema + Migrations
+
+- **pb_migrations/ in .gitignore:** Migrations gehören ins Repo — `.gitignore`-Eintrag für `pb_migrations/` entfernt. Nur `pb_data/` (Laufzeitdaten) bleibt ignoriert.
+- **PocketBase Auth-Collection + Relations:** Beim Anlegen einer Relation auf die users-Collection (noch nicht gespeichert) kann `_pb_users_auth_` als Platzhalter-ID genutzt werden. Nach `app.save(users)` muss die Relation-Collection manuell aktualisiert werden (Patch-Pattern).
+- **Vitest globals:** `beforeAll` und andere globals müssen entweder importiert werden (`import { beforeAll } from 'vitest'`) oder `globals: true` in vitest.config.ts gesetzt sein — beides geht. Expliziter Import bevorzugt (ESLint: no-undef).
+- **`__dirname` in ESM:** In ESM-Modulen (`"type": "module"`) ist `__dirname` nicht verfügbar. Ersatz: `dirname(fileURLToPath(import.meta.url))`.
+- **PocketBase Migrations Reihenfolge:** Collections mit Relations müssen nach den Collections angelegt werden, auf die sie verweisen: classes → users → course_unlocks → progress.
