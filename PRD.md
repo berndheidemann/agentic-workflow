@@ -56,16 +56,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-002: PocketBase Docker-Setup
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-000
 - **Akzeptanzkriterien:**
-  - [ ] `docker-compose.yml` mit PocketBase + Nginx Services
-  - [ ] `nginx.conf` mit Path-Routing für alle Sites + API
-  - [ ] PocketBase startet und ist unter `/api/` erreichbar
-  - [ ] Admin-UI unter `/_/` erreichbar
-  - [ ] Health-Check konfiguriert
+  - [x] `docker-compose.yml` mit PocketBase + Nginx Services
+  - [x] `nginx.conf` mit Path-Routing für alle Sites + API
+  - [x] PocketBase startet und ist unter `/api/` erreichbar
+  - [x] Admin-UI unter `/_/` erreichbar
+  - [x] Health-Check konfiguriert
 
 ### REQ-003: PocketBase Schema anlegen
 
