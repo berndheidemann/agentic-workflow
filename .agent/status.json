@@ -1,16 +1,24 @@
 {
+  "REQ-000": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": []
+  },
   "REQ-001": {
-    "status": "open",
+    "status": "in_progress",
     "priority": "P0",
     "size": "S",
-    "deps": []
+    "deps": [
+      "REQ-000"
+    ]
   },
   "REQ-002": {
     "status": "open",
     "priority": "P0",
     "size": "M",
     "deps": [
-      "REQ-001"
+      "REQ-000"
     ]
   },
   "REQ-003": {
@@ -22,11 +30,11 @@
     ]
   },
   "REQ-004": {
-    "status": "open",
+    "status": "in_progress",
     "priority": "P0",
     "size": "S",
     "deps": [
-      "REQ-001"
+      "REQ-000"
     ]
   },
   "REQ-005": {
@@ -62,6 +70,14 @@
     "size": "M",
     "deps": [
       "REQ-003"
+    ]
+  },
+  "REQ-009": {
+    "status": "open",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-001"
     ]
   },
   "REQ-010": {
@@ -236,6 +252,23 @@
       "REQ-023a"
     ]
   },
+  "REQ-036": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006",
+      "REQ-007"
+    ]
+  },
+  "REQ-037": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-009"
+    ]
+  },
   "REQ-040": {
     "status": "open",
     "priority": "P1",
@@ -322,6 +355,23 @@
     "deps": [
       "REQ-002",
       "REQ-010"
+    ]
+  },
+  "REQ-074": {
+    "status": "open",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-073"
+    ]
+  },
+  "REQ-075": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-021",
+      "REQ-073"
     ]
   }
 }

@@ -1,0 +1,27 @@
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    restart: unless-stopped
+    # Note: Port 3572 is held by the sandbox container.
+    # Nginx runs on internal Docker network only.
+    # For dev smoke-test, the Vite dev-server on port 3572 proxies to PocketBase directly.
+    # Port binding via Nginx is used in production (Traefik handles external routing).
+
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/pb/pb_data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8090/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  pb_data:

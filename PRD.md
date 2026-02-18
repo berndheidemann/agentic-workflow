@@ -10,10 +10,33 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Unit-Tests:** Mindestens ein Test pro neuer Funktion/Hook/Komponente (Vitest + React Testing Library). Mocks nur für externe APIs (PocketBase SDK Calls, fetch), **nicht** für eigene Module.
 - **Integrations-Tests:** Cross-Cutting-Concerns (Auth/Cookie/Provider-Interaktion) werden mit echten Modulen getestet, nicht vollständig gemockt.
 - **E2E-Tests:** Ein Playwright-Test pro User-Flow — **PFLICHT** für jedes UI-REQ, keine Ausnahmen.
-- **Smoke-Test:** Verifikation gegen echten Stack (Docker + Playwright MCP). **Ohne bestandenen Smoke-Test kein `done`.**
+- **Smoke-Test:** Verifikation gegen echten Stack (Docker + Playwright MCP). **Ohne bestandenen Smoke-Test kein `done`.** Ausnahme: `SANDBOX_MODE=1` — dann reichen Build + Unit-Tests + Lint.
 - **Responsive:** Funktioniert auf Mobile (375px) und Desktop (1280px)
 - **Visuelle Verifikation:** Agent prüft via Playwright MCP: Ausrichtung, Abstände, Farben, Lesbarkeit, keine Überlappungen
-- **Voraussetzungen:** Docker (PocketBase + Nginx) und Playwright MCP müssen verfügbar sein. Fehlt eines → REQ ist `blocked`, nicht `done`.
+- **Voraussetzungen:** Docker (PocketBase + Nginx) und Playwright MCP müssen verfügbar sein. Fehlt eines → REQ ist `blocked`, nicht `done`. Ausnahme: `SANDBOX_MODE=1`.
+
+---
+
+## Phase 0: Tech-Stack Spike
+
+### REQ-000: Tech-Stack Spike — Vertikaler Durchstich
+
+- **Status:** done
+- **Priorität:** P0
+- **Größe:** M
+- **Abhängig von:** —
+- **Hinweis:** Einmaliger Spike zur Validierung des gesamten Tech-Stacks. Ziel ist ein dünner, funktionierender Durchstich durch alle Schichten — nicht produktionsreif, aber beweist Machbarkeit. Alles was hier entsteht wird in den nachfolgenden REQs verfeinert und erweitert.
+- **Akzeptanzkriterien:**
+  - [x] **Monorepo:** Root `package.json` mit npm Workspaces (`packages/shared`, `apps/hub`), TypeScript-Config
+  - [x] **Shared Package:** `@lernplattform/shared` baut mit tsup, exportiert eine Dummy-Funktion, ist aus `apps/hub` importierbar
+  - [x] **Hub App:** Vite + React + TypeScript + Tailwind, Dev-Server startet, zeigt "Hello Lernplattform" mit importierter Shared-Funktion
+  - [x] **PocketBase:** Docker Compose mit PocketBase-Service, startet, `/api/health` antwortet mit 200
+  - [x] **Nginx:** Docker Compose mit Nginx-Service, Path-Routing: `/api/*` → PocketBase, `/` → statische Dateien (oder Proxy auf Hub Dev-Server)
+  - [x] **PocketBase SDK:** Hub kann PocketBase SDK importieren und Health-Endpoint erreichen (Proof of Connectivity)
+  - [x] **Sites-Proxy:** Nginx routet `/ap1/` auf ein statisches Test-File (beweist Subpfad-Routing)
+  - [x] **Build:** `npm run build` im Hub erfolgreich, Output in `dist/`
+  - [x] **Dev-Workflow:** `npm run dev` startet Hub Dev-Server auf Port 5173, Docker Stack parallel nutzbar
+  - [x] **Ergebnis dokumentiert:** Kurzer Abschnitt in `.agent/architecture.md` mit Erkenntnissen (was funktioniert, was angepasst werden musste, Versionen)
 
 ---
 
@@ -21,22 +44,22 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-001: Projektstruktur initialisieren
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
-- **Abhängig von:** —
+- **Abhängig von:** REQ-000
 - **Akzeptanzkriterien:**
-  - [ ] Monorepo-Struktur mit `packages/shared/` und `apps/hub/`
-  - [ ] Root `package.json` mit Workspaces
-  - [ ] TypeScript-Konfiguration (tsconfig.json)
-  - [ ] `.gitignore` korrekt konfiguriert
+  - [x] Monorepo-Struktur mit `packages/shared/` und `apps/hub/`
+  - [x] Root `package.json` mit Workspaces
+  - [x] TypeScript-Konfiguration (tsconfig.json)
+  - [x] `.gitignore` korrekt konfiguriert
 
 ### REQ-002: PocketBase Docker-Setup
 
 - **Status:** open
 - **Priorität:** P0
 - **Größe:** M
-- **Abhängig von:** REQ-001
+- **Abhängig von:** REQ-000
 - **Akzeptanzkriterien:**
   - [ ] `docker-compose.yml` mit PocketBase + Nginx Services
   - [ ] `nginx.conf` mit Path-Routing für alle Sites + API
@@ -53,23 +76,23 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Akzeptanzkriterien:**
   - [ ] Collection `users` (Auth): username, role, class_id, display_name (pin_hash entfällt — PocketBase password-Feld übernimmt Hashing)
   - [ ] Collection `classes`: name, join_code, school_year, is_active, created_by
-  - [ ] Collection `course_unlocks`: class_id, course, module, is_unlocked, unlocked_by, unlocked_at
+  - [ ] Collection `course_unlocks`: class_id, user_id (nullable, für späteres individuelles Freischalten), course, module, is_unlocked, unlocked_by, unlocked_at
   - [ ] Collection `progress`: user_id, course, lesson, exercise, status, score, max_score, attempts, completed_at
   - [ ] UNIQUE-Constraint auf progress (user_id, course, lesson, exercise)
   - [ ] API Rules korrekt gesetzt (siehe REQUIREMENTS.md Abschnitt 4)
 
 ### REQ-004: Shared Package Grundstruktur
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
-- **Abhängig von:** REQ-001
+- **Abhängig von:** REQ-000
 - **Akzeptanzkriterien:**
-  - [ ] `packages/shared/package.json` mit korrektem Namen `@lernplattform/shared`
-  - [ ] TypeScript + React als Peer-Dependencies
-  - [ ] Build-Konfiguration (tsup)
-  - [ ] `src/index.ts` mit Exports
-  - [ ] Package ist von `apps/hub` importierbar
+  - [x] `packages/shared/package.json` mit korrektem Namen `@lernplattform/shared`
+  - [x] TypeScript + React als Peer-Dependencies
+  - [x] Build-Konfiguration (tsup)
+  - [x] `src/index.ts` mit Exports
+  - [x] Package ist von `apps/hub` importierbar
 
 ### REQ-005: AuthProvider + useAuth Hook
 
@@ -125,6 +148,21 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [ ] User kann nur eigenen Progress schreiben (API Rule)
   - [ ] Plausibilitäts-Flag: `suspicious: true` wenn >5 Aufgaben/Minute
 
+### REQ-009: Site-Registry (Single Source of Truth)
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** S
+- **Abhängig von:** REQ-001
+- **Hinweis:** Zentrale Konfiguration aller Lernsituationen. Eliminiert hartcodierte Site-Listen in nginx.conf, Landing Page, Dashboard und Deploy-Script. Entscheidend für die Vision "zukünftig deutlich mehr Lernsituationen".
+- **Akzeptanzkriterien:**
+  - [ ] Konfigurationsdatei `sites.json` (oder PocketBase Collection `sites`) mit: slug, name, description, icon, base_path, framework_type (starlight|react-spa), is_active, sort_order
+  - [ ] Landing Page (REQ-011) liest Kurs-Kacheln aus der Registry statt aus hartcodiertem Code
+  - [ ] Dashboard-Kursfilter (REQ-023b) liest verfügbare Kurse aus der Registry
+  - [ ] Deploy-Script (REQ-071) validiert Site-Namen gegen die Registry
+  - [ ] Nginx-Config kann aus der Registry generiert werden (Template oder Script)
+  - [ ] Neue Lernsituation einbinden = 1 Eintrag in der Registry + Dateien deployen
+
 ---
 
 ## Phase 2: Hub-App
@@ -149,7 +187,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Größe:** M
 - **Abhängig von:** REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] 5 Kurs-Kacheln mit Titel, Beschreibung und Icon
+  - [ ] Kurs-Kacheln mit Titel, Beschreibung und Icon — dynamisch aus Site-Registry (REQ-009) oder Konfigurationsdatei, nicht hartcodiert
   - [ ] Kacheln verlinken auf die jeweiligen Sites (`/ap1/`, `/pandas/`, etc.)
   - [ ] Responsive: 1 Spalte mobil, 2-3 Spalten Desktop
   - [ ] Ohne Login: Kacheln ohne Fortschritt, direkter Link
@@ -274,6 +312,8 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Akzeptanzkriterien:**
   - [ ] Liste aller Module pro Kurs mit aktuellem Status (gesperrt/freigeschaltet)
   - [ ] Toggle-Buttons zum Freischalten/Sperren pro Modul pro Klasse
+  - [ ] Bulk-Aktion: "Alle Module bis einschließlich Modul X freischalten" als Ein-Klick-Aktion
+  - [ ] Default-Zustand bei neuer Klasse: alles freigeschaltet (Lehrer sperrt bewusst, nicht andersrum)
   - [ ] Änderungen werden sofort in PocketBase gespeichert
   - [ ] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen
 
@@ -358,6 +398,34 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [ ] Automatischer Sync bei Reconnect
   - [ ] Queue wird nach erfolgreichem Sync geleert
 
+### REQ-036: Prerequisite-basiertes Soft-Gate
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-006, REQ-007
+- **Hinweis:** Umsetzung von UNLOCK-03 aus REQUIREMENTS.md. Automatisches Freischalten als Empfehlung, kein harter Block.
+- **Akzeptanzkriterien:**
+  - [ ] Sites können in Frontmatter Prerequisites definieren: `prerequisites: ["netzwerktechnik/ip-adressierung"]`
+  - [ ] Wenn Prerequisites nicht erfüllt: gelber Hinweis oben auf der Seite ("Wir empfehlen zuerst: [Lektionsname]")
+  - [ ] Content ist trotzdem sichtbar (Soft-Gate, kein harter Block)
+  - [ ] Ohne Login: kein Hinweis (Gast-Modus, alles offen)
+  - [ ] Prerequisite-Check basiert auf Progress-Daten des eingeloggten Users
+
+### REQ-037: Kursstruktur-Manifest
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-009
+- **Hinweis:** Ohne Manifest kann das Dashboard die Matrix nicht vollständig aufbauen (es kennt nur Aufgaben mit existierenden Progress-Einträgen). Der Fortschrittsbalken kann "total" nicht berechnen.
+- **Akzeptanzkriterien:**
+  - [ ] Jede Site exportiert beim Build eine `course-manifest.json` mit: Kursname, Module (mit Titel), Lektionen (mit Titel), Aufgaben-IDs (mit Titel und Typ)
+  - [ ] Manifest-Format ist dokumentiert und einheitlich für Starlight- und React-SPA-Sites
+  - [ ] Dashboard (REQ-023a) liest Manifeste um die vollständige Matrix aufzubauen (inkl. Aufgaben ohne Progress-Einträge)
+  - [ ] Fortschrittsbalken (REQ-014, REQ-033) berechnen "total" aus dem Manifest
+  - [ ] Build-Script oder Plugin generiert das Manifest automatisch (kein manuelles Pflegen)
+
 ---
 
 ## Phase 4b: Accessibility Hardening
@@ -401,7 +469,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-001
-- **Hinweis:** Quell-Repo liegt in `sites/zuul/` (Docusaurus). Ziel: Astro/Starlight-Projekt wie AP1/pandas/REST.
+- **Hinweis:** Quell-Repo liegt in `sites/lf05_worldOfZuul/` (Docusaurus). Ziel: Astro/Starlight-Projekt wie AP1/pandas/REST.
 - **Akzeptanzkriterien:**
   - [ ] Neues Astro/Starlight-Projekt mit `base: '/zuul'`
   - [ ] Alle 25 Markdown-Seiten migriert (Arbeitsblätter + Infoblätter)
@@ -464,7 +532,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-051
-- **Hinweis:** Erfordert Zugriff auf die Repos `pandas-lernen` und `rest_nosql_datenformate`
+- **Hinweis:** Erfordert Zugriff auf die Repos `pandas-lernen` und `rest_noSQL_datenformate`
 - **Akzeptanzkriterien:**
   - [ ] pandas-lernen: Base-Path `/pandas/`, Shared-Komponente integriert, Build erfolgreich
   - [ ] REST/NoSQL: Base-Path `/rest/`, Shared-Komponente integriert, Build erfolgreich
@@ -510,7 +578,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Akzeptanzkriterien:**
   - [ ] `scripts/backup.sh` sichert PocketBase SQLite-DB, gzip, 30-Tage-Rotation, Cron-fähig
   - [ ] `scripts/deploy.sh <site-name>` deployt eine einzelne Site (Build + rsync)
-  - [ ] Deploy-Script validiert Site-Name (ap1|pandas|rest|zuul|numpy|uml|hub)
+  - [ ] Deploy-Script validiert Site-Name gegen Site-Registry (REQ-009), nicht gegen hartcodierte Liste
 
 ### REQ-073: DSGVO & Security Hardening
 
@@ -524,3 +592,48 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [ ] Keine IP-Logs in PocketBase
   - [ ] Hinweis auf Datenminimierung in der Registrierung
   - [ ] Security Headers in nginx.conf: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+
+### REQ-074: Einwilligungsformular Erziehungsberechtigte
+
+- **Status:** open
+- **Priorität:** P0
+- **Größe:** S
+- **Abhängig von:** REQ-073
+- **Hinweis:** Ohne Einwilligung der Erziehungsberechtigten darf die Plattform mit Minderjährigen (< 16 Jahre) nicht betrieben werden. Rechtliche Pflicht für den Schulbetrieb.
+- **Akzeptanzkriterien:**
+  - [ ] PDF-Template für Einwilligungserklärung der Erziehungsberechtigten
+  - [ ] Inhalt: Welche Daten werden erhoben (Username, Klasse, Lernfortschritt), Zweck, Speicherdauer, Löschung am Schuljahresende
+  - [ ] Hinweis auf Freiwilligkeit (Plattform auch ohne Login nutzbar)
+  - [ ] Download-Link auf der Registrierungsseite
+  - [ ] Datenschutzerklärungs-Seite mit vollständigem Inhalt (nicht nur Link)
+
+### REQ-075: Löschkonzept & Klasse archivieren
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-021, REQ-073
+- **Hinweis:** DSGVO-Pflicht: personenbezogene Daten müssen nach Wegfall des Zwecks gelöscht werden. Am Schuljahresende müssen Schüler-Daten löschbar sein.
+- **Akzeptanzkriterien:**
+  - [ ] Dashboard-Aktion "Klasse archivieren" für Lehrer
+  - [ ] Archivierung löscht: alle Schüler-Accounts der Klasse, deren Progress-Daten, Unlock-Einträge
+  - [ ] Sicherheitsabfrage vor Löschung ("Klasse FI24a mit 23 Schülern wirklich archivieren?")
+  - [ ] Klasse wird als `is_active: false` markiert, aber Name/Schuljahr bleiben für Lehrer-Referenz erhalten
+  - [ ] Löschung ist irreversibel — Hinweis im Dialog
+
+---
+
+## Erweiterungs-Backlog (nicht in Phase 1, aber Architektur darf sie nicht verbauen)
+
+> Diese Features sind bewusst nicht im aktuellen Scope, aber als Zukunfts-Optionen identifiziert.
+> Die aktuelle Architektur muss diese Wege offen halten, ohne sie jetzt zu implementieren.
+
+- **Individuelles Freischalten pro Schüler** — Schema ist vorbereitet (`user_id` nullable in `course_unlocks`). UI kommt wenn konkreter Bedarf entsteht.
+- **Fortschrittsbasiertes Auto-Unlock** — "Wenn 80% von Modul 1 → Modul 2 freischalten". Konfigurierbar pro Klasse/Kurs. Braucht Manifest (REQ-037) als Grundlage.
+- **Zeitgesteuerte Freischaltung** — `unlocked_from`-Datumsfeld in `course_unlocks`. Lehrer bereitet Freischaltung für nächste Woche vor.
+- **Freischalt-Vorlagen** — Freischalt-Konfiguration als Template speichern und auf Parallelklassen anwenden.
+- **Datenexport** — CSV/Excel-Export der Progress-Matrix für Lehrer (Notendokumentation).
+- **Benachrichtigungen** — Lehrer wird informiert wenn Klasse ein Modul abschließt (PocketBase Realtime).
+- **Server-seitige Code-Ausführung** — Für externe Tool-Integration (IDEs, Jupyter). Nicht Phase 1, aber Architektur erlaubt es später.
+- **Analytics & Lernstandsdiagnose** — Aggregierte Auswertungen über Klassen/Schuljahre hinweg.
+- **Peer-Review & Feedback** — Schüler bewerten Lösungen gegenseitig. Braucht neue Collections.

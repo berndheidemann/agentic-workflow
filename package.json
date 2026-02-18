@@ -1,0 +1,20 @@
+{
+  "name": "lernplattform",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/hub",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/hub",
+    "lint": "npm run lint --workspace=packages/shared --workspace=apps/hub",
+    "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  }
+}
