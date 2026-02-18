@@ -70,3 +70,25 @@
 - `pocketbase` als `peerDependency` in `@lernplattform/shared` — Consumer bringt eigene Version mit
 - Auth-State-Updates via `pb.authStore.onChange()` — kein Polling, reaktiv über Callback-Pattern
 - 14-Tage Cookie-Laufzeit (entspricht PRD-Anforderung für Session-Dauer)
+
+---
+
+## ADR-004: Progress Sync Architecture (2026-02-18, REQ-006)
+
+**Kontext:** Progress-Tracking muss in allen Sites funktionieren (Astro/Starlight + React SPAs). Sites feuern `exercise-complete` CustomEvents. Sync muss effizient (gesammelt, nicht per Aufgabe) und robust sein.
+
+**Entscheidung:** Dreischichtige Architektur:
+- `url-parser.ts` (pure function): Framework-agnostisch, Pathname-Parsing, kein Seiteneffekt
+- `SyncEngine` (Klasse): Framework-agnostisch, Queue + 30s-Debounce-Timer + visibilitychange-Listener + PocketBase-Upsert
+- `useProgress` (React Hook): React-Integration, nutzt `useAuth()` für Login-Check, instanziiert SyncEngine
+
+**Sync-Strategie:** Try-create-catch-update (optimistisch). Erster Versuch ist `create()`, bei UNIQUE-Constraint-Fehler wird bestehender Record per `getFirstListItem()` + `update()` aktualisiert. Weniger Queries im Happy Path.
+
+**Gast-Modus:** Wenn `!isLoggedIn`, gibt `useProgress()` stabile `GUEST_RETURN`-Referenz zurück. Kein Fehler, kein Tracking, kein Netzwerk-Traffic.
+
+**URL-Konvention:** Erstes Pfad-Segment = course (entspricht Nginx-Subpfad), Rest = lesson, Trailing Slashes entfernt.
+
+**Konsequenzen:**
+- `exercise-complete` CustomEvent ist der einzige Integrationspunkt mit bestehenden Sites
+- SyncEngine ist unabhängig von React testbar
+- Bei Netzwerk-Fehler bleibt Eintrag in Queue und wird beim nächsten Flush erneut versucht

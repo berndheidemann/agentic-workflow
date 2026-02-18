@@ -110,16 +110,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-006: useProgress Hook + Sync
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003, REQ-004
 - **Akzeptanzkriterien:**
-  - [ ] `useProgress` Hook: reportComplete(exerciseId, score, maxScore), getProgress(course)
-  - [ ] Debounced Sync: gesammelt alle 30s oder bei Page-Visibility-Change
-  - [ ] Lauscht auf `exercise-complete` CustomEvent
-  - [ ] Kurs und Lektion werden aus URL abgeleitet
-  - [ ] Nur aktiv wenn User eingeloggt (Gast-Modus: kein Tracking)
+  - [x] `useProgress` Hook: reportComplete(exerciseId, score, maxScore), getProgress(course)
+  - [x] Debounced Sync: gesammelt alle 30s oder bei Page-Visibility-Change
+  - [x] Lauscht auf `exercise-complete` CustomEvent
+  - [x] Kurs und Lektion werden aus URL abgeleitet
+  - [x] Nur aktiv wenn User eingeloggt (Gast-Modus: kein Tracking)
 
 ### REQ-007: useUnlock Hook
 

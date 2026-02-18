@@ -50,3 +50,10 @@
 - **PocketBase `vi.mock` mit authStore.save:** Um `onChange`-Callbacks in Tests auszulösen, muss das `authWithPassword`-Mock `this.authStore.save(token, record)` aufrufen (nicht nur einen Wert zurückgeben). Klassenmethode als arrow function gibt `this` korrekt via Closure.
 - **`@vitejs/plugin-react` im Root:** Kann in `vitest.config.ts` von Sub-Packages genutzt werden (kein erneutes Installieren nötig) — npm Workspace hoisting sorgt dafür.
 - **`BaseAuthStore` API:** PocketBase 0.26+: `save(token, record?: AuthRecord)` und `clear()` sind die überschreibbaren Methoden. `onChange(callback, fireImmediately?)` gibt Unsubscribe-Funktion zurück.
+
+### 2026-02-18: REQ-006 useProgress Hook + Sync
+
+- **`vi.mock('pocketbase')` ohne `importOriginal`:** Wenn man pocketbase vollständig überschreibt, fehlt `BaseAuthStore` — und `CookieAuthStore` importiert dieses. Fix: `vi.mock('pocketbase', async (importOriginal) => { const actual = await importOriginal(); return { ...actual }; })` und nur die Methoden des PocketBase-Clients über `AuthContext.Provider` mocken.
+- **SyncEngine-Timer-Tests:** `vi.runAllTimersAsync()` feuert alle ausstehenden Timer, inkl. dem 30s-Sync-Timer. Bei "negativ"-Tests (sollte NICHT flush) einen langen syncInterval (60s) nutzen und nur `vi.advanceTimersByTimeAsync(100)` aufrufen.
+- **visibilitychange-Tests:** `document.visibilityState` muss via `Object.defineProperty` mit `configurable: true` überschrieben werden — direktes Assignment schlägt fehl.
+- **Stabile Guest-Return-Referenz:** `GUEST_RETURN`-Konstante außerhalb der Render-Funktion deklarieren (nicht `useMemo`), damit bei Guest-Mode keine unnötigen Re-Renders entstehen und die Referenz stabil ist.
