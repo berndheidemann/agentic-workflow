@@ -6,7 +6,7 @@
     "deps": []
   },
   "REQ-001": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P0",
     "size": "S",
     "deps": [
@@ -30,7 +30,7 @@
     ]
   },
   "REQ-004": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P0",
     "size": "S",
     "deps": [
