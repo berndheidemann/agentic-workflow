@@ -53,3 +53,20 @@
 - TypeScript-Typen in `@lernplattform/shared/schema` müssen manuell mit Migration-Definitionen synchron gehalten werden — Kommentar-Verweis in beiden Dateien als Mitigation
 - Migration-Datei kann nicht ohne laufenden PocketBase getestet werden — strukturelle Validierung via Vitest + String-Analyse als Ersatz unter SANDBOX_MODE=1
 - Rollback via DOWN-Funktion implementiert (löscht Collections in Reihenfolge: progress → course_unlocks → users → classes)
+
+---
+
+## ADR-003: CookieAuthStore für PocketBase Auth-Persistenz (2026-02-18, REQ-005)
+
+**Kontext:** PocketBase SDK bietet `BaseAuthStore` (in-memory), `LocalAuthStore` (localStorage) und `AsyncAuthStore`. Für die Lernplattform muss Auth-State einen Page-Reload überleben und Cross-Subdomain funktionieren (`.szut.dev`), damit Sites unter `/ap1/`, `/pandas/` etc. denselben Login nutzen können.
+
+**Entscheidung:** Eigener `CookieAuthStore extends BaseAuthStore` in `packages/shared/src/auth/cookie-auth-store.ts`. Überschreibt `save()` und `clear()`, serialisiert Auth-State als JSON in `document.cookie`. Domain ist über `CookieAuthStoreOptions.domain` konfigurierbar. `AuthProvider` React Context erstellt PocketBase-Client mit diesem Store und exponiert `useAuth()` Hook.
+
+**Begründung:** `LocalAuthStore` (localStorage) funktioniert nicht Cross-Subdomain. `BaseAuthStore` hat eingebaute `loadFromCookie()`/`exportToCookie()` Hilfsmethoden — aber deren Format ist PocketBase-spezifisch. Eigenes JSON-Format ist transparenter und vermeidet Format-Abhängigkeiten.
+
+**Konsequenzen:**
+- Cookie ist `httpOnly: false` (JS muss lesen) — kein Sicherheitsproblem, Token lebt ohnehin im JS-Kontext
+- `secure: true` in Produktion, `false` im Dev (konfigurierbar über `CookieAuthStoreOptions`)
+- `pocketbase` als `peerDependency` in `@lernplattform/shared` — Consumer bringt eigene Version mit
+- Auth-State-Updates via `pb.authStore.onChange()` — kein Polling, reaktiv über Callback-Pattern
+- 14-Tage Cookie-Laufzeit (entspricht PRD-Anforderung für Session-Dauer)

@@ -41,3 +41,12 @@
 - **Vitest globals:** `beforeAll` und andere globals müssen entweder importiert werden (`import { beforeAll } from 'vitest'`) oder `globals: true` in vitest.config.ts gesetzt sein — beides geht. Expliziter Import bevorzugt (ESLint: no-undef).
 - **`__dirname` in ESM:** In ESM-Modulen (`"type": "module"`) ist `__dirname` nicht verfügbar. Ersatz: `dirname(fileURLToPath(import.meta.url))`.
 - **PocketBase Migrations Reihenfolge:** Collections mit Relations müssen nach den Collections angelegt werden, auf die sie verweisen: classes → users → course_unlocks → progress.
+
+### 2026-02-18: REQ-005 AuthProvider + useAuth Hook
+
+- **PocketBase als peerDep + devDep:** `pocketbase` muss in `packages/shared` als `peerDependency` (für Consumer) UND als `devDependency` (für direkte Test-Imports) deklariert werden.
+- **`globals.browser` in ESLint:** Das `globals`-npm-Paket ist im Root vorhanden — `import globals from 'globals'` in ESLint flat config ermöglicht `globals.browser` für `document`, `window`, `console` etc.
+- **Vitest-Umgebung per Datei:** `// @vitest-environment jsdom` als Kommentar in Test-Dateien setzt jsdom nur für diese Datei — vermeidet globale Umstellung auf jsdom (schema-Tests laufen so weiter in Node, schneller).
+- **PocketBase `vi.mock` mit authStore.save:** Um `onChange`-Callbacks in Tests auszulösen, muss das `authWithPassword`-Mock `this.authStore.save(token, record)` aufrufen (nicht nur einen Wert zurückgeben). Klassenmethode als arrow function gibt `this` korrekt via Closure.
+- **`@vitejs/plugin-react` im Root:** Kann in `vitest.config.ts` von Sub-Packages genutzt werden (kein erneutes Installieren nötig) — npm Workspace hoisting sorgt dafür.
+- **`BaseAuthStore` API:** PocketBase 0.26+: `save(token, record?: AuthRecord)` und `clear()` sind die überschreibbaren Methoden. `onChange(callback, fireImmediately?)` gibt Unsubscribe-Funktion zurück.

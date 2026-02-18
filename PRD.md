@@ -96,17 +96,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-005: AuthProvider + useAuth Hook
 
-- **Status:** in_progress
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003, REQ-004
 - **Akzeptanzkriterien:**
-  - [ ] `AuthProvider` React Context mit PocketBase SDK
-  - [ ] `useAuth` Hook: isLoggedIn, user, login(username, pin, classCode), logout
-  - [ ] Auth-State wird aus PocketBase Cookie gelesen
-  - [ ] Login setzt Cookie auf Domain (konfigurierbar)
-  - [ ] Logout löscht Cookie und Auth-State
-  - [ ] TypeScript-Typen für User exportiert
+  - [x] `AuthProvider` React Context mit PocketBase SDK
+  - [x] `useAuth` Hook: isLoggedIn, user, login(username, pin, classCode), logout
+  - [x] Auth-State wird aus PocketBase Cookie gelesen
+  - [x] Login setzt Cookie auf Domain (konfigurierbar)
+  - [x] Logout löscht Cookie und Auth-State
+  - [x] TypeScript-Typen für User exportiert
 
 ### REQ-006: useProgress Hook + Sync
 
