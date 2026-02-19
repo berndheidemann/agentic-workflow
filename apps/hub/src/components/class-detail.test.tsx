@@ -150,6 +150,42 @@ describe('ClassDetail', () => {
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
+  it('zeigt klickbare Schüler-Zeilen wenn onSelectStudent übergeben wird', async () => {
+    mockGetOne.mockResolvedValueOnce(mockClass);
+    mockGetFullList.mockResolvedValueOnce(mockStudents);
+
+    const onSelectStudent = vi.fn();
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={makeAuthContext()}>
+          <ClassDetail classId="cls-1" onBack={vi.fn()} onSelectStudent={onSelectStudent} />
+        </AuthContext.Provider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => screen.getByText('anna'));
+    const studentBtn = screen.getByRole('button', { name: /Schüler anna öffnen/i });
+    expect(studentBtn).toBeInTheDocument();
+  });
+
+  it('ruft onSelectStudent mit Schüler-ID auf bei Klick', async () => {
+    mockGetOne.mockResolvedValueOnce(mockClass);
+    mockGetFullList.mockResolvedValueOnce(mockStudents);
+
+    const onSelectStudent = vi.fn();
+    render(
+      <MemoryRouter>
+        <AuthContext.Provider value={makeAuthContext()}>
+          <ClassDetail classId="cls-1" onBack={vi.fn()} onSelectStudent={onSelectStudent} />
+        </AuthContext.Provider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => screen.getByText('anna'));
+    fireEvent.click(screen.getByRole('button', { name: /Schüler anna öffnen/i }));
+    expect(onSelectStudent).toHaveBeenCalledWith('u-1');
+  });
+
   it('hat Copy-Button für den Klassen-Code', async () => {
     mockGetOne.mockResolvedValueOnce(mockClass);
     mockGetFullList.mockResolvedValueOnce([]);

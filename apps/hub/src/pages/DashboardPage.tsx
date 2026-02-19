@@ -6,6 +6,7 @@ import { ClassList } from '../components/class-list';
 import type { ClassWithCount } from '../components/class-list';
 import { ClassDetail } from '../components/class-detail';
 import { CreateClassForm } from '../components/create-class-form';
+import { StudentDetail } from '../components/student-detail';
 import { ProgressMatrix } from '../components/progress-matrix';
 import { useClassProgress } from '../hooks/use-class-progress';
 import { ModuleUnlockList } from '../components/module-unlock-list';
@@ -115,6 +116,26 @@ function KlassenDetailView() {
     <ClassDetail
       classId={classId}
       onBack={() => navigate('/dashboard/klassen')}
+      onSelectStudent={(studentId) => navigate(`/dashboard/klassen/${classId}/schueler/${studentId}`)}
+    />
+  );
+}
+
+// ─── Schüler Detail View ───────────────────────────────────────────────────────
+
+function SchuelerDetailView() {
+  const { classId, studentId } = useParams<{ classId: string; studentId: string }>();
+  const navigate = useNavigate();
+
+  if (!classId || !studentId) {
+    return <Navigate to="/dashboard/klassen" replace />;
+  }
+
+  return (
+    <StudentDetail
+      studentId={studentId}
+      classId={classId}
+      onBack={() => navigate(`/dashboard/klassen/${classId}`)}
     />
   );
 }
@@ -451,6 +472,7 @@ function DashboardPage() {
           <Route index element={<Navigate to="/dashboard/klassen" replace />} />
           <Route path="klassen" element={<KlassenView />} />
           <Route path="klassen/:classId" element={<KlassenDetailView />} />
+          <Route path="klassen/:classId/schueler/:studentId" element={<SchuelerDetailView />} />
           <Route path="matrix" element={<MatrixView />} />
           <Route path="freischaltung" element={<FreischaltungView />} />
         </Routes>

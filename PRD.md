@@ -319,7 +319,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 
-- **Status:** open
+- **Status:** in_progress
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-020, REQ-021

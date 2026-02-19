@@ -7,6 +7,7 @@ import type { Class, User } from '@lernplattform/shared';
 export interface ClassDetailProps {
   classId: string;
   onBack: () => void;
+  onSelectStudent?: (studentId: string) => void;
 }
 
 interface DetailState {
@@ -19,7 +20,7 @@ interface DetailState {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ClassDetail({ classId, onBack }: ClassDetailProps) {
+export function ClassDetail({ classId, onBack, onSelectStudent }: ClassDetailProps) {
   const { pb } = useAuth();
 
   const [state, setState] = useState<DetailState>({
@@ -158,8 +159,28 @@ export function ClassDetail({ classId, onBack }: ClassDetailProps) {
                   </thead>
                   <tbody>
                     {state.students.map((student) => (
-                      <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 pr-4 font-medium text-gray-900">{student.username}</td>
+                      <tr
+                        key={student.id}
+                        className={[
+                          'border-b border-gray-100',
+                          onSelectStudent ? 'hover:bg-blue-50 cursor-pointer' : 'hover:bg-gray-50',
+                        ].join(' ')}
+                        onClick={onSelectStudent ? () => onSelectStudent(student.id) : undefined}
+                      >
+                        <td className="py-3 pr-4">
+                          {onSelectStudent ? (
+                            <button
+                              type="button"
+                              onClick={() => onSelectStudent(student.id)}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                              aria-label={`Schüler ${student.username} öffnen`}
+                            >
+                              {student.username}
+                            </button>
+                          ) : (
+                            <span className="font-medium text-gray-900">{student.username}</span>
+                          )}
+                        </td>
                         <td className="py-3 text-gray-600">{student.display_name || '—'}</td>
                       </tr>
                     ))}

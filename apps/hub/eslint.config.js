@@ -26,6 +26,8 @@ export default [
         fetch: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLFormElement: 'readonly',
+        HTMLDialogElement: 'readonly',
+        Event: 'readonly',
         URLSearchParams: 'readonly',
         React: 'readonly',
       },
@@ -62,6 +64,9 @@ export default [
         navigator: 'readonly',
         React: 'readonly',
         HTMLElement: 'readonly',
+        HTMLDialogElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        Event: 'readonly',
         // Vitest globals
         describe: 'readonly',
         it: 'readonly',
