@@ -109,7 +109,7 @@ Fake-Auth-Cookies werden vom PocketBase SDK verworfen (Token wird gegen Server v
 ### 2026-02-19 — Validator-Ergebnis: Systematische E2E-Test-Lücke
 
 **Muster erkannt:** Sonnet erstellt E2E-Test-Dateien (`e2e/*.spec.ts`), installiert aber nie Playwright als npm-Paket und führt die Tests nie aus.
-**UPDATE (Validation 2):** `@playwright/test` + Chromium jetzt installiert, `playwright.config.ts` vorhanden. `e2e/login.spec.ts` (6 Tests) grün. `npx playwright test` aus `apps/hub/` ausführen. Fehlende E2E-Tests (landing, register, dashboard) bei neuen done-REQs ergänzen.
+**UPDATE (Validation 2):** Vollständig behoben. `@playwright/test` + Chromium installiert, `playwright.config.ts` vorhanden. 24 E2E-Tests in 4 Specs (login, landing, register, dashboard/404) — alle grün. `cd apps/hub && npx playwright test` ausführen. Bei neuen User-Flows entsprechende E2E-Specs ergänzen.
 
 ### 2026-02-19 — Validator: PRD-Checkboxen nachpflegen
 
