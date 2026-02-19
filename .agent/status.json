@@ -222,7 +222,7 @@
     ]
   },
   "REQ-032": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "size": "M",
     "deps": [
