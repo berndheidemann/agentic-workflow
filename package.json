@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm run dev --workspace=apps/hub",
     "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/hub",
-    "test": "npm run test --workspace=packages/shared",
+    "test": "npm run test --workspace=packages/shared --workspace=apps/hub",
     "lint": "npm run lint --workspace=packages/shared --workspace=apps/hub",
     "format": "prettier --write \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\"",
     "format:check": "prettier --check \"packages/**/*.{ts,tsx}\" \"apps/**/*.{ts,tsx}\""
