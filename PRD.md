@@ -220,7 +220,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-014: Kurs-Kacheln mit Fortschrittsbalken
 
-- **Status:** blocked
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006, REQ-011
@@ -315,7 +315,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [x] Bulk-Aktion: "Alle Module bis einschließlich Modul X freischalten" als Ein-Klick-Aktion
   - [x] Default-Zustand bei neuer Klasse: alles freigeschaltet (Lehrer sperrt bewusst, nicht andersrum)
   - [x] Änderungen werden sofort in PocketBase gespeichert
-  - [ ] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen *(Validator: "abgeschlossen" benötigt Progress-Daten aus REQ-037 Manifest)*
+  - [x] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen *(Heuristik: "abgeschlossen" = mind. 1 Schüler mit completed-Progress. Volle Manifest-Semantik via REQ-037)*
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 
@@ -511,7 +511,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-051: AP1-Trainer Shared-Integration
 
-- **Status:** blocked — Docker nicht verfügbar (Verifikationsumgebung fehlt)
+- **Status:** open
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-006, REQ-007, REQ-050

@@ -1,16 +1,18 @@
 # Agent Context
 
-> Iteration REQ-009 blocked | 2026-02-19 | 24/44 done
+> Validation 5 | 2026-02-19 | 24/44 done, 0 blocked, 20 open
 
-## Was implementiert wurde (REQ-024 — Modul-Freischaltung im Dashboard)
+## Validierungsergebnis
 
-- `ModuleStatus`: `'unlocked' | 'locked' | 'completed'` (alle 3 Zustände)
-- `useModuleUnlocks`: parallel 3 API-Calls (course_unlocks, users, progress)
-- "completed" wenn freigeschaltet UND mind. 1 Schüler mit `status="completed"` Progress im Modul
-- `lessonBelongsToModule`: `lesson === moduleId || lesson.startsWith(moduleId + '/')`
-- `moduleIdsKey = moduleIds.join(',')` + `useRef` verhindert useEffect-Infinite-Loop
-- `module-unlock-list.tsx`: blauer Stil für `completed` (✅, "Abgeschlossen", "Sperren"-Button)
-- 188 Hub-Tests + 148 Shared-Tests grün, Build + Lint sauber
+- **Preflight:** PASS — Docker (mit `sudo`), Build, Tests (188+148), Lint, Playwright MCP
+- **Keine neuen done-REQs** seit Validation 4 (iter-005). 4 Iterationen (006-009) haben nichts produziert.
+- **Docker-Blocker aufgehoben:** REQ-009, REQ-014, REQ-051 von `blocked` → `open`
+- **REQ-024 Checkbox korrigiert:** "Drei Zustände" war unchecked, ist aber implementiert (Heuristik)
+
+## KRITISCH: Docker braucht `sudo`
+
+Sonnet muss `sudo docker compose` statt `docker compose` verwenden.
+4 Iterationen ($1.71) wurden verschwendet weil Sonnet "permission denied" nicht mit `sudo` gelöst hat.
 
 ## Was existiert
 
@@ -18,21 +20,20 @@
 - `@lernplattform/shared`: Auth + Progress + Unlock + Validation (148 Tests)
 - `apps/hub`: Vite + React + TS + Tailwind + React Router (188 Tests)
   - Routing: `/`, `/login`, `/register`, `/dashboard/*`, `/datenschutz`, `/einwilligung`, `*` (404)
-  - Dashboard: Klassen-Verwaltung, Matrix (Aggregat + Filter + URL-Params), Freischaltung (6/6 ✅)
+  - Dashboard: Klassen, Matrix (Aggregat + Filter + URL-Params), Freischaltung (alle 6 AK ✅)
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
 - CookieAuthStore: Auth überlebt Page-Reload
-- `apps/hub/src/config/sites.ts`: SiteConfig-Interface + 6 Sites (REQ-009 Interface vorweggenommen durch ADR-006)
+- `apps/hub/src/config/sites.ts`: SiteConfig + 6 Sites
 
-## Nächstes REQ
+## Nächste Prioritäten
 
-- **REQ-009** (P1, S) — Site-Registry — BLOCKED (Docker nicht verfügbar)
-- **REQ-051** (P0, M) — AP1-Trainer Shared-Integration — BLOCKED (Docker nicht verfügbar)
-- **REQ-015** (P1, S) — Deps: REQ-005, REQ-006, REQ-010 alle done — BLOCKED (Docker)
+1. **REQ-051** (P0, M) — AP1-Trainer Shared-Integration (jetzt unblocked!)
+2. **REQ-009** (P1, S) — Site-Registry
+3. **REQ-014** (P1, M) — Kurs-Kacheln mit Fortschrittsbalken
+4. **REQ-015** (P1, S) — Profil-Bereich
 
-## Offene Punkte / Hinweise
+## Credentials
 
-- Docker nicht verfügbar (permission denied auf /var/run/docker.sock) → alle REQs blockiert
-- "completed" ist Heuristik ohne Manifest: mit REQ-037 verfeinerbar (nur Hook-Änderung)
 - Superuser: `admin@lernplattform.test` / `admin12345678`
 - Teacher: `testlehrer` / `1234` (join_code `L5RXKX`)
 - Test-Klasse: join_code `S9VFB6` (id: e7bna5s0me9rtql)

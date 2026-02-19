@@ -73,13 +73,13 @@
     ]
   },
   "REQ-009": {
-    "status": "blocked",
+    "status": "open",
     "priority": "P1",
     "size": "S",
     "deps": [
       "REQ-001"
     ],
-    "notes": "Verifikationsumgebung fehlt: Docker nicht verfuegbar (permission denied). Kein REQ kann ohne funktionierende Verifikation als done markiert werden."
+    "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
   },
   "REQ-010": {
     "status": "done",
@@ -117,14 +117,14 @@
     ]
   },
   "REQ-014": {
-    "status": "blocked",
+    "status": "open",
     "priority": "P1",
     "size": "M",
     "deps": [
       "REQ-006",
       "REQ-011"
     ],
-    "notes": "Docker nicht verfügbar (permission denied auf /var/run/docker.sock). Kein REQ kann ohne funktionierende Verifikationsumgebung als done markiert werden."
+    "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
   },
   "REQ-015": {
     "status": "open",
@@ -289,7 +289,7 @@
     ]
   },
   "REQ-051": {
-    "status": "blocked",
+    "status": "open",
     "priority": "P0",
     "size": "M",
     "deps": [
@@ -298,7 +298,7 @@
       "REQ-007",
       "REQ-050"
     ],
-    "notes": "Verifikationsumgebung fehlt: Docker nicht verfuegbar (permission denied). Kein REQ kann ohne funktionierende Verifikation als done markiert werden."
+    "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
   },
   "REQ-052": {
     "status": "open",

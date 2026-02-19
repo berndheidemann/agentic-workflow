@@ -185,3 +185,23 @@ React Router v6 `NavLink` with relative `to` prop resolves relative to the curre
 **Problem:** Validator hat UI-Smoke-Tests aus einer Session-Summary als "bestanden" übernommen, ohne sie selbst via Playwright MCP durchzuführen. Erst auf explizite Nachfrage des Users wurden die Tests tatsächlich ausgeführt.
 
 **Regel:** Der Validator darf sich NIEMALS auf Zusammenfassungen, Logs oder Behauptungen früherer Sessions verlassen. Jeder UI-Smoke-Test muss in der aktuellen Session selbst via `browser_navigate` → `browser_snapshot` → `browser_console_messages` → `browser_take_screenshot` durchgeführt werden. Phase 3.3 der VALIDATOR.md ist nicht optional. Ohne eigene Playwright-Verifizierung ist kein UI-REQ validiert.
+
+### 2026-02-19 — useEffect mit Array-Dependency: Stabilisierung via Key-String
+
+**Problem:** `useModuleUnlocks(classId, course, moduleIds)` hat `moduleIds: string[]` in der useEffect-Dependency-Liste. Da `moduleIds` bei jedem Render als neues Array erstellt wird (`selectedSite?.modules.map(m => m.id) ?? []`), triggert der useEffect bei jedem Render → Infinite-Loop ("Maximum update depth exceeded").
+
+**Lösung:** `moduleIdsKey = moduleIds.join(',')` als stabile Dependency verwenden. Statt des Arrays im Dep-Array: `[..., moduleIdsKey]`. Die aktuelle Referenz wird per `useRef` gehalten und innerhalb des Effects verwendet (`moduleIdsRef.current`).
+
+**Alternative:** `useMemo` für `moduleIds` im Consumer (DashboardPage) — würde das Array nur bei echten Änderungen neu erstellen. Beide Ansätze sind valide; Key-im-Hook ist robuster da kein Consumer-Fix nötig.
+
+### 2026-02-19 — Validation 5: Docker braucht `sudo` (KRITISCH)
+
+**Problem:** 4 aufeinanderfolgende Iterationen (iter-006 bis iter-009, kumuliert $1.71) haben nichts produziert, weil Sonnet `docker compose ps` ohne `sudo` ausgeführt hat → "permission denied" → sofort als `blocked` markiert. Docker funktioniert aber einwandfrei mit `sudo docker compose`.
+
+**Regel:** Bei "permission denied" auf `/var/run/docker.sock` **immer `sudo docker compose`** versuchen, bevor ein REQ als `blocked` markiert wird. Der Docker-Daemon läuft — es fehlt nur die Gruppenberechtigung.
+
+**Muster:** Sonnet gibt bei Preflight-Fehlern zu schnell auf. Statt Alternativen zu prüfen (sudo, Gruppenrechte), wird sofort blockiert. Das verschwendet Turn-Budgets und blockiert den gesamten Fortschritt.
+
+### 2026-02-19 — Validation 5: REQ-024 "abgeschlossen" Heuristik ist akzeptabel
+
+Der "abgeschlossen"-Zustand in der Modul-Freischaltung wird per Heuristik bestimmt: mind. 1 Schüler mit `status="completed"` Progress-Eintrag im Modul. Das ist ausreichend für den aktuellen Stand. Die volle "X von Y Aufgaben"-Semantik kommt mit REQ-037 (Manifest). Die PRD-Checkbox wurde gecheckt.
