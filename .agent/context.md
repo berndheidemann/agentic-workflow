@@ -1,16 +1,14 @@
 # Agent Context
 
-> 2026-02-19 | 29/44 done, 0 blocked, 14 open
+> 2026-02-19 | 30/44 done, 0 blocked, 14 open
 
 ## Was zuletzt passiert ist
 
-REQ-025 (Schüler-Verwaltung im Dashboard): done. Smoke-Test bestanden.
-- `StudentDetail`-Komponente: Username, Klasse, Fortschritt-Übersicht pro Kurs + Gesamt
-- `ResetPinDialog`-Komponente: PIN zurücksetzen mit 4-stelliger zufälliger Vorausfüllung
-- `useStudentProgress`-Hook: Bulk-Query aller completed-Progress-Einträge für einen Schüler
-- Route: `/dashboard/klassen/:classId/schueler/:studentId`
-- Fix: `afterEach(cleanup)` in `apps/hub/src/test-setup.ts` global (jsdom cleanup war defekt)
-- 251 Tests grün (via `npm run test`)
+REQ-026 (Dashboard Detail-Ansicht Zelle): done. Smoke-Test bestanden.
+- `CellDetailModal`-Komponente: zeigt Versuche, Score (X/Y), Zeitpunkt per `<dialog>` Modal
+- `ProgressMatrix` erweitert: Zellen sind klickbare `<button>`-Elemente, öffnen CellDetailModal
+- `HTMLButtonElement` in ESLint globals (prod-Block) ergänzt
+- 266 Tests grün (251 + 15 neue)
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -21,10 +19,12 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
 - `@lernplattform/shared`: Auth + Progress + Unlock + Validation (148 Tests)
-- `apps/hub`: Vite + React + TS + Tailwind + React Router (251 Tests)
+- `apps/hub`: Vite + React + TS + Tailwind + React Router (266 Tests)
   - Routing: `/`, `/login`, `/register`, `/dashboard/*`, `/datenschutz`, `/einwilligung`, `*` (404)
-  - Dashboard: Klassen, Matrix, Freischaltung + Schüler-Detail (alle AK ✅)
+  - Dashboard: Klassen, Matrix (mit Zell-Klick → Detail-Modal), Freischaltung + Schüler-Detail
   - `apps/hub/src/test-setup.ts`: `afterEach(cleanup)` global (jsdom cleanup-Fix)
+  - `apps/hub/src/components/cell-detail-modal.tsx`: Detail-Modal für Matrix-Zellen
+  - `apps/hub/src/components/progress-matrix.tsx`: Matrix mit klickbaren Zellen + Modal
   - `apps/hub/src/components/student-detail.tsx`: Schüler-Detail mit Fortschritt + PIN-Reset
   - `apps/hub/src/components/reset-pin-dialog.tsx`: PIN-Reset-Dialog (Dialog-Element + a11y)
   - `apps/hub/src/hooks/use-student-progress.ts`: Fortschritt-Abfrage für einen Schüler
@@ -44,9 +44,8 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 ## Nächste Prioritäten
 
-1. **REQ-026** (P1, S) — Dashboard Detail-Ansicht Zelle [Abhängigkeit REQ-023a done]
-2. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
-3. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
+1. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
+2. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
 
 ## Wichtige Architektur-Details
 
@@ -56,9 +55,10 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 - `useSites()` startet mit statischen Fallback-Sites → kein Loading-Flash
 - `useCourseProgress()` ist Hub-spezifisch — Bulk-Query, Gast-Modus: kein Fetch
 - `useStudentProgress()` ist Hub-spezifisch — filtert nach `user_id` + `status = "completed"`
-- ESLint: `fetch` + `HTMLElement` global in `apps/hub/eslint.config.js` (prod + test Block)
+- ESLint: `fetch` + `HTMLElement` + `HTMLButtonElement` global in `apps/hub/eslint.config.js` (prod Block)
 - ADR-011: `total_exercises` in sites.json als Workaround bis REQ-037 (Manifest)
 - **Test-Ausführung:** `npm run test` (workspace-aware), nie `npx vitest run` im Root!
+- **Dialog-Tests:** jsdom braucht `HTMLDialogElement.prototype.showModal/close` Mock (siehe reset-pin-dialog.test.tsx)
 
 ## Credentials
 

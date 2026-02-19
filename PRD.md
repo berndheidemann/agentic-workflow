@@ -329,13 +329,13 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-026: Dashboard Detail-Ansicht Zelle
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-023a
 - **Akzeptanzkriterien:**
-  - [ ] Klick auf Zelle in Matrix → Detail: Anzahl Versuche, Score, Zeitpunkt
-  - [ ] Modal oder Sidebar-Panel
+  - [x] Klick auf Zelle in Matrix → Detail: Anzahl Versuche, Score, Zeitpunkt
+  - [x] Modal oder Sidebar-Panel
 
 ---
 
