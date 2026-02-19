@@ -255,13 +255,14 @@
     ]
   },
   "REQ-036": {
-    "status": "open",
+    "status": "done",
     "priority": "P1",
     "size": "M",
     "deps": [
       "REQ-006",
       "REQ-007"
-    ]
+    ],
+    "notes": "usePrerequisites + PrerequisiteBanner + PrerequisiteInjector. Fix: Starlight v0.37 starlightRoute + client:only=react"
   },
   "REQ-037": {
     "status": "open",
