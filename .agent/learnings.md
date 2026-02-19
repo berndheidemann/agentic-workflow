@@ -105,3 +105,15 @@ Wenn register() zu AuthContextValue hinzugefügt wird, müssen ALLE Test-Mocks a
 ### 2026-02-19 — ProtectedRoute Smoke-Test Limitation
 
 Fake-Auth-Cookies werden vom PocketBase SDK verworfen (Token wird gegen Server validiert). Ein Smoke-Test kann nur das Redirect-Verhalten testen (nicht-authentifiziert → /login). Das eingeloggte Dashboard kann nur mit echtem PocketBase-Token oder durch Unit-Tests verifiziert werden.
+
+### 2026-02-19 — Validator-Ergebnis: Systematische E2E-Test-Lücke
+
+**Muster erkannt:** Sonnet erstellt E2E-Test-Dateien (`e2e/*.spec.ts`), installiert aber nie Playwright als npm-Paket und führt die Tests nie aus. Nur `login.spec.ts` existiert, E2E-Dateien für Landing, Register und Dashboard fehlen komplett. **Pflicht laut PRD:** "Ein Playwright-Test pro User-Flow — PFLICHT". Sonnet muss in einer zukünftigen Iteration:
+1. `npm i -D @playwright/test` ausführen
+2. `npx playwright install --with-deps chromium` ausführen
+3. Fehlende E2E-Tests erstellen (landing, register, dashboard)
+4. `npx playwright test` als Teil des Verification-Schritts integrieren
+
+### 2026-02-19 — Validator: PRD-Checkboxen nachpflegen
+
+Sonnet hat bei REQ-012 die PRD-Checkboxen nicht angehakt obwohl status.json auf `done` gesetzt wurde. Jede Iteration muss PRD.md-Checkboxen **und** status.json synchron halten. Validator hat die Checkboxen nachträglich korrigiert.

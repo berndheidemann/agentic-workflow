@@ -199,11 +199,11 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] Formular: Klassen-Code + Username + 4-stelliger PIN
-  - [ ] Validierung mit Fehlermeldungen (deutsch)
-  - [ ] Erfolgreicher Login → Redirect auf Landing Page
-  - [ ] Session: Cookie, 14 Tage gültig
-  - [ ] Keyboard-navigierbar, Accessibility
+  - [x] Formular: Klassen-Code + Username + 4-stelliger PIN
+  - [x] Validierung mit Fehlermeldungen (deutsch)
+  - [x] Erfolgreicher Login → Redirect auf Landing Page
+  - [x] Session: Cookie, 14 Tage gültig
+  - [x] Keyboard-navigierbar, Accessibility
 
 ### REQ-013: Registrierungs-Seite
 
