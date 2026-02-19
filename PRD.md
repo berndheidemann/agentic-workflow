@@ -231,14 +231,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-015: Profil-Bereich
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-005, REQ-006, REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] "Hallo [Username]! Du hast X von Y Aufgaben geschafft"
-  - [ ] Logout-Button
-  - [ ] Nur sichtbar wenn eingeloggt
+  - [x] "Hallo [Username]! Du hast X von Y Aufgaben geschafft"
+  - [x] Logout-Button
+  - [x] Nur sichtbar wenn eingeloggt
 
 ---
 
