@@ -1,34 +1,33 @@
 # Agent Context
 
-> Iteration 8 | 2026-02-19 | REQ-008 abgeschlossen
+> Iteration 9 | 2026-02-19 | REQ-010 + REQ-022 abgeschlossen
 
 ## Projektstatus
 
-- Fortschritt: 9/44 REQs done (REQ-000 bis REQ-008)
-- Nächste REQs: REQ-010 (P0, S, dep REQ-004 ✓), REQ-022 (P0, S, dep REQ-003 ✓)
+- Fortschritt: 11/44 REQs done (inkl. REQ-010, REQ-022)
+- Nächste REQs: REQ-011 (P0, M, dep REQ-010 ✓), REQ-009 (P1, S, dep REQ-001 ✓)
 - Blocker: Keine
 
 ## Was existiert
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
-- Root: `package.json`, `tsconfig.json`, `.gitignore`, `.prettierrc`, `.prettierignore`
-- ESLint flat config (v9): `packages/shared/eslint.config.js`, `apps/hub/eslint.config.js`
-- `@lernplattform/shared`: tsup Build (ESM+CJS+DTS), exportiert Schema-Typen + Auth + Progress + Unlock + Validation Module
-- `packages/shared/src/validation/`: join-code.ts, pin.ts, progress-rules.ts (je mit Tests)
-- `pb_hooks/`: join-code.pb.js (kryptografisch sicher via $security.randomStringWithAlphabet), user-validation.pb.js (PIN + role-Erzwingung), progress-validation.pb.js (Rate-Limit, Status-Aufstieg, suspicious-Flag)
-- `pb_migrations/`: create_collections.js + add_suspicious_field.js
-- `apps/hub`: Vite + React 18 + TS + Tailwind, zeigt Shared-Import + PocketBase-Status
+- Root: `package.json` (test-script beide Workspaces), `tsconfig.json`, `.gitignore`, `.prettierrc`
+- ESLint flat config (v9): `packages/shared/eslint.config.js`, `apps/hub/eslint.config.js` (mit Vitest-Globals für Test-Dateien)
+- `@lernplattform/shared`: tsup Build (ESM+CJS+DTS), Auth + Progress + Unlock + Validation Module
+- `pb_hooks/`: join-code.pb.js, user-validation.pb.js (role=student erzwungen), progress-validation.pb.js
+- `pb_migrations/`: create_collections.js (role: student|teacher), add_suspicious_field.js
+- `apps/hub`: Vite + React 18 + TS + Tailwind + React Router 7
+  - Routing: `/` (HomePage), `/login` (LoginPage), `/register` (RegisterPage), `/dashboard/*` (DashboardPage), `*` (NotFoundPage)
+  - Vitest konfiguriert: 11 Unit-Tests in `src/pages/*.test.tsx`
+  - Test-Dateien aus tsconfig exclude für Production-Build
 - Docker Compose: PocketBase + Nginx (COPY-basiert, pb_migrations)
-- Vitest: 133 Unit-Tests grün
+- Vitest gesamt: 144 Unit-Tests grün (133 shared + 11 hub)
 
 ## Aktuelle Erkenntnisse
 
-- **Security Fix (REQ-008):** Opus Security Review hat 2 Probleme gefunden:
-  1. Role Escalation: Ohne `e.record.set('role', 'student')` in user-validation konnte sich jeder als Teacher registrieren → gefixt
-  2. Math.random() für Join-Codes: Ersetzt durch `$security.randomStringWithAlphabet()` (kryptografisch sicher in PocketBase JSVM) → gefixt
-- `$security.randomStringWithAlphabet(length, alphabet)` ist die korrekte PocketBase JSVM API für kryptografisch sichere Zufallsstrings
-- PocketBase API Rules für `progress`: createRule + updateRule erzwingen `user_id = @request.auth.id` → User kann nur eigenen Progress schreiben
-- pb_hooks überschreiben Server-seitig `suspicious` und `role` — Client-Input wird ignoriert
-- Docker-Netzwerk: `sudo docker network connect project_default claude-sandbox-sonstige_learn-szut-dev` nötig um PocketBase erreichbar zu machen
-- `npm run test` (workspace-Filter) ist der korrekte Preflight-Befehl
-- Nächste P0-REQs: REQ-010 (Hub Grundstruktur), REQ-022 (Klassen-Verwaltung API)
+- **Vite Dual-React Bug:** Alter Vite-Cache erzeugt zwei React-Chunks (verschiedene Hash-Versionen) → "Invalid hook call" im Browser. Fix: `rm -rf node_modules/.vite` vor neuem Dev-Start.
+- **Dev-Port in Sandbox:** Port 3572 ist vom Sandbox-Container belegt → Vite weicht auf 3573 aus. Smoke-Tests laufen auf 3573 (intern erreichbar via Playwright MCP).
+- **Lehrer-Account (REQ-022):** Kein Code nötig. PocketBase Admin-UI erstellt Lehrer-Accounts direkt. Hook erzwingt role=student nur bei Selbstregistrierung — greift nicht für Admin-Operationen.
+- **tsconfig.json exclude:** Test-Dateien müssen in `exclude` der tsconfig.json stehen, sonst findet `tsc -b` Vitest-Globals nicht.
+- **Hub ESLint:** Separate Config-Blöcke für Test-Dateien vs. Prod-Dateien nötig (Vitest-Globals vs. Browser-Globals).
+- Nächste P0-REQs: REQ-011 (Landing Page mit Kurs-Kacheln, dep REQ-010 ✓)

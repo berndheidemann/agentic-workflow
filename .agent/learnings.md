@@ -71,3 +71,11 @@
 - **PocketBase JSVM Crypto:** `$security.randomStringWithAlphabet(length, alphabet)` ist die korrekte API für kryptografisch sichere Zufallsstrings (nutzt `crypto/rand`). `Math.random()` ist für Join-Codes unzureichend.
 - **Hook-Reihenfolge:** Server-seitige Hooks überschreiben Client-Felder via `e.record.set()` — `suspicious`, `role` etc. können so nicht vom Client manipuliert werden.
 - **Parameterisierte Filter:** PocketBase JSVM nutzt `{:param}`-Syntax für sichere Queries — kein String-Concat in findRecordsByFilter nötig/erlaubt.
+
+### 2026-02-19: REQ-010 Hub Grundstruktur + REQ-022 Lehrer-Backend
+
+- **Vite Cache-Stale + Doppeltes React:** Nach npm install mit neuem Package (z.B. react-router-dom) kann Vite beim Neustart zwei React-Instanzen bundeln (alte deps-Cache + neue). Fix: `rm -rf node_modules/.vite` erzwingt saubere Dep-Optimierung. Symptom: "Invalid hook call" mit zwei verschiedenen Chunk-Hashes.
+- **tsconfig.json exclude für Tests:** Test-Dateien (`*.test.tsx`) und Setup-Dateien (`test-setup.ts`) müssen in `exclude` der tsconfig.json stehen, sonst schlägt `tsc -b` fehl weil Vitest-Globals (`describe`, `it`, `expect`) unbekannt sind.
+- **Hub ESLint für Tests:** Separate ESLint-Config-Blöcke für Test- vs. Prod-Dateien nötig: Test-Block definiert Vitest-Globals, Prod-Block definiert Browser-Globals.
+- **Lehrer-Account ohne Code:** PocketBase `onRecordCreateRequest`-Hook erzwingt role=student nur bei HTTP-Requests. Admin-UI-Operationen laufen als superuser und umgehen Hooks — Lehrer-Accounts können sicher per Admin-UI erstellt werden.
+- **npm test beide Workspaces:** Root-Skript `npm run test` muss `--workspace=packages/shared --workspace=apps/hub` enthalten wenn beide getestet werden sollen.

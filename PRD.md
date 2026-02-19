@@ -169,16 +169,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-010: Hub Grundstruktur
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-004
 - **Akzeptanzkriterien:**
-  - [ ] Vite + React + TypeScript + Tailwind CSS Setup
-  - [ ] Routing (React Router) mit Basis-Routes
-  - [ ] `@lernplattform/shared` als Workspace-Dependency
-  - [ ] Dev-Server startet auf Port 5173
-  - [ ] `npm run build` erfolgreich
+  - [x] Vite + React + TypeScript + Tailwind CSS Setup
+  - [x] Routing (React Router) mit Basis-Routes
+  - [x] `@lernplattform/shared` als Workspace-Dependency
+  - [x] Dev-Server startet auf Port 5173
+  - [x] `npm run build` erfolgreich
 
 ### REQ-011: Landing Page mit Kurs-Kacheln
 
@@ -270,14 +270,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-022: Lehrer-Account erstellen (Backend)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-003
 - **Akzeptanzkriterien:**
-  - [ ] Lehrer-Login mit Username + Passwort (nicht PIN)
-  - [ ] Lehrer-Accounts werden initial über PocketBase Admin-UI erstellt
-  - [ ] role=teacher in der users Collection
+  - [x] Lehrer-Login mit Username + Passwort (nicht PIN)
+  - [x] Lehrer-Accounts werden initial über PocketBase Admin-UI erstellt
+  - [x] role=teacher in der users Collection
 
 ### REQ-023a: Dashboard Matrix-Ansicht (Basis)
 
