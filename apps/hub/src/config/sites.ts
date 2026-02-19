@@ -18,6 +18,12 @@ export interface SiteConfig {
   sortOrder: number;
   /** Modules for this course. Placeholder until REQ-037 manifests provide real data. */
   modules: ModuleConfig[];
+  /**
+   * Total number of exercises in this course.
+   * Manually maintained until REQ-037 (Manifest) provides real data.
+   * Used for progress percentage calculation in course cards.
+   */
+  totalExercises: number;
 }
 
 // ─── JSON shape (snake_case, matches sites.json) ──────────────────────────────
@@ -37,6 +43,7 @@ interface SiteJson {
   framework_type: 'starlight' | 'react-spa';
   is_active: boolean;
   sort_order: number;
+  total_exercises: number;
   modules: ModuleJson[];
 }
 
@@ -57,6 +64,7 @@ function siteFromJson(raw: SiteJson): SiteConfig {
     frameworkType: raw.framework_type,
     isActive: raw.is_active,
     sortOrder: raw.sort_order,
+    totalExercises: raw.total_exercises ?? 0,
     modules: raw.modules.map((m) => ({
       id: m.id,
       name: m.name,
@@ -125,6 +133,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 1,
+    totalExercises: 120,
     modules: [
       { id: 'wirtschaft', name: 'Wirtschaft & Recht', sortOrder: 1 },
       { id: 'it-systeme', name: 'IT-Systeme', sortOrder: 2 },
@@ -142,6 +151,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 2,
+    totalExercises: 40,
     modules: [
       { id: 'grundlagen', name: 'Grundlagen', sortOrder: 1 },
       { id: 'dataframes', name: 'DataFrames', sortOrder: 2 },
@@ -158,6 +168,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 3,
+    totalExercises: 35,
     modules: [
       { id: 'rest-grundlagen', name: 'REST Grundlagen', sortOrder: 1 },
       { id: 'http-methoden', name: 'HTTP-Methoden', sortOrder: 2 },
@@ -174,6 +185,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 4,
+    totalExercises: 30,
     modules: [
       { id: 'einfuehrung', name: 'Einführung', sortOrder: 1 },
       { id: 'klassen', name: 'Klassen & Objekte', sortOrder: 2 },
@@ -190,6 +202,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'react-spa',
     isActive: true,
     sortOrder: 5,
+    totalExercises: 25,
     modules: [
       { id: 'arrays', name: 'Arrays & Vektoren', sortOrder: 1 },
       { id: 'operationen', name: 'Operationen', sortOrder: 2 },
@@ -205,6 +218,7 @@ export const sites: SiteConfig[] = [
     frameworkType: 'react-spa',
     isActive: true,
     sortOrder: 6,
+    totalExercises: 30,
     modules: [
       { id: 'klassendiagramme', name: 'Klassendiagramme', sortOrder: 1 },
       { id: 'sequenzdiagramme', name: 'Sequenzdiagramme', sortOrder: 2 },

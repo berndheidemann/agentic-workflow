@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { CourseGrid } from './course-grid';
 import type { SiteConfig } from '../config/sites';
+import type { CourseProgressItem } from '../hooks/use-course-progress';
 
 const makeSite = (slug: string, sortOrder: number): SiteConfig => ({
   slug,
@@ -13,6 +14,7 @@ const makeSite = (slug: string, sortOrder: number): SiteConfig => ({
   frameworkType: 'starlight',
   isActive: true,
   sortOrder,
+  totalExercises: 50,
   modules: [],
 });
 
@@ -47,5 +49,21 @@ describe('CourseGrid', () => {
     const links = screen.getAllByRole('link');
     expect(links[0]).toHaveAttribute('href', '/ap1/');
     expect(links[1]).toHaveAttribute('href', '/pandas/');
+  });
+
+  it('zeigt keine Fortschrittsbalken ohne courseProgress-Prop', () => {
+    const sites = [makeSite('ap1', 1), makeSite('pandas', 2)];
+    const { container } = render(<CourseGrid sites={sites} />);
+    expect(container.querySelectorAll('[role="progressbar"]')).toHaveLength(0);
+  });
+
+  it('zeigt Fortschrittsbalken für Sites mit courseProgress', () => {
+    const sites = [makeSite('ap1', 1), makeSite('pandas', 2)];
+    const progressMap = new Map<string, CourseProgressItem>([
+      ['ap1', { courseSlug: 'ap1', completedExercises: 10, totalExercises: 50, percentage: 20 }],
+    ]);
+    const { container } = render(<CourseGrid sites={sites} courseProgress={progressMap} />);
+    // Only ap1 has progress data, pandas does not
+    expect(container.querySelectorAll('[role="progressbar"]')).toHaveLength(1);
   });
 });

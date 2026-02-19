@@ -18,6 +18,8 @@ describe('sites static config', () => {
       expect(site.frameworkType).toMatch(/^(starlight|react-spa)$/);
       expect(typeof site.isActive).toBe('boolean');
       expect(typeof site.sortOrder).toBe('number');
+      expect(typeof site.totalExercises).toBe('number');
+      expect(site.totalExercises).toBeGreaterThan(0);
       expect(Array.isArray(site.modules)).toBe(true);
       expect(site.modules.length).toBeGreaterThan(0);
     }
@@ -171,6 +173,7 @@ describe('useSites Hook', () => {
           framework_type: 'react-spa' as const,
           is_active: true,
           sort_order: 1,
+          total_exercises: 10,
           modules: [],
         },
       ],

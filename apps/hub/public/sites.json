@@ -10,6 +10,7 @@
       "framework_type": "starlight",
       "is_active": true,
       "sort_order": 1,
+      "total_exercises": 120,
       "modules": [
         { "id": "wirtschaft", "name": "Wirtschaft & Recht", "sort_order": 1 },
         { "id": "it-systeme", "name": "IT-Systeme", "sort_order": 2 },
@@ -27,6 +28,7 @@
       "framework_type": "starlight",
       "is_active": true,
       "sort_order": 2,
+      "total_exercises": 40,
       "modules": [
         { "id": "grundlagen", "name": "Grundlagen", "sort_order": 1 },
         { "id": "dataframes", "name": "DataFrames", "sort_order": 2 },
@@ -43,6 +45,7 @@
       "framework_type": "starlight",
       "is_active": true,
       "sort_order": 3,
+      "total_exercises": 35,
       "modules": [
         { "id": "rest-grundlagen", "name": "REST Grundlagen", "sort_order": 1 },
         { "id": "http-methoden", "name": "HTTP-Methoden", "sort_order": 2 },
@@ -59,6 +62,7 @@
       "framework_type": "starlight",
       "is_active": true,
       "sort_order": 4,
+      "total_exercises": 30,
       "modules": [
         { "id": "einfuehrung", "name": "Einführung", "sort_order": 1 },
         { "id": "klassen", "name": "Klassen & Objekte", "sort_order": 2 },
@@ -75,6 +79,7 @@
       "framework_type": "react-spa",
       "is_active": true,
       "sort_order": 5,
+      "total_exercises": 25,
       "modules": [
         { "id": "arrays", "name": "Arrays & Vektoren", "sort_order": 1 },
         { "id": "operationen", "name": "Operationen", "sort_order": 2 },
@@ -90,6 +95,7 @@
       "framework_type": "react-spa",
       "is_active": true,
       "sort_order": 6,
+      "total_exercises": 30,
       "modules": [
         { "id": "klassendiagramme", "name": "Klassendiagramme", "sort_order": 1 },
         { "id": "sequenzdiagramme", "name": "Sequenzdiagramme", "sort_order": 2 },

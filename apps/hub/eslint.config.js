@@ -61,6 +61,7 @@ export default [
         console: 'readonly',
         navigator: 'readonly',
         React: 'readonly',
+        HTMLElement: 'readonly',
         // Vitest globals
         describe: 'readonly',
         it: 'readonly',

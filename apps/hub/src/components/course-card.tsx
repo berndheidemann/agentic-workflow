@@ -1,10 +1,13 @@
 import type { SiteConfig } from '../config/sites';
+import type { CourseProgressItem } from '../hooks/use-course-progress';
+import { ProgressBar } from './progress-bar';
 
 interface CourseCardProps {
   site: SiteConfig;
+  progress?: CourseProgressItem;
 }
 
-export function CourseCard({ site }: CourseCardProps) {
+export function CourseCard({ site, progress }: CourseCardProps) {
   return (
     <a
       href={site.basePath}
@@ -32,6 +35,14 @@ export function CourseCard({ site }: CourseCardProps) {
         <h2 className="text-base font-semibold text-gray-800">{site.name}</h2>
       </div>
       <p className="text-gray-500 text-sm leading-relaxed">{site.description}</p>
+      {progress && progress.totalExercises > 0 && (
+        <ProgressBar
+          percentage={progress.percentage}
+          completedCount={progress.completedExercises}
+          totalCount={progress.totalExercises}
+          courseSlug={site.slug}
+        />
+      )}
     </a>
   );
 }
