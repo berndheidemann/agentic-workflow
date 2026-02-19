@@ -15,10 +15,16 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: 'Lernplattform', level: 1 })).toBeInTheDocument();
   });
 
-  it('zeigt alle 6 Kurs-Kacheln als Links', () => {
+  it('zeigt alle 6 Kurs-Kacheln als Links plus Footer-Link', () => {
     renderWithRouter(<HomePage />);
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(6);
+    expect(links).toHaveLength(7); // 6 courses + Datenschutzerklärung
+  });
+
+  it('zeigt Datenschutzerklärung-Link im Footer', () => {
+    renderWithRouter(<HomePage />);
+    const link = screen.getByRole('link', { name: /Datenschutzerklärung/i });
+    expect(link).toHaveAttribute('href', '/datenschutz');
   });
 
   it('verlinkt AP1-Trainer korrekt', () => {

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { NavLink, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { NavLink, Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@lernplattform/shared';
 import type { Class, User } from '@lernplattform/shared';
 import { ClassList } from '../components/class-list';
@@ -125,12 +125,55 @@ const activeSites = getActiveSites();
 
 function MatrixView() {
   const { pb, user } = useAuth();
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [classes, setClasses] = useState<Class[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
 
+  // Read filter state from URL params
+  const selectedClassId = searchParams.get('class') || null;
+  const selectedCourse = searchParams.get('course') || null;
+  const selectedModule = searchParams.get('module') || null;
+
+  // Update a single URL param without losing others
+  function setParam(key: string, value: string | null) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+      // Clear module when course changes (modules are course-specific)
+      if (key === 'course') next.delete('module');
+      return next;
+    }, { replace: true });
+  }
+
   const { columns, rows, isLoading, error } = useClassProgress(selectedClassId, selectedCourse);
+
+  // Get modules for the selected course
+  const selectedSite = activeSites.find((s) => s.slug === selectedCourse);
+  const courseModules = selectedSite?.modules ?? [];
+
+  // Filter columns by module (lesson prefix matches module ID)
+  const filteredColumns = useMemo(() => {
+    if (!selectedModule) return columns;
+    return columns.filter((col) => col.lesson === selectedModule);
+  }, [columns, selectedModule]);
+
+  // Filter rows to only include cells for visible columns
+  const filteredRows = useMemo(() => {
+    if (!selectedModule) return rows;
+    return rows.map((row) => {
+      const cells = new Map<string, typeof row.cells extends Map<string, infer V> ? V : never>();
+      for (const col of filteredColumns) {
+        const key = `${col.lesson}::${col.exercise}`;
+        const cell = row.cells.get(key);
+        if (cell) cells.set(key, cell);
+      }
+      return { ...row, cells };
+    });
+  }, [rows, filteredColumns, selectedModule]);
 
   // Load teacher's classes for the class selector
   useEffect(() => {
@@ -171,7 +214,7 @@ function MatrixView() {
             id="matrix-class-select"
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:text-gray-400"
             value={selectedClassId ?? ''}
-            onChange={(e) => setSelectedClassId(e.target.value || null)}
+            onChange={(e) => setParam('class', e.target.value || null)}
             disabled={classesLoading}
             aria-label="Klasse auswählen"
           >
@@ -192,13 +235,34 @@ function MatrixView() {
             id="matrix-course-select"
             className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             value={selectedCourse ?? ''}
-            onChange={(e) => setSelectedCourse(e.target.value || null)}
+            onChange={(e) => setParam('course', e.target.value || null)}
             aria-label="Kurs auswählen"
           >
             <option value="">— Kurs wählen —</option>
             {activeSites.map((site) => (
               <option key={site.slug} value={site.slug}>
                 {site.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="matrix-module-select" className="text-sm font-medium text-gray-700">
+            Modul
+          </label>
+          <select
+            id="matrix-module-select"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:text-gray-400"
+            value={selectedModule ?? ''}
+            onChange={(e) => setParam('module', e.target.value || null)}
+            disabled={courseModules.length === 0}
+            aria-label="Modul auswählen"
+          >
+            <option value="">— Alle Module —</option>
+            {courseModules.map((mod) => (
+              <option key={mod.id} value={mod.id}>
+                {mod.name}
               </option>
             ))}
           </select>
@@ -224,8 +288,8 @@ function MatrixView() {
       {/* Matrix */}
       <div className="bg-white border border-gray-200 rounded-xl p-4">
         <ProgressMatrix
-          columns={columns}
-          rows={rows}
+          columns={filteredColumns}
+          rows={filteredRows}
           isLoading={isLoading}
           error={error}
         />
@@ -351,9 +415,9 @@ function FreischaltungView() {
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 const navItems = [
-  { to: 'klassen', label: 'Klassen' },
-  { to: 'matrix', label: 'Matrix' },
-  { to: 'freischaltung', label: 'Freischaltung' },
+  { to: '/dashboard/klassen', label: 'Klassen' },
+  { to: '/dashboard/matrix', label: 'Matrix' },
+  { to: '/dashboard/freischaltung', label: 'Freischaltung' },
 ] as const;
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -384,7 +448,7 @@ function DashboardPage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8">
         <Routes>
-          <Route index element={<Navigate to="klassen" replace />} />
+          <Route index element={<Navigate to="/dashboard/klassen" replace />} />
           <Route path="klassen" element={<KlassenView />} />
           <Route path="klassen/:classId" element={<KlassenDetailView />} />
           <Route path="matrix" element={<MatrixView />} />

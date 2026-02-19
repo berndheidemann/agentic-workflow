@@ -251,7 +251,19 @@ function RegisterPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <p className="mt-4 text-xs text-gray-400 text-center">
+          Wir speichern nur deinen Benutzernamen, Klasse und Lernfortschritt
+          — keine Klarnamen oder E-Mail-Adressen.{' '}
+          <Link to="/datenschutz" className="underline hover:text-gray-600">
+            Datenschutzerklärung
+          </Link>
+          {' · '}
+          <Link to="/einwilligung" className="underline hover:text-gray-600">
+            Einwilligungsformular
+          </Link>
+        </p>
+
+        <div className="mt-4 text-center">
           <Link
             to="/login"
             className="text-blue-600 hover:text-blue-700 text-sm underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"

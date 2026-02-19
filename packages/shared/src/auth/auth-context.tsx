@@ -48,8 +48,10 @@ export function AuthProvider({ children, baseUrl = '', cookieOptions }: AuthProv
 
   // Subscribe to authStore changes and sync React state
   useEffect(() => {
+    let cancelled = false;
+
     const unsubscribe = pb.authStore.onChange((token, record) => {
-      setAuthState(buildAuthState(token, record));
+      if (!cancelled) setAuthState(buildAuthState(token, record));
     });
 
     // If we already have a valid token (from cookie), validate with server
@@ -58,22 +60,27 @@ export function AuthProvider({ children, baseUrl = '', cookieOptions }: AuthProv
       pb.collection('users')
         .authRefresh()
         .then(() => {
-          setAuthState((prev) => ({ ...prev, isLoading: false }));
+          if (!cancelled) setAuthState((prev) => ({ ...prev, isLoading: false }));
         })
         .catch(() => {
-          pb.authStore.clear();
-          setAuthState({
-            isLoggedIn: false,
-            user: null,
-            token: null,
-            isLoading: false,
-          });
+          if (!cancelled) {
+            pb.authStore.clear();
+            setAuthState({
+              isLoggedIn: false,
+              user: null,
+              token: null,
+              isLoading: false,
+            });
+          }
         });
     } else {
-      setAuthState((prev) => ({ ...prev, isLoading: false }));
+      if (!cancelled) setAuthState((prev) => ({ ...prev, isLoading: false }));
     }
 
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [pb]);
 
   const login = useCallback(

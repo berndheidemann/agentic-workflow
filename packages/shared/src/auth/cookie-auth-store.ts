@@ -5,8 +5,9 @@ import type { CookieAuthStoreOptions } from './types';
 /**
  * PocketBase AuthStore that persists auth state in a browser cookie.
  *
- * Cookie is readable by JS (not httpOnly) because the PocketBase SDK
- * manages it client-side — this matches the official PocketBase cookie pattern.
+ * Uses PocketBase's built-in exportToCookie/loadFromCookie for consistent
+ * serialization format. Cookie is readable by JS (not httpOnly) because
+ * the PocketBase SDK manages it client-side.
  *
  * Auth state persists for 14 days and survives page reloads.
  */
@@ -22,7 +23,8 @@ export class CookieAuthStore extends BaseAuthStore {
     this.cookieName = options.cookieName ?? 'pb_auth';
     this.domain = options.domain;
     this.path = options.path ?? '/';
-    this.secure = options.secure ?? true;
+    this.secure =
+      options.secure ?? (typeof location !== 'undefined' && location.protocol === 'https:');
     this.sameSite = options.sameSite ?? 'Lax';
 
     // Rehydrate from existing cookie on construction
@@ -43,15 +45,18 @@ export class CookieAuthStore extends BaseAuthStore {
 
   private writeCookie(): void {
     if (typeof document === 'undefined') return;
-    const value = encodeURIComponent(JSON.stringify({ token: this.token, record: this.record }));
-    let cookie = `${this.cookieName}=${value}`;
-    cookie += `; path=${this.path}`;
-    cookie += `; SameSite=${this.sameSite}`;
-    if (this.secure) cookie += '; Secure';
-    if (this.domain) cookie += `; domain=${this.domain}`;
-    const expires = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-    cookie += `; expires=${expires.toUTCString()}`;
-    document.cookie = cookie;
+    const cookieStr = this.exportToCookie(
+      {
+        path: this.path,
+        secure: this.secure,
+        sameSite: this.sameSite,
+        domain: this.domain,
+        httpOnly: false,
+        expires: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      },
+      this.cookieName
+    );
+    document.cookie = cookieStr;
   }
 
   private expireCookie(): void {

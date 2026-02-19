@@ -143,6 +143,36 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
             </tr>
           ))}
         </tbody>
+        {/* Aggregate row: completion percentage per column */}
+        <tfoot>
+          <tr className="bg-blue-50">
+            <th
+              scope="row"
+              className="sticky left-0 z-10 bg-blue-50 px-3 py-2 text-left font-semibold text-blue-800 border-t-2 border-r border-blue-200 min-w-[8rem] text-xs"
+            >
+              Klasse gesamt
+            </th>
+            {columns.map((col) => {
+              const key = `${col.lesson}::${col.exercise}`;
+              const total = rows.length;
+              let correct = 0;
+              for (const row of rows) {
+                const cell = row.cells.get(key);
+                if (cell?.status === 'correct') correct++;
+              }
+              const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+              return (
+                <td
+                  key={key}
+                  className="px-2 py-2 text-center border-t-2 border-blue-200 text-xs font-semibold text-blue-800"
+                  aria-label={`${col.label}: ${pct}% der Klasse hat diese Aufgabe geschafft`}
+                >
+                  {pct}%
+                </td>
+              );
+            })}
+          </tr>
+        </tfoot>
       </table>
     </div>
   );

@@ -145,4 +145,62 @@ describe('ProgressMatrix', () => {
     expect(screen.getByRole('rowheader', { name: 'anna' })).toBeInTheDocument();
     expect(screen.getByRole('rowheader', { name: 'bert' })).toBeInTheDocument();
   });
+
+  // ─── Aggregate row tests ────────────────────────────────────────────────────
+
+  it('zeigt Aggregat-Zeile mit "Klasse gesamt" Label', () => {
+    const row = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'correct' });
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    expect(screen.getByRole('rowheader', { name: /Klasse gesamt/i })).toBeInTheDocument();
+  });
+
+  it('berechnet 100% wenn alle Schüler correct', () => {
+    const row1 = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'correct' });
+    const row2 = makeRow(makeStudent('s2', 'bert'), { 'lektion-1::aufgabe-1': 'correct' });
+    render(<ProgressMatrix columns={[col1]} rows={[row1, row2]} isLoading={false} error={null} />);
+
+    const cell = screen.getByRole('cell', { name: /lektion-1\/aufgabe-1.*100%/i });
+    expect(cell).toHaveTextContent('100%');
+  });
+
+  it('berechnet 0% wenn kein Schüler correct', () => {
+    const row1 = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'incorrect' });
+    const row2 = makeRow(makeStudent('s2', 'bert'), { 'lektion-1::aufgabe-1': 'unattempted' });
+    render(<ProgressMatrix columns={[col1]} rows={[row1, row2]} isLoading={false} error={null} />);
+
+    const cell = screen.getByRole('cell', { name: /lektion-1\/aufgabe-1.*0%/i });
+    expect(cell).toHaveTextContent('0%');
+  });
+
+  it('berechnet 50% wenn 1 von 2 Schülern correct', () => {
+    const row1 = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'correct' });
+    const row2 = makeRow(makeStudent('s2', 'bert'), { 'lektion-1::aufgabe-1': 'incorrect' });
+    render(<ProgressMatrix columns={[col1]} rows={[row1, row2]} isLoading={false} error={null} />);
+
+    const cell = screen.getByRole('cell', { name: /lektion-1\/aufgabe-1.*50%/i });
+    expect(cell).toHaveTextContent('50%');
+  });
+
+  it('zeigt separate Prozentsätze pro Spalte', () => {
+    const row1 = makeRow(makeStudent('s1', 'anna'), {
+      'lektion-1::aufgabe-1': 'correct',
+      'lektion-1::aufgabe-2': 'incorrect',
+    });
+    const row2 = makeRow(makeStudent('s2', 'bert'), {
+      'lektion-1::aufgabe-1': 'correct',
+      'lektion-1::aufgabe-2': 'correct',
+    });
+    render(<ProgressMatrix columns={[col1, col2]} rows={[row1, row2]} isLoading={false} error={null} />);
+
+    const cell1 = screen.getByRole('cell', { name: /lektion-1\/aufgabe-1.*100%/i });
+    expect(cell1).toHaveTextContent('100%');
+    const cell2 = screen.getByRole('cell', { name: /lektion-1\/aufgabe-2.*50%/i });
+    expect(cell2).toHaveTextContent('50%');
+  });
+
+  it('zeigt keine Aggregat-Zeile wenn keine Daten', () => {
+    render(<ProgressMatrix columns={[]} rows={[]} isLoading={false} error={null} />);
+    expect(screen.queryByText(/Klasse gesamt/i)).not.toBeInTheDocument();
+  });
 });

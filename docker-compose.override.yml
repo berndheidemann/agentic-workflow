@@ -1,0 +1,12 @@
+# Dev overrides — automatically loaded by docker compose.
+# Exposes PocketBase port for local development.
+# Not used in production (Traefik routes through nginx).
+services:
+  pocketbase:
+    ports:
+      - "8090:8090"
+
+  nginx:
+    labels: []
+    ports:
+      - "8080:80"

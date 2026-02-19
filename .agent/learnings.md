@@ -159,3 +159,15 @@ PocketBase users auth collection hat default `password.min = 8`. Für 4-Ziffern-
 ### 2026-02-19 — SPA-Navigation für Smoke-Tests
 
 Full-page-Navigation (`page.goto('/dashboard')`) verliert die Auth-Session (Cookie wird nicht restored). Stattdessen `window.history.pushState` + `PopStateEvent` nutzen oder innerhalb der SPA über Links navigieren.
+
+**UPDATE:** Root cause war CookieAuthStore using custom JSON for `writeCookie()` but PocketBase's `loadFromCookie()` for reading. Format mismatch → cookie can't be rehydrated on reload. Fix: use `this.exportToCookie(options, key)` for writing, which produces the same format that `loadFromCookie()` expects. After fix, `page.goto()` works fine with auth persistence.
+
+**ALSO:** AuthProvider `authRefresh()` needs a `cancelled` flag in the useEffect cleanup to prevent React StrictMode race conditions (first mount's aborted request clears auth before second mount's successful request).
+
+### 2026-02-19 — NavLink relative vs absolute paths in nested Routes
+
+React Router v6 `NavLink` with relative `to` prop resolves relative to the current URL path, not the matched route. At `/dashboard/freischaltung`, clicking `to="matrix"` navigates to `/dashboard/freischaltung/matrix` (wrong). Fix: use absolute paths (`to="/dashboard/matrix"`).
+
+### 2026-02-19 — Shared package rebuild required for Vite
+
+`packages/shared` exports from `./dist/` (built output via tsup). Vite dev server reads the built files, not the source. After editing shared package source, must run `npm run --workspace=packages/shared build` and clear Vite dep cache (`rm -rf apps/hub/node_modules/.vite`) then restart Vite for changes to take effect.

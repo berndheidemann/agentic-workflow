@@ -293,15 +293,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-023b: Dashboard Matrix — Filter & Aggregation
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-023a
 - **Akzeptanzkriterien:**
-  - [ ] Aggregat-Zeile: "X% der Klasse hat diese Aufgabe geschafft"
-  - [ ] Filter: nach Klasse, nach Kurs, nach Modul
-  - [ ] Filter-Kombination funktioniert korrekt
-  - [ ] URL-Parameter für aktiven Filter (Sharing/Bookmarking)
+  - [x] Aggregat-Zeile: "X% der Klasse hat diese Aufgabe geschafft"
+  - [x] Filter: nach Klasse, nach Kurs, nach Modul
+  - [x] Filter-Kombination funktioniert korrekt
+  - [x] URL-Parameter für aktiven Filter (Sharing/Bookmarking)
 
 ### REQ-024: Modul-Freischaltung im Dashboard
 
@@ -355,15 +355,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-031: UnlockGate Komponente
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-007
 - **Akzeptanzkriterien:**
-  - [ ] Wrapper-Komponente: zeigt Schloss oder Content
-  - [ ] Gesperrt: Hinweis was fehlt ("Dieses Modul wurde noch nicht freigeschaltet")
-  - [ ] Ohne Login: alles offen (kein Gate)
-  - [ ] Freigeschaltet: Content normal sichtbar
+  - [x] Wrapper-Komponente: zeigt Schloss oder Content
+  - [x] Gesperrt: Hinweis was fehlt ("Dieses Modul wurde noch nicht freigeschaltet")
+  - [x] Ohne Login: alles offen (kein Gate)
+  - [x] Freigeschaltet: Content normal sichtbar
 
 ### REQ-032: SidebarUnlock Komponente
 
@@ -500,14 +500,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-050: AP1-Trainer Base-Path konfigurieren
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-002
 - **Akzeptanzkriterien:**
-  - [ ] `astro.config.mjs`: `base: '/ap1'` und `site: 'https://learn.szut.dev'`
-  - [ ] Build erfolgreich mit Subpfad
-  - [ ] Alle internen Links funktionieren mit Prefix
+  - [x] `astro.config.mjs`: `base: '/ap1'` und `site: 'https://learn.szut.dev'`
+  - [x] Build erfolgreich mit Subpfad
+  - [x] Alle internen Links funktionieren mit Prefix
 
 ### REQ-051: AP1-Trainer Shared-Integration
 
@@ -558,16 +558,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-070: Docker Compose Production-Setup
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-002
 - **Akzeptanzkriterien:**
-  - [ ] Traefik-Labels für `learn.szut.dev`
-  - [ ] TLS via Let's Encrypt (Traefik certresolver)
-  - [ ] PocketBase persistent Volume
-  - [ ] Nginx mit korrektem Path-Routing
-  - [ ] `docker compose up -d` startet alles
+  - [x] Traefik-Labels für `learn.szut.dev`
+  - [x] TLS via Let's Encrypt (Traefik certresolver)
+  - [x] PocketBase persistent Volume
+  - [x] Nginx mit korrektem Path-Routing
+  - [x] `docker compose up -d` startet alles
 
 ### REQ-071: Ops-Scripts (Backup + Deploy)
 
@@ -582,30 +582,30 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-073: DSGVO & Security Hardening
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-002, REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] Datenschutzerklärung auf Landing Page verlinkt
-  - [ ] Kein Klarname-Zwang (nur Username + Klasse)
-  - [ ] Keine IP-Logs in PocketBase
-  - [ ] Hinweis auf Datenminimierung in der Registrierung
-  - [ ] Security Headers in nginx.conf: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+  - [x] Datenschutzerklärung auf Landing Page verlinkt
+  - [x] Kein Klarname-Zwang (nur Username + Klasse)
+  - [x] Keine IP-Logs in PocketBase
+  - [x] Hinweis auf Datenminimierung in der Registrierung
+  - [x] Security Headers in nginx.conf: X-Content-Type-Options, X-Frame-Options, Referrer-Policy
 
 ### REQ-074: Einwilligungsformular Erziehungsberechtigte
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-073
 - **Hinweis:** Ohne Einwilligung der Erziehungsberechtigten darf die Plattform mit Minderjährigen (< 16 Jahre) nicht betrieben werden. Rechtliche Pflicht für den Schulbetrieb.
 - **Akzeptanzkriterien:**
-  - [ ] PDF-Template für Einwilligungserklärung der Erziehungsberechtigten
-  - [ ] Inhalt: Welche Daten werden erhoben (Username, Klasse, Lernfortschritt), Zweck, Speicherdauer, Löschung am Schuljahresende
-  - [ ] Hinweis auf Freiwilligkeit (Plattform auch ohne Login nutzbar)
-  - [ ] Download-Link auf der Registrierungsseite
-  - [ ] Datenschutzerklärungs-Seite mit vollständigem Inhalt (nicht nur Link)
+  - [x] PDF-Template für Einwilligungserklärung der Erziehungsberechtigten
+  - [x] Inhalt: Welche Daten werden erhoben (Username, Klasse, Lernfortschritt), Zweck, Speicherdauer, Löschung am Schuljahresende
+  - [x] Hinweis auf Freiwilligkeit (Plattform auch ohne Login nutzbar)
+  - [x] Download-Link auf der Registrierungsseite
+  - [x] Datenschutzerklärungs-Seite mit vollständigem Inhalt (nicht nur Link)
 
 ### REQ-075: Löschkonzept & Klasse archivieren
 
