@@ -127,7 +127,7 @@
     "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
   },
   "REQ-015": {
-    "status": "open",
+    "status": "done",
     "priority": "P1",
     "size": "S",
     "deps": [
