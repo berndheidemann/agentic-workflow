@@ -198,7 +198,7 @@
     ]
   },
   "REQ-026": {
-    "status": "open",
+    "status": "in_progress",
     "priority": "P1",
     "size": "S",
     "deps": [

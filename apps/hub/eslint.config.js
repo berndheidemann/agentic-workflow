@@ -27,6 +27,7 @@ export default [
         HTMLInputElement: 'readonly',
         HTMLFormElement: 'readonly',
         HTMLDialogElement: 'readonly',
+        HTMLButtonElement: 'readonly',
         Event: 'readonly',
         URLSearchParams: 'readonly',
         React: 'readonly',

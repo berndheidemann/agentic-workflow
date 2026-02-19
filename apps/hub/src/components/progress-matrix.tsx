@@ -1,4 +1,6 @@
-import type { MatrixColumn, MatrixRow, CellStatus } from '../hooks/use-class-progress';
+import { useState } from 'react';
+import type { MatrixColumn, MatrixRow, CellStatus, MatrixCell } from '../hooks/use-class-progress';
+import { CellDetailModal } from './cell-detail-modal';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -7,6 +9,12 @@ export interface ProgressMatrixProps {
   rows: MatrixRow[];
   isLoading: boolean;
   error: string | null;
+}
+
+interface SelectedCell {
+  cell: MatrixCell;
+  column: MatrixColumn;
+  studentName: string;
 }
 
 // ─── Cell styling ─────────────────────────────────────────────────────────────
@@ -63,6 +71,8 @@ function LoadingSkeleton() {
  * Data is provided by useClassProgress hook; this component has no side effects.
  */
 export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatrixProps) {
+  const [selectedCell, setSelectedCell] = useState<SelectedCell | null>(null);
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
@@ -87,6 +97,7 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
   }
 
   return (
+    <>
     <div className="overflow-x-auto" role="region" aria-label="Fortschrittsmatrix">
       <table
         className="min-w-full border-collapse text-sm"
@@ -136,7 +147,20 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
                     className={`px-2 py-2 text-center border-b border-gray-100 ${style.bg}`}
                     aria-label={`${row.student.username}, ${col.label}: ${style.label}`}
                   >
-                    <span className="sr-only">{style.label}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedCell({
+                          cell,
+                          column: col,
+                          studentName: row.student.username,
+                        })
+                      }
+                      aria-label={`Detail anzeigen: ${row.student.username}, ${col.label}`}
+                      className="w-full h-full min-w-[2rem] min-h-[1.5rem] rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                    >
+                      <span className="sr-only">{style.label}</span>
+                    </button>
                   </td>
                 );
               })}
@@ -175,5 +199,14 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
         </tfoot>
       </table>
     </div>
+
+    <CellDetailModal
+      cell={selectedCell?.cell ?? null}
+      column={selectedCell?.column ?? null}
+      studentName={selectedCell?.studentName ?? ''}
+      isOpen={selectedCell !== null}
+      onClose={() => setSelectedCell(null)}
+    />
+    </>
   );
 }
