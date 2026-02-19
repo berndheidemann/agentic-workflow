@@ -150,7 +150,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-009: Site-Registry (Single Source of Truth)
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-001
@@ -220,7 +220,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-014: Kurs-Kacheln mit Fortschrittsbalken
 
-- **Status:** done
+- **Status:** blocked
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006, REQ-011
@@ -231,7 +231,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-015: Profil-Bereich
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-005, REQ-006, REQ-010
@@ -319,7 +319,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-020, REQ-021
@@ -329,7 +329,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-026: Dashboard Detail-Ansicht Zelle
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-023a
@@ -343,7 +343,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-030: LoginBanner Komponente
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-005
@@ -367,7 +367,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-032: SidebarUnlock Komponente
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-007
@@ -378,7 +378,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-033: ProgressBar Komponente (Sidebar)
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-006
@@ -389,7 +389,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-034: Offline-Queue für Progress
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006
@@ -400,7 +400,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-036: Prerequisite-basiertes Soft-Gate
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006, REQ-007
@@ -414,7 +414,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-037: Kursstruktur-Manifest
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-009
@@ -432,7 +432,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-035: a11y-Feinschliff bestehende Komponenten
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-011, REQ-023a
@@ -450,7 +450,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-040: Dashboard zeigt verdächtige Einträge
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-008, REQ-023a
@@ -465,7 +465,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-052: World of Zuul — Docusaurus → Astro/Starlight Migration
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-001
@@ -482,7 +482,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-053: World of Zuul — Shared-Integration
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-006, REQ-007, REQ-052
@@ -528,7 +528,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-060: Starlight-Sites integrieren (pandas, REST/NoSQL)
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-051
@@ -541,7 +541,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-061: React-SPA-Sites integrieren (NumPy, UML)
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-051
@@ -571,7 +571,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-071: Ops-Scripts (Backup + Deploy)
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-070
@@ -609,7 +609,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-075: Löschkonzept & Klasse archivieren
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-021, REQ-073

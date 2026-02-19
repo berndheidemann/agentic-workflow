@@ -117,13 +117,14 @@
     ]
   },
   "REQ-014": {
-    "status": "open",
+    "status": "blocked",
     "priority": "P1",
     "size": "M",
     "deps": [
       "REQ-006",
       "REQ-011"
-    ]
+    ],
+    "notes": "Docker nicht verfügbar (permission denied auf /var/run/docker.sock). Kein REQ kann ohne funktionierende Verifikationsumgebung als done markiert werden."
   },
   "REQ-015": {
     "status": "open",
