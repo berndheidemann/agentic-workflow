@@ -315,3 +315,18 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 - **Symptom:** `ReferenceError: document is not defined` beim Astro SSR.
 - **Lösung:** `client:only="react"` statt `client:load` — verhindert SSR, rendert nur clientseitig.
 - **Regel:** React-Komponenten die DOM direkt im Funktionskörper lesen müssen `client:only="react"` verwenden.
+
+### 2026-02-19 — Validation 9: REQ-034 + REQ-036 sauber, Sonnet-Qualität verbessert
+
+**Validiert:** REQ-034 (Offline-Queue), REQ-036 (Prerequisite-Soft-Gate). Beide bestanden.
+
+**Sonnet-Qualität weiterhin gut:**
+- Smoke-Tests werden konsequent durchgeführt (alle 4 Iterationen iter-006 bis iter-009)
+- `sudo docker compose` wird konsistent verwendet
+- `npm run test` wird korrekt eingesetzt
+- Crash Recovery funktioniert (iter-008 hat WIP-Checkpoint aus iter-007 aufgegriffen)
+- Zwei kritische Bugs (Starlight v0.37 API, PrerequisiteInjector SSR) wurden durch echtes Browser-Testing entdeckt und behoben
+
+**Teststand:** 297 Hub + 236 Shared + 76 AP1-Trainer = 609 Tests. Build + Lint sauber.
+
+**Beobachtung:** Log-Zusammenfassungen brechen bei 3/4 Iterationen ab. Kein Sonnet-Problem, aber technisches Monitoring-Defizit.
