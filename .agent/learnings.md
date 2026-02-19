@@ -118,3 +118,17 @@ Sonnet hat bei REQ-012 die PRD-Checkboxen nicht angehakt obwohl status.json auf 
 ### 2026-02-19 — Validation 2: Stabile Codebasis, E2E-Lücke besteht weiter
 
 Keine neuen done-REQs seit Validation 1. Alle 15 done-REQs weiterhin korrekt (Preflight + Smoke-Tests bestanden). E2E-Setup nachgeholt: `@playwright/test` + Chromium installiert, `playwright.config.ts` erstellt, 6 Login-E2E-Tests grün. act()-Warnings in mehreren Test-Dateien sind technische Schuld, keine Failures. iter-006 wurde abgebrochen (kein Status-Block) — REQ-021 korrekt als `open` geblieben.
+
+### 2026-02-19 — Validation 3: REQ-021 bestanden, Teacher-Auth-Blocker identifiziert
+
+**REQ-021 validiert:** Alle 4 Akzeptanzkriterien erfüllt. CreateClassForm, ClassList, ClassDetail — vollständig implementiert mit 31 Unit-Tests, 5 E2E-Tests, guter a11y. Code-Qualität hoch.
+
+**REQ-023a korrekt in_progress:** Sonnet hat den Status richtig belassen — Code existiert (ProgressMatrix, useClassProgress, MatrixView), aber der Smoke-Test konnte nicht abgeschlossen werden.
+
+**Teacher-Auth-Smoke-Test-Blocker (KRITISCH):** 3 Iterationen (iter-006, iter-008, iter-009) haben kumuliert ~60% der Turn-Budgets mit dem Versuch verbrannt, einen Teacher-Account für Dashboard-Smoke-Tests zu erstellen/einzuloggen. Kernproblem: `user-validation.pb.js` Hook erzwingt 4-stellige PIN für ALLE User-Creation-Requests (inkl. Admin-API). Teacher brauchen Passwörter (≥8 Zeichen), was mit der PIN-Validierung kollidiert. Die LoginPage erzwingt zusätzlich clientseitig genau 4 Ziffern.
+
+**Lösung:** Der Hook muss Admin/Superuser-Requests von der PIN-Validierung ausnehmen. Entweder: `if (e.hasSuperuserAuth()) return;` am Anfang des Hooks, oder eine Seed-Migration die direkt über `$app.save()` schreibt (umgeht Hooks). Ohne diesen Fix kann kein Dashboard-Feature vollständig verifiziert werden.
+
+**Muster:** Sonnet erkennt strukturelle Blocker zu spät und versucht 20+ verschiedene Workarounds statt den Blocker direkt zu adressieren. Bei wiederholtem Scheitern des gleichen Ansatzes: Hook/Schema anpassen statt Workarounds.
+
+**Teststand:** 32 E2E-Tests (6 Specs), 154 Hub-Unit-Tests, 141 Shared-Unit-Tests = 327 gesamt. Build + Lint sauber.
