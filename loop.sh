@@ -337,7 +337,7 @@ build_validator_prompt() {
     if [ -f "$logfile" ]; then
       echo "---"
       echo ""
-      bash scripts/summarize-log.sh "$logfile" 2>/dev/null || echo "_Log-Zusammenfassung fehlgeschlagen für $logfile_"
+      bash scripts/summarize-log.sh "$logfile" 2>/dev/null || echo "_Log-Zusammenfassung fehlgeschlagen für ${logfile}_"
       echo ""
       count=$((count + 1))
     fi
