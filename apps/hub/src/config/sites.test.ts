@@ -16,6 +16,18 @@ describe('sites config', () => {
       expect(site.frameworkType).toMatch(/^(starlight|react-spa)$/);
       expect(typeof site.isActive).toBe('boolean');
       expect(typeof site.sortOrder).toBe('number');
+      expect(Array.isArray(site.modules)).toBe(true);
+      expect(site.modules.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('jedes Modul hat id, name und sortOrder', () => {
+    for (const site of sites) {
+      for (const mod of site.modules) {
+        expect(mod.id).toBeTruthy();
+        expect(mod.name).toBeTruthy();
+        expect(typeof mod.sortOrder).toBe('number');
+      }
     }
   });
 

@@ -305,17 +305,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-024: Modul-Freischaltung im Dashboard
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-007, REQ-020, REQ-021
 - **Akzeptanzkriterien:**
-  - [ ] Liste aller Module pro Kurs mit aktuellem Status (gesperrt/freigeschaltet)
-  - [ ] Toggle-Buttons zum Freischalten/Sperren pro Modul pro Klasse
-  - [ ] Bulk-Aktion: "Alle Module bis einschließlich Modul X freischalten" als Ein-Klick-Aktion
-  - [ ] Default-Zustand bei neuer Klasse: alles freigeschaltet (Lehrer sperrt bewusst, nicht andersrum)
-  - [ ] Änderungen werden sofort in PocketBase gespeichert
-  - [ ] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen
+  - [x] Liste aller Module pro Kurs mit aktuellem Status (gesperrt/freigeschaltet)
+  - [x] Toggle-Buttons zum Freischalten/Sperren pro Modul pro Klasse
+  - [x] Bulk-Aktion: "Alle Module bis einschließlich Modul X freischalten" als Ein-Klick-Aktion
+  - [x] Default-Zustand bei neuer Klasse: alles freigeschaltet (Lehrer sperrt bewusst, nicht andersrum)
+  - [x] Änderungen werden sofort in PocketBase gespeichert
+  - [x] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 

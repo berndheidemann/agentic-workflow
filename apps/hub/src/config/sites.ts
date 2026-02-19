@@ -1,3 +1,9 @@
+export interface ModuleConfig {
+  id: string;
+  name: string;
+  sortOrder: number;
+}
+
 export interface SiteConfig {
   slug: string;
   name: string;
@@ -8,6 +14,8 @@ export interface SiteConfig {
   frameworkType: 'starlight' | 'react-spa';
   isActive: boolean;
   sortOrder: number;
+  /** Modules for this course. Placeholder until REQ-037 manifests provide real data. */
+  modules: ModuleConfig[];
 }
 
 // Heroicons MIT License — https://github.com/tailwindlabs/heroicons
@@ -22,6 +30,13 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 1,
+    modules: [
+      { id: 'wirtschaft', name: 'Wirtschaft & Recht', sortOrder: 1 },
+      { id: 'it-systeme', name: 'IT-Systeme', sortOrder: 2 },
+      { id: 'netzwerke', name: 'Netzwerktechnik', sortOrder: 3 },
+      { id: 'programmierung', name: 'Programmierung', sortOrder: 4 },
+      { id: 'datenbanken', name: 'Datenbanken', sortOrder: 5 },
+    ],
   },
   {
     slug: 'pandas',
@@ -32,6 +47,12 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 2,
+    modules: [
+      { id: 'grundlagen', name: 'Grundlagen', sortOrder: 1 },
+      { id: 'dataframes', name: 'DataFrames', sortOrder: 2 },
+      { id: 'analyse', name: 'Datenanalyse', sortOrder: 3 },
+      { id: 'visualisierung', name: 'Visualisierung', sortOrder: 4 },
+    ],
   },
   {
     slug: 'rest',
@@ -42,6 +63,12 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 3,
+    modules: [
+      { id: 'rest-grundlagen', name: 'REST Grundlagen', sortOrder: 1 },
+      { id: 'http-methoden', name: 'HTTP-Methoden', sortOrder: 2 },
+      { id: 'nosql', name: 'NoSQL-Datenbanken', sortOrder: 3 },
+      { id: 'api-design', name: 'API-Design', sortOrder: 4 },
+    ],
   },
   {
     slug: 'zuul',
@@ -52,6 +79,12 @@ export const sites: SiteConfig[] = [
     frameworkType: 'starlight',
     isActive: true,
     sortOrder: 4,
+    modules: [
+      { id: 'einfuehrung', name: 'Einführung', sortOrder: 1 },
+      { id: 'klassen', name: 'Klassen & Objekte', sortOrder: 2 },
+      { id: 'vererbung', name: 'Vererbung', sortOrder: 3 },
+      { id: 'entwurfsmuster', name: 'Entwurfsmuster', sortOrder: 4 },
+    ],
   },
   {
     slug: 'numpy',
@@ -62,6 +95,11 @@ export const sites: SiteConfig[] = [
     frameworkType: 'react-spa',
     isActive: true,
     sortOrder: 5,
+    modules: [
+      { id: 'arrays', name: 'Arrays & Vektoren', sortOrder: 1 },
+      { id: 'operationen', name: 'Operationen', sortOrder: 2 },
+      { id: 'lineare-algebra', name: 'Lineare Algebra', sortOrder: 3 },
+    ],
   },
   {
     slug: 'uml',
@@ -72,6 +110,12 @@ export const sites: SiteConfig[] = [
     frameworkType: 'react-spa',
     isActive: true,
     sortOrder: 6,
+    modules: [
+      { id: 'klassendiagramme', name: 'Klassendiagramme', sortOrder: 1 },
+      { id: 'sequenzdiagramme', name: 'Sequenzdiagramme', sortOrder: 2 },
+      { id: 'aktivitaetsdiagramme', name: 'Aktivitätsdiagramme', sortOrder: 3 },
+      { id: 'anwendungsfalldiagramme', name: 'Anwendungsfalldiagramme', sortOrder: 4 },
+    ],
   },
 ];
 

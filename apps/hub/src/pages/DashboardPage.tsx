@@ -8,6 +8,8 @@ import { ClassDetail } from '../components/class-detail';
 import { CreateClassForm } from '../components/create-class-form';
 import { ProgressMatrix } from '../components/progress-matrix';
 import { useClassProgress } from '../hooks/use-class-progress';
+import { ModuleUnlockList } from '../components/module-unlock-list';
+import { useModuleUnlocks } from '../hooks/use-module-unlocks';
 import { getActiveSites } from '../config/sites';
 
 // ─── Klassen View ─────────────────────────────────────────────────────────────
@@ -233,12 +235,115 @@ function MatrixView() {
 }
 
 function FreischaltungView() {
+  const { pb, user } = useAuth();
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [classesLoading, setClassesLoading] = useState(true);
+
+  const selectedSite = activeSites.find((s) => s.slug === selectedCourse);
+  const moduleIds = selectedSite?.modules.map((m) => m.id) ?? [];
+
+  const { modules, isLoading, isSaving, error, toggleModule, unlockUpTo } =
+    useModuleUnlocks(selectedClassId, selectedCourse, moduleIds);
+
+  // Load teacher's classes
+  useEffect(() => {
+    let stale = false;
+
+    async function loadClasses() {
+      setClassesLoading(true);
+      try {
+        const result = await pb.collection('classes').getFullList<Class>({
+          filter: user?.id ? `created_by = "${user.id}"` : '',
+          sort: 'name',
+        });
+        if (!stale) setClasses(result);
+      } catch {
+        // Keep empty list on error
+      } finally {
+        if (!stale) setClassesLoading(false);
+      }
+    }
+
+    loadClasses();
+    return () => { stale = true; };
+  }, [pb, user?.id]);
+
   return (
     <section aria-labelledby="freischaltung-heading">
-      <h2 id="freischaltung-heading" className="text-xl font-semibold text-gray-800 mb-4">
-        Freischaltung
+      <h2 id="freischaltung-heading" className="text-xl font-semibold text-gray-800 mb-6">
+        Modul-Freischaltung
       </h2>
-      <p className="text-gray-500 text-sm">Modul-Freischaltung folgt in REQ-024.</p>
+
+      <p className="text-gray-500 text-sm mb-4">
+        Standardmäßig sind alle Module freigeschaltet. Sperre gezielt Module,
+        die Schüler noch nicht bearbeiten sollen.
+      </p>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex flex-col gap-1">
+          <label htmlFor="unlock-class-select" className="text-sm font-medium text-gray-700">
+            Klasse
+          </label>
+          <select
+            id="unlock-class-select"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:text-gray-400"
+            value={selectedClassId ?? ''}
+            onChange={(e) => setSelectedClassId(e.target.value || null)}
+            disabled={classesLoading}
+            aria-label="Klasse auswählen"
+          >
+            <option value="">— Klasse wählen —</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name} ({cls.school_year})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="unlock-course-select" className="text-sm font-medium text-gray-700">
+            Kurs
+          </label>
+          <select
+            id="unlock-course-select"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            value={selectedCourse ?? ''}
+            onChange={(e) => setSelectedCourse(e.target.value || null)}
+            aria-label="Kurs auswählen"
+          >
+            <option value="">— Kurs wählen —</option>
+            {activeSites.map((site) => (
+              <option key={site.slug} value={site.slug}>
+                {site.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Saving indicator */}
+      {isSaving && (
+        <div aria-live="polite" className="mb-4 text-sm text-blue-600">
+          Änderungen werden gespeichert…
+        </div>
+      )}
+
+      {/* Module list */}
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <ModuleUnlockList
+          modules={modules}
+          moduleConfigs={selectedSite?.modules ?? []}
+          isSaving={isSaving}
+          isLoading={isLoading}
+          error={error}
+          onToggle={toggleModule}
+          onUnlockUpTo={(moduleId) => unlockUpTo(moduleId, moduleIds)}
+        />
+      </div>
     </section>
   );
 }
