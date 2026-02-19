@@ -13,22 +13,19 @@ test.describe('Login-Seite', () => {
 
   test('zeigt das Login-Formular', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Anmelden', level: 1 })).toBeVisible();
-    await expect(page.getByLabel('Klassen-Code')).toBeVisible();
     await expect(page.getByLabel('Benutzername')).toBeVisible();
     await expect(page.getByLabel('PIN (4 Ziffern)')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Anmelden' })).toBeVisible();
   });
 
-  test('zeigt Validierungsfehler bei leerem Submit', async ({ page }) => {
-    await page.getByRole('button', { name: 'Anmelden' }).click();
-    await expect(page.getByText('Bitte Klassen-Code eingeben.')).toBeVisible();
-    await expect(page.getByText('Bitte Benutzernamen eingeben.')).toBeVisible();
-    await expect(page.getByText('Bitte PIN eingeben.')).toBeVisible();
+  test('zeigt kein Klassen-Code-Feld', async ({ page }) => {
+    await expect(page.getByLabel('Klassen-Code')).not.toBeVisible();
   });
 
-  test('Klassen-Code wird automatisch großgeschrieben', async ({ page }) => {
-    await page.getByLabel('Klassen-Code').fill('ab3c4d');
-    await expect(page.getByLabel('Klassen-Code')).toHaveValue('AB3C4D');
+  test('zeigt Validierungsfehler bei leerem Submit', async ({ page }) => {
+    await page.getByRole('button', { name: 'Anmelden' }).click();
+    await expect(page.getByText('Bitte Benutzernamen eingeben.')).toBeVisible();
+    await expect(page.getByText('Bitte PIN eingeben.')).toBeVisible();
   });
 
   test('Link zur Registrierungsseite vorhanden', async ({ page }) => {
@@ -38,15 +35,11 @@ test.describe('Login-Seite', () => {
   });
 
   test('Tab-Navigation durch alle Felder funktioniert', async ({ page }) => {
-    const classCodeInput = page.getByLabel('Klassen-Code');
     const usernameInput = page.getByLabel('Benutzername');
     const pinInput = page.getByLabel('PIN (4 Ziffern)');
     const submitButton = page.getByRole('button', { name: 'Anmelden' });
 
-    await classCodeInput.focus();
-    await expect(classCodeInput).toBeFocused();
-
-    await page.keyboard.press('Tab');
+    await usernameInput.focus();
     await expect(usernameInput).toBeFocused();
 
     await page.keyboard.press('Tab');
@@ -57,7 +50,6 @@ test.describe('Login-Seite', () => {
   });
 
   test('Login mit falschen Daten zeigt Fehlermeldung', async ({ page }) => {
-    await page.getByLabel('Klassen-Code').fill('AB3C4D');
     await page.getByLabel('Benutzername').fill('nichtexistierend');
     await page.getByLabel('PIN (4 Ziffern)').fill('9999');
     await page.getByRole('button', { name: 'Anmelden' }).click();

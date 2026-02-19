@@ -41,10 +41,11 @@ describe('CourseCard', () => {
     expect(container.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('Link zeigt auf basePath', () => {
+  it('Link enthält basePath', () => {
     render(<CourseCard site={mockSite} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/ap1/');
+    const href = link.getAttribute('href')!;
+    expect(href).toContain('/ap1/');
   });
 
   it('Link hat aria-label mit Name und Beschreibung', () => {

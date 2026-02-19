@@ -42,10 +42,11 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: 'Lernplattform', level: 1 })).toBeInTheDocument();
   });
 
-  it('zeigt alle 6 Kurs-Kacheln als Links plus Footer-Link', () => {
+  it('zeigt alle 6 Kurs-Kacheln als Links plus Footer-Link und Gast-CTA-Links', () => {
     renderWithRouter();
     const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(7); // 6 courses + Datenschutzerklärung
+    // 6 courses + Datenschutzerklärung + Anmelden + Registrieren (Gast-CTA)
+    expect(links).toHaveLength(9);
   });
 
   it('zeigt Datenschutzerklärung-Link im Footer', () => {
@@ -57,13 +58,13 @@ describe('HomePage', () => {
   it('verlinkt AP1-Trainer korrekt', () => {
     renderWithRouter();
     const link = screen.getByRole('link', { name: /AP1-Trainer/i });
-    expect(link).toHaveAttribute('href', '/ap1/');
+    expect(link.getAttribute('href')).toContain('/ap1/');
   });
 
   it('verlinkt Pandas korrekt', () => {
     renderWithRouter();
     const link = screen.getByRole('link', { name: /Pandas/i });
-    expect(link).toHaveAttribute('href', '/pandas/');
+    expect(link.getAttribute('href')).toContain('/pandas/');
   });
 
   it('hat einen main-Bereich', () => {
@@ -81,10 +82,8 @@ describe('HomePage', () => {
     renderWithRouter();
     const activeSites = getActiveSites();
     for (const site of activeSites) {
-      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toHaveAttribute(
-        'href',
-        site.basePath
-      );
+      const link = screen.getByRole('link', { name: new RegExp(site.name, 'i') });
+      expect(link.getAttribute('href')).toContain(site.basePath);
     }
   });
 

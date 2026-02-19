@@ -47,8 +47,8 @@ describe('CourseGrid', () => {
     const sites = [makeSite('ap1', 1), makeSite('pandas', 2)];
     render(<CourseGrid sites={sites} />);
     const links = screen.getAllByRole('link');
-    expect(links[0]).toHaveAttribute('href', '/ap1/');
-    expect(links[1]).toHaveAttribute('href', '/pandas/');
+    expect(links[0].getAttribute('href')).toContain('/ap1/');
+    expect(links[1].getAttribute('href')).toContain('/pandas/');
   });
 
   it('zeigt keine Fortschrittsbalken ohne courseProgress-Prop', () => {

@@ -44,8 +44,7 @@ function getForm() {
   return screen.getByRole('button', { name: /anmelden/i }).closest('form')!;
 }
 
-function fillForm(classCode = 'AB3C4D', username = 'testuser', pin = '1234') {
-  fireEvent.change(screen.getByLabelText('Klassen-Code'), { target: { value: classCode } });
+function fillForm(username = 'testuser', pin = '1234') {
   fireEvent.change(screen.getByLabelText('Benutzername'), { target: { value: username } });
   fireEvent.change(screen.getByLabelText('PIN (4 Ziffern)'), { target: { value: pin } });
 }
@@ -69,11 +68,6 @@ describe('LoginPage', () => {
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 
-  it('zeigt Klassen-Code-Feld', () => {
-    renderLoginPage();
-    expect(screen.getByLabelText('Klassen-Code')).toBeInTheDocument();
-  });
-
   it('zeigt Benutzername-Feld', () => {
     renderLoginPage();
     expect(screen.getByLabelText('Benutzername')).toBeInTheDocument();
@@ -94,33 +88,21 @@ describe('LoginPage', () => {
     expect(screen.getByRole('link', { name: /registrieren/i })).toBeInTheDocument();
   });
 
+  it('zeigt keinen Klassen-Code-Feld', () => {
+    renderLoginPage();
+    expect(screen.queryByLabelText('Klassen-Code')).not.toBeInTheDocument();
+  });
+
   // ── Validierung ───────────────────────────────────────────────────────────
-
-  it('zeigt Fehler bei leerem Klassen-Code nach Submit', async () => {
-    renderLoginPage();
-    fireEvent.submit(getForm());
-    expect(await screen.findByText('Bitte Klassen-Code eingeben.')).toBeInTheDocument();
-  });
-
-  it('zeigt Fehler bei ungültigem Klassen-Code (zu kurz)', async () => {
-    renderLoginPage();
-    fireEvent.change(screen.getByLabelText('Klassen-Code'), { target: { value: 'ABC' } });
-    fireEvent.submit(getForm());
-    expect(
-      await screen.findByText('Klassen-Code muss aus 6 Zeichen bestehen (Buchstaben und Ziffern).')
-    ).toBeInTheDocument();
-  });
 
   it('zeigt Fehler bei leerem Benutzernamen nach Submit', async () => {
     renderLoginPage();
-    fireEvent.change(screen.getByLabelText('Klassen-Code'), { target: { value: 'AB3C4D' } });
     fireEvent.submit(getForm());
     expect(await screen.findByText('Bitte Benutzernamen eingeben.')).toBeInTheDocument();
   });
 
   it('zeigt Fehler bei leerem PIN nach Submit', async () => {
     renderLoginPage();
-    fireEvent.change(screen.getByLabelText('Klassen-Code'), { target: { value: 'AB3C4D' } });
     fireEvent.change(screen.getByLabelText('Benutzername'), { target: { value: 'testuser' } });
     fireEvent.submit(getForm());
     expect(await screen.findByText('Bitte PIN eingeben.')).toBeInTheDocument();
@@ -128,21 +110,21 @@ describe('LoginPage', () => {
 
   it('zeigt Fehler bei ungültigem PIN (nicht 4 Ziffern)', async () => {
     renderLoginPage();
-    fillForm('AB3C4D', 'testuser', '12');
+    fillForm('testuser', '12');
     fireEvent.submit(getForm());
     expect(await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.')).toBeInTheDocument();
   });
 
   it('zeigt Fehler bei nicht-numerischem PIN', async () => {
     renderLoginPage();
-    fillForm('AB3C4D', 'testuser', 'abcd');
+    fillForm('testuser', 'abcd');
     fireEvent.submit(getForm());
     expect(await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.')).toBeInTheDocument();
   });
 
   // ── Submit-Verhalten ──────────────────────────────────────────────────────
 
-  it('ruft login() mit username und pin auf — nicht mit classCode', async () => {
+  it('ruft login() mit username und pin auf', async () => {
     const mockLogin = vi.fn().mockResolvedValue(undefined);
     renderLoginPage(makeAuthContext({ login: mockLogin }));
 
@@ -154,7 +136,7 @@ describe('LoginPage', () => {
     });
   });
 
-  it('übergibt keinen Klassen-Code an login()', async () => {
+  it('übergibt nur username und pin an login()', async () => {
     const mockLogin = vi.fn().mockResolvedValue(undefined);
     renderLoginPage(makeAuthContext({ login: mockLogin }));
 
@@ -235,13 +217,6 @@ describe('LoginPage', () => {
     });
   });
 
-  it('Klassen-Code-Eingabe wird automatisch großgeschrieben', () => {
-    renderLoginPage();
-    const input = screen.getByLabelText('Klassen-Code');
-    fireEvent.change(input, { target: { value: 'ab3c4d' } });
-    expect(input).toHaveValue('AB3C4D');
-  });
-
   // ── Accessibility ─────────────────────────────────────────────────────────
 
   it('Felder haben aria-invalid="true" bei Validierungsfehler', async () => {
@@ -249,7 +224,6 @@ describe('LoginPage', () => {
     fireEvent.submit(getForm());
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Klassen-Code')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByLabelText('Benutzername')).toHaveAttribute('aria-invalid', 'true');
       expect(screen.getByLabelText('PIN (4 Ziffern)')).toHaveAttribute('aria-invalid', 'true');
     });
@@ -260,10 +234,6 @@ describe('LoginPage', () => {
     fireEvent.submit(getForm());
 
     await waitFor(() => {
-      expect(screen.getByLabelText('Klassen-Code')).toHaveAttribute(
-        'aria-describedby',
-        'classCode-error'
-      );
       expect(screen.getByLabelText('Benutzername')).toHaveAttribute(
         'aria-describedby',
         'username-error'
@@ -277,7 +247,6 @@ describe('LoginPage', () => {
 
   it('alle Felder haben aria-required="true"', () => {
     renderLoginPage();
-    expect(screen.getByLabelText('Klassen-Code')).toHaveAttribute('aria-required', 'true');
     expect(screen.getByLabelText('Benutzername')).toHaveAttribute('aria-required', 'true');
     expect(screen.getByLabelText('PIN (4 Ziffern)')).toHaveAttribute('aria-required', 'true');
   });

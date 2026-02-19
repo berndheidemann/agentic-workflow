@@ -12,7 +12,6 @@ test.describe('Profil-Bereich (Landing Page)', () => {
   test('Nach Login ist Profil-Bereich sichtbar', async ({ page }) => {
     // Login
     await page.goto(`${BASE_URL}/login`);
-    await page.getByLabel('Klassen-Code').fill('S9VFB6');
     await page.getByLabel('Benutzername').fill('testschueler');
     await page.getByLabel('PIN (4 Ziffern)').fill('1234');
     await page.getByRole('button', { name: 'Anmelden' }).click();
@@ -37,7 +36,6 @@ test.describe('Profil-Bereich (Landing Page)', () => {
   test('Logout-Button kehrt zu Gast-Ansicht zurück', async ({ page }) => {
     // Login first
     await page.goto(`${BASE_URL}/login`);
-    await page.getByLabel('Klassen-Code').fill('S9VFB6');
     await page.getByLabel('Benutzername').fill('testschueler');
     await page.getByLabel('PIN (4 Ziffern)').fill('1234');
     await page.getByRole('button', { name: 'Anmelden' }).click();
