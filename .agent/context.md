@@ -12,7 +12,7 @@
 
 ## Offene Punkte für Sonnet
 
-1. **E2E-Tests fehlen weiterhin:** Nur `e2e/login.spec.ts` existiert. Playwright nicht als npm-Paket installiert. Muss vor nächster Validation nachgeholt werden.
+1. **E2E-Tests:** `@playwright/test` + Chromium installiert, `playwright.config.ts` vorhanden. `e2e/login.spec.ts` (6 Tests) läuft grün. Es fehlen noch E2E-Tests für Landing, Register und Dashboard.
 2. **act() Warnings:** use-unlock, LoginPage, RegisterPage Tests haben act()-Warnings. Keine Failures, aber sollten bereinigt werden.
 3. **REQ-021 war angefangen:** iter-006 startete REQ-021 (Klassenverwaltung), wurde abgebrochen. Sonnet kann dort weitermachen.
 
