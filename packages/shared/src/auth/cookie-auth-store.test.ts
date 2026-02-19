@@ -32,7 +32,12 @@ describe('CookieAuthStore', () => {
 
   it('save() writes token and record to document.cookie', () => {
     const store = new CookieAuthStore();
-    const fakeRecord = { id: 'u1', username: 'test', collectionId: 'users', collectionName: 'users' } as Parameters<typeof store.save>[1];
+    const fakeRecord = {
+      id: 'u1',
+      username: 'test',
+      collectionId: 'users',
+      collectionName: 'users',
+    } as Parameters<typeof store.save>[1];
 
     store.save('my-token', fakeRecord);
 
@@ -66,7 +71,12 @@ describe('CookieAuthStore', () => {
   it('rehydrates from existing cookie on construction', () => {
     // First store saves a cookie
     const store1 = new CookieAuthStore();
-    const fakeRecord = { id: 'u1', username: 'reloaded', collectionId: 'users', collectionName: 'users' } as Parameters<typeof store1.save>[1];
+    const fakeRecord = {
+      id: 'u1',
+      username: 'reloaded',
+      collectionId: 'users',
+      collectionName: 'users',
+    } as Parameters<typeof store1.save>[1];
     store1.save('rehydrate-token', fakeRecord);
 
     // We can't test proper rehydration here because loadFromCookie

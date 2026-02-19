@@ -62,9 +62,7 @@ function wrapper(authValue: AuthContextValue) {
   };
 }
 
-function makeUnlock(
-  overrides: Partial<CourseUnlock> = {},
-): CourseUnlock {
+function makeUnlock(overrides: Partial<CourseUnlock> = {}): CourseUnlock {
   return {
     id: 'unlock-1',
     class_id: 'class-1',
@@ -337,10 +335,10 @@ describe('useUnlock', () => {
       });
 
       expect(mockGetFullList).toHaveBeenCalledWith(
-        expect.objectContaining({ filter: expect.stringContaining('ap1') }),
+        expect.objectContaining({ filter: expect.stringContaining('ap1') })
       );
       expect(mockGetFullList).toHaveBeenCalledWith(
-        expect.objectContaining({ filter: expect.stringContaining('pandas') }),
+        expect.objectContaining({ filter: expect.stringContaining('pandas') })
       );
     });
   });

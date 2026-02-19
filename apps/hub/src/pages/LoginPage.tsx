@@ -112,9 +112,7 @@ function LoginPage() {
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Anmelden</h1>
-        <p className="text-gray-500 text-sm mb-6">
-          Melde dich mit deinem Klassen-Code an.
-        </p>
+        <p className="text-gray-500 text-sm mb-6">Melde dich mit deinem Klassen-Code an.</p>
 
         {errors.general && (
           <div
@@ -129,10 +127,7 @@ function LoginPage() {
         <form onSubmit={handleSubmit} noValidate>
           {/* Klassen-Code */}
           <div className="mb-4">
-            <label
-              htmlFor="classCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-1">
               Klassen-Code
             </label>
             <input
@@ -161,10 +156,7 @@ function LoginPage() {
 
           {/* Benutzername */}
           <div className="mb-4">
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
               Benutzername
             </label>
             <input
@@ -192,10 +184,7 @@ function LoginPage() {
 
           {/* PIN */}
           <div className="mb-6">
-            <label
-              htmlFor="pin"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-1">
               PIN (4 Ziffern)
             </label>
             <input

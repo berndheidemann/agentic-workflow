@@ -57,11 +57,9 @@ export function useUnlock(): UseUnlockReturn {
       setIsLoadingUnlock(true);
 
       try {
-        const records = await pb
-          .collection(COLLECTION_COURSE_UNLOCKS)
-          .getFullList<CourseUnlock>({
-            filter: `class_id = "${user.classId}" && course = "${course}"`,
-          });
+        const records = await pb.collection(COLLECTION_COURSE_UNLOCKS).getFullList<CourseUnlock>({
+          filter: `class_id = "${user.classId}" && course = "${course}"`,
+        });
 
         cacheRef.current.set(course, records);
         fetchedCoursesRef.current.add(course);
@@ -78,7 +76,7 @@ export function useUnlock(): UseUnlockReturn {
         }
       }
     },
-    [isLoggedIn, user, pb, authLoading],
+    [isLoggedIn, user, pb, authLoading]
   );
 
   const isModuleUnlocked = useCallback(
@@ -103,7 +101,7 @@ export function useUnlock(): UseUnlockReturn {
       // Rules exist: check if this module is explicitly unlocked
       return cached.some((entry) => entry.module === module && entry.is_unlocked);
     },
-    [isLoggedIn, user, authLoading, fetchCourse],
+    [isLoggedIn, user, authLoading, fetchCourse]
   );
 
   const getUnlockedModules = useCallback(
@@ -127,7 +125,7 @@ export function useUnlock(): UseUnlockReturn {
       // Return names of explicitly unlocked modules
       return cached.filter((entry) => entry.is_unlocked).map((entry) => entry.module);
     },
-    [isLoggedIn, user, authLoading, fetchCourse],
+    [isLoggedIn, user, authLoading, fetchCourse]
   );
 
   // Guest mode: stable reference, no re-renders

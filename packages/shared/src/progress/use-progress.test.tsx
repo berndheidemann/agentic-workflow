@@ -152,7 +152,7 @@ describe('useProgress', () => {
           lesson: 'modul-1/lektion-1',
           exercise: 'ex-1',
           user_id: 'user-123',
-        }),
+        })
       );
     });
 
@@ -165,7 +165,7 @@ describe('useProgress', () => {
         window.dispatchEvent(
           new CustomEvent('exercise-complete', {
             detail: { exerciseId: 'ex-2', score: 3, maxScore: 5 },
-          }),
+          })
         );
       });
 
@@ -182,7 +182,7 @@ describe('useProgress', () => {
         window.dispatchEvent(
           new CustomEvent('exercise-complete', {
             detail: { exerciseId: 'ex-2', score: 3, maxScore: 5 },
-          }),
+          })
         );
       });
 
@@ -196,7 +196,7 @@ describe('useProgress', () => {
           score: 3,
           max_score: 5,
           status: 'started', // 3 < 5
-        }),
+        })
       );
     });
 
@@ -226,7 +226,7 @@ describe('useProgress', () => {
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         'exercise-complete',
-        expect.any(Function),
+        expect.any(Function)
       );
     });
   });

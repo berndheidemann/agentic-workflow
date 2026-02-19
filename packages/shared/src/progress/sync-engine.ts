@@ -146,16 +146,14 @@ export class SyncEngine {
       // UNIQUE constraint violation → update existing record
       try {
         const filter = `user_id = "${this.userId}" && course = "${entry.course}" && lesson = "${entry.lesson}" && exercise = "${entry.exercise}"`;
-        const existing = await this.pb
-          .collection(COLLECTION_PROGRESS)
-          .getFirstListItem(filter);
+        const existing = await this.pb.collection(COLLECTION_PROGRESS).getFirstListItem(filter);
 
         await this.pb.collection(COLLECTION_PROGRESS).update(existing.id, {
           score: entry.score,
           max_score: entry.maxScore,
           status,
           completed_at: status === 'completed' ? entry.completedAt : null,
-          attempts: (existing['attempts'] as number ?? 0) + 1,
+          attempts: ((existing['attempts'] as number) ?? 0) + 1,
         });
       } catch {
         // If upsert fails, silently skip — entry was already removed from queue.

@@ -43,9 +43,7 @@ export class CookieAuthStore extends BaseAuthStore {
 
   private writeCookie(): void {
     if (typeof document === 'undefined') return;
-    const value = encodeURIComponent(
-      JSON.stringify({ token: this.token, record: this.record }),
-    );
+    const value = encodeURIComponent(JSON.stringify({ token: this.token, record: this.record }));
     let cookie = `${this.cookieName}=${value}`;
     cookie += `; path=${this.path}`;
     cookie += `; SameSite=${this.sameSite}`;

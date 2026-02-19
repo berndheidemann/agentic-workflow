@@ -20,10 +20,7 @@ vi.mock('pocketbase', async (importOriginal) => {
   const actual = await importOriginal<typeof import('pocketbase')>();
 
   class MockPocketBase extends actual.default {
-    constructor(
-      baseUrl?: string,
-      authStore?: ConstructorParameters<typeof actual.default>[1],
-    ) {
+    constructor(baseUrl?: string, authStore?: ConstructorParameters<typeof actual.default>[1]) {
       super(baseUrl, authStore);
     }
 
@@ -31,8 +28,9 @@ vi.mock('pocketbase', async (importOriginal) => {
       // Return a proxy service with mocked network methods.
       // Arrow function captures `this` implicitly (no alias needed).
       return {
-        authWithPassword: vi.fn().mockImplementation(
-          async (_username: string, _password: string) => {
+        authWithPassword: vi
+          .fn()
+          .mockImplementation(async (_username: string, _password: string) => {
             const record: RecordModel = {
               id: 'user1',
               username: 'testuser',
@@ -50,8 +48,7 @@ vi.mock('pocketbase', async (importOriginal) => {
             // Call the real authStore.save() so onChange fires and React state updates
             this.authStore.save('mock-jwt-token', record);
             return { token: 'mock-jwt-token', record };
-          },
-        ),
+          }),
         authRefresh: vi.fn().mockRejectedValue(new Error('no valid token')),
       } as unknown as ReturnType<(typeof actual.default.prototype)['collection']>;
     }
@@ -91,7 +88,7 @@ describe('useAuth', () => {
   it('throws if used outside of AuthProvider', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => renderHook(() => useAuth())).toThrow(
-      'useAuth muss innerhalb von <AuthProvider> verwendet werden.',
+      'useAuth muss innerhalb von <AuthProvider> verwendet werden.'
     );
     consoleSpy.mockRestore();
   });

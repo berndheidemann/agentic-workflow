@@ -81,11 +81,12 @@ Jede UI-Komponente muss diese Anforderungen erfüllen:
 - **NICHT mocken:** Eigene Module (`CookieAuthStore`, Provider-Interaktion, Hook-Komposition). Diese werden real oder per Integrations-Test getestet.
 - Wenn ein Test nur durch vollständiges Mocken eigener Module grün wird, fehlt ein Integrations-Test.
 
-**Voraussetzungen (nicht optional):**
+**Voraussetzungen (außer bei `SANDBOX_MODE=1`):**
 
 - **Docker** muss laufen (PocketBase + Nginx Stack) — ohne Docker kein Smoke-Test, ohne Smoke-Test kein `done`
 - **Playwright MCP** muss verfügbar sein — ohne Browser-Verifikation kein `done` für UI-REQs
 - Unit-Tests allein reichen **nicht** für den Status `done` bei UI-REQs. Ein Smoke-Test gegen den echten Stack ist Pflicht.
+- **`SANDBOX_MODE=1`:** Docker/Playwright-Checks entfallen. Build + Unit-Tests + Lint reichen für `done`.
 
 ## Modell-Strategie
 

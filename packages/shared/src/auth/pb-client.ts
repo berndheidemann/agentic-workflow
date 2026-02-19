@@ -10,7 +10,7 @@ import type { CookieAuthStoreOptions } from './types';
  */
 export function createPocketBaseClient(
   baseUrl: string = '',
-  cookieOptions?: CookieAuthStoreOptions,
+  cookieOptions?: CookieAuthStoreOptions
 ): PocketBase {
   const authStore = new CookieAuthStore(cookieOptions);
   return new PocketBase(baseUrl, authStore);

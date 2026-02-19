@@ -98,7 +98,7 @@ export function useProgress(): UseProgressReturn {
         completedAt: new Date().toISOString(),
       });
     },
-    [isLoggedIn, user, isLoading],
+    [isLoggedIn, user, isLoading]
   );
 
   const getProgress = useCallback(
@@ -110,7 +110,7 @@ export function useProgress(): UseProgressReturn {
         sort: 'lesson,exercise',
       });
     },
-    [isLoggedIn, user, pb, isLoading],
+    [isLoggedIn, user, pb, isLoading]
   );
 
   // Guest mode: return stable no-ops without any state

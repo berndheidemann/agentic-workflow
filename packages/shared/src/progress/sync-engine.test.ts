@@ -99,7 +99,7 @@ describe('SyncEngine', () => {
       await engine.flush();
 
       expect(mockCreate).toHaveBeenCalledWith(
-        expect.objectContaining({ status: 'started', completed_at: null }),
+        expect.objectContaining({ status: 'started', completed_at: null })
       );
     });
 
@@ -127,10 +127,7 @@ describe('SyncEngine', () => {
       await engine.flush();
 
       expect(mockGetFirstListItem).toHaveBeenCalledOnce();
-      expect(mockUpdate).toHaveBeenCalledWith(
-        'rec-1',
-        expect.objectContaining({ attempts: 3 }),
-      );
+      expect(mockUpdate).toHaveBeenCalledWith('rec-1', expect.objectContaining({ attempts: 3 }));
     });
 
     it('silently ignores entries when both create and update fail', async () => {
@@ -155,7 +152,7 @@ describe('SyncEngine', () => {
     it('is true during flush and false after', async () => {
       let resolveFn!: () => void;
       mockCreate.mockImplementationOnce(
-        () => new Promise<void>((resolve) => (resolveFn = resolve)),
+        () => new Promise<void>((resolve) => (resolveFn = resolve))
       );
 
       const engine = makeEngine();

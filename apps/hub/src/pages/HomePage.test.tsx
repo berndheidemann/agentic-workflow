@@ -50,7 +50,7 @@ describe('HomePage', () => {
     for (const site of activeSites) {
       expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toHaveAttribute(
         'href',
-        site.basePath,
+        site.basePath
       );
     }
   });

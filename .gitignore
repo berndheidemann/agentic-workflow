@@ -51,7 +51,11 @@ test-results/
 .sandbox-ports
 
 # Sites (separate repos, not submodules)
-sites/hub/
+sites/
+
+# Build artifacts (compiled config files)
+apps/hub/vite.config.js
+apps/hub/vite.config.d.ts
 
 # Screenshots/temp files
-req-*.png
+*.png

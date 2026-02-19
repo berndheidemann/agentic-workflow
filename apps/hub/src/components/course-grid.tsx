@@ -7,9 +7,7 @@ interface CourseGridProps {
 
 export function CourseGrid({ sites }: CourseGridProps) {
   if (sites.length === 0) {
-    return (
-      <p className="text-gray-500 text-center py-8">Keine Kurse verfügbar.</p>
-    );
+    return <p className="text-gray-500 text-center py-8">Keine Kurse verfügbar.</p>;
   }
 
   return (
