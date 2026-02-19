@@ -277,3 +277,15 @@
 - Einträge mit `retryCount >= maxRetries` (default 5) werden verworfen (kein Endlos-Wachstum)
 - `navigator.onLine` ist nicht 100% zuverlässig (Captive Portal) — mitigiert durch try-catch in `upsertEntry`
 - `persistQueue: false` Option ermöglicht saubere Unit-Tests ohne localStorage-Pollution
+
+---
+
+## ADR-014: Frontmatter-to-Island Datenübergabe via JSON Script Tag (2026-02-19, REQ-036)
+
+**Kontext:** Astro-Frontmatter-Daten (z.B. `prerequisites`) müssen zur Laufzeit in React-Islands verfügbar sein. Starlight v0.37+ liefert keine Props mehr an Head-Overrides.
+
+**Entscheidung:** Frontmatter-Daten werden via `<script id="..." type="application/json" set:html={JSON.stringify(data)} />` im Head in den DOM geschrieben. React-Islands lesen diese Daten mit `document.getElementById()` + `JSON.parse()` zur Laufzeit.
+
+**Begründung:** Vermeidet Props-Drilling durch Astro-Layouts, funktioniert unabhängig von Island-Mounting-Reihenfolge, klar abgegrenzte Datenübergabe-Schnittstelle. Pattern ist unabhängig von Starlight-Internals.
+
+**Konsequenzen:** Islands die DOM direkt lesen müssen `client:only="react"` nutzen (kein SSR). Frontmatter-Daten müssen JSON-serialisierbar sein. Pro Seite ein Script-Tag pro Datentyp (kein Zusammenmischen).

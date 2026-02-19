@@ -301,3 +301,17 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 **Muster: Status-Blöcke fehlen bei Abbruch.** iter-001 und iter-002 haben keinen Status-Block produziert. Das ist ein bekanntes Problem bei Turn-Limit-Abbrüchen (vgl. Validation 6, REQ-051). Kein neues Muster, aber weiterhin relevant.
 
 **Lücke: E2E-Tests für Shared-Komponenten.** LoginBanner und a11y-Fixes haben keine eigenen Playwright-E2E-Specs. Die Unit-Tests und Smoke-Tests decken die Funktionalität ab, aber laut PRD sind E2E-Tests für jedes UI-REQ Pflicht. Bei zukünftigen Validierungen beobachten.
+
+### 2026-02-19 — Starlight v0.37+: Frontmatter-Zugriff via starlightRoute
+
+- **Problem:** `Astro.props.entry?.data` ist in Head.astro-Overrides leer — Starlight v0.37+ liefert keine Props mehr.
+- **Lösung:** `Astro.locals.starlightRoute.entry.data` für Frontmatter-Daten in Starlight-Overrides verwenden.
+- **Beweis:** Standard-`Head.astro` nutzt `Astro.locals.starlightRoute` intern (`const { head } = Astro.locals.starlightRoute`).
+- **TypeScript:** Cast nötig: `(Astro.locals.starlightRoute?.entry?.data as { prerequisites?: string[] })?.prerequisites`
+
+### 2026-02-19 — PrerequisiteInjector: client:only statt client:load
+
+- **Problem:** `PrerequisiteInjector` ruft `document.getElementById()` im Funktionskörper auf (nicht in useEffect).
+- **Symptom:** `ReferenceError: document is not defined` beim Astro SSR.
+- **Lösung:** `client:only="react"` statt `client:load` — verhindert SSR, rendert nur clientseitig.
+- **Regel:** React-Komponenten die DOM direkt im Funktionskörper lesen müssen `client:only="react"` verwenden.

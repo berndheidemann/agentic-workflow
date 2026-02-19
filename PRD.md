@@ -400,17 +400,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-036: Prerequisite-basiertes Soft-Gate
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006, REQ-007
 - **Hinweis:** Umsetzung von UNLOCK-03 aus REQUIREMENTS.md. Automatisches Freischalten als Empfehlung, kein harter Block.
 - **Akzeptanzkriterien:**
-  - [ ] Sites können in Frontmatter Prerequisites definieren: `prerequisites: ["netzwerktechnik/ip-adressierung"]`
-  - [ ] Wenn Prerequisites nicht erfüllt: gelber Hinweis oben auf der Seite ("Wir empfehlen zuerst: [Lektionsname]")
-  - [ ] Content ist trotzdem sichtbar (Soft-Gate, kein harter Block)
-  - [ ] Ohne Login: kein Hinweis (Gast-Modus, alles offen)
-  - [ ] Prerequisite-Check basiert auf Progress-Daten des eingeloggten Users
+  - [x] Sites können in Frontmatter Prerequisites definieren: `prerequisites: ["netzwerktechnik/ip-adressierung"]`
+  - [x] Wenn Prerequisites nicht erfüllt: gelber Hinweis oben auf der Seite ("Wir empfehlen zuerst: [Lektionsname]")
+  - [x] Content ist trotzdem sichtbar (Soft-Gate, kein harter Block)
+  - [x] Ohne Login: kein Hinweis (Gast-Modus, alles offen)
+  - [x] Prerequisite-Check basiert auf Progress-Daten des eingeloggten Users
 
 ### REQ-037: Kursstruktur-Manifest
 
