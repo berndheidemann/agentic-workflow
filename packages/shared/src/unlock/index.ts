@@ -1,3 +1,4 @@
 export { useUnlock } from './use-unlock';
 export { UnlockGate } from './unlock-gate';
-export type { UseUnlockReturn, UnlockCache, CourseUnlock as UnlockCourseUnlock } from './types';
+export { SidebarUnlock } from './sidebar-unlock';
+export type { UseUnlockReturn, UnlockCache, ModuleStatus, CourseUnlock as UnlockCourseUnlock } from './types';

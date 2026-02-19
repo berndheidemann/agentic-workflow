@@ -1,5 +1,15 @@
 import type { CourseUnlock } from '../schema/collections';
 
+// ─── Module status ─────────────────────────────────────────────────────────────
+
+/**
+ * Three-state status for a module in the sidebar.
+ * - locked: module exists but is not yet unlocked by the teacher
+ * - unlocked: module is accessible (default state for guests / no rules)
+ * - completed: module is accessible and the user has finished all exercises
+ */
+export type ModuleStatus = 'locked' | 'unlocked' | 'completed';
+
 // ─── Hook return type ─────────────────────────────────────────────────────────
 
 /** Return type of useUnlock(). */
