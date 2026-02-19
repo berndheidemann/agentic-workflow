@@ -23,6 +23,7 @@ function makeAuthContext(overrides: Partial<AuthContextValue> = {}): AuthContext
     token: null,
     isLoading: false,
     login: vi.fn().mockResolvedValue(undefined),
+    register: vi.fn().mockResolvedValue(undefined),
     logout: vi.fn(),
     pb: {} as AuthContextValue['pb'],
     ...overrides,
@@ -35,7 +36,7 @@ function renderLoginPage(authCtx: AuthContextValue = makeAuthContext()) {
       <MemoryRouter>
         <LoginPage />
       </MemoryRouter>
-    </AuthContext.Provider>,
+    </AuthContext.Provider>
   );
 }
 
@@ -106,7 +107,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('Klassen-Code'), { target: { value: 'ABC' } });
     fireEvent.submit(getForm());
     expect(
-      await screen.findByText('Klassen-Code muss aus 6 Zeichen bestehen (Buchstaben und Ziffern).'),
+      await screen.findByText('Klassen-Code muss aus 6 Zeichen bestehen (Buchstaben und Ziffern).')
     ).toBeInTheDocument();
   });
 
@@ -129,18 +130,14 @@ describe('LoginPage', () => {
     renderLoginPage();
     fillForm('AB3C4D', 'testuser', '12');
     fireEvent.submit(getForm());
-    expect(
-      await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.')).toBeInTheDocument();
   });
 
   it('zeigt Fehler bei nicht-numerischem PIN', async () => {
     renderLoginPage();
     fillForm('AB3C4D', 'testuser', 'abcd');
     fireEvent.submit(getForm());
-    expect(
-      await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('PIN muss aus genau 4 Ziffern bestehen.')).toBeInTheDocument();
   });
 
   // ── Submit-Verhalten ──────────────────────────────────────────────────────
@@ -185,7 +182,10 @@ describe('LoginPage', () => {
   it('zeigt Lade-Zustand während Submit (Button disabled)', async () => {
     let resolveLogin!: () => void;
     const mockLogin = vi.fn().mockImplementation(
-      () => new Promise<void>((resolve) => { resolveLogin = resolve; }),
+      () =>
+        new Promise<void>((resolve) => {
+          resolveLogin = resolve;
+        })
     );
     renderLoginPage(makeAuthContext({ login: mockLogin }));
 
@@ -196,7 +196,9 @@ describe('LoginPage', () => {
       expect(screen.getByRole('button', { name: 'Wird angemeldet…' })).toBeDisabled();
     });
 
-    act(() => { resolveLogin(); });
+    act(() => {
+      resolveLogin();
+    });
   });
 
   it('zeigt Server-Fehlermeldung bei Status 400 (falscher Login)', async () => {
@@ -206,9 +208,7 @@ describe('LoginPage', () => {
     fillForm();
     fireEvent.submit(getForm());
 
-    expect(
-      await screen.findByText('Benutzername oder PIN ist falsch.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Benutzername oder PIN ist falsch.')).toBeInTheDocument();
   });
 
   it('zeigt Netzwerk-Fehlermeldung bei Status 0', async () => {
@@ -219,9 +219,7 @@ describe('LoginPage', () => {
     fireEvent.submit(getForm());
 
     expect(
-      await screen.findByText(
-        'Verbindung zum Server fehlgeschlagen. Bitte versuche es erneut.',
-      ),
+      await screen.findByText('Verbindung zum Server fehlgeschlagen. Bitte versuche es erneut.')
     ).toBeInTheDocument();
   });
 
@@ -264,15 +262,15 @@ describe('LoginPage', () => {
     await waitFor(() => {
       expect(screen.getByLabelText('Klassen-Code')).toHaveAttribute(
         'aria-describedby',
-        'classCode-error',
+        'classCode-error'
       );
       expect(screen.getByLabelText('Benutzername')).toHaveAttribute(
         'aria-describedby',
-        'username-error',
+        'username-error'
       );
       expect(screen.getByLabelText('PIN (4 Ziffern)')).toHaveAttribute(
         'aria-describedby',
-        'pin-error',
+        'pin-error'
       );
     });
   });

@@ -1,16 +1,256 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@lernplattform/shared';
+import {
+  isValidJoinCode,
+  isValidPin,
+  isValidUsername,
+  USERNAME_MIN_LENGTH,
+} from '@lernplattform/shared';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface FormState {
+  classCode: string;
+  username: string;
+  pin: string;
+}
+
+interface FormErrors {
+  classCode?: string;
+  username?: string;
+  pin?: string;
+  general?: string;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function validateForm(state: FormState): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!state.classCode.trim()) {
+    errors.classCode = 'Bitte Klassen-Code eingeben.';
+  } else if (!isValidJoinCode(state.classCode.toUpperCase())) {
+    errors.classCode = 'Klassen-Code muss aus 6 Zeichen bestehen (Buchstaben und Ziffern).';
+  }
+
+  if (!state.username.trim()) {
+    errors.username = 'Bitte Benutzernamen eingeben.';
+  } else if (!isValidUsername(state.username)) {
+    errors.username = `Benutzername muss mindestens ${USERNAME_MIN_LENGTH} Zeichen lang sein.`;
+  }
+
+  if (!state.pin) {
+    errors.pin = 'Bitte PIN eingeben.';
+  } else if (!isValidPin(state.pin)) {
+    errors.pin = 'PIN muss aus genau 4 Ziffern bestehen.';
+  }
+
+  return errors;
+}
+
+function mapRegisterError(error: unknown): FormErrors {
+  const pbError = error as { status?: number; response?: { data?: Record<string, unknown> } };
+
+  if (pbError?.status === 0) {
+    return { general: 'Verbindung zum Server fehlgeschlagen. Bitte versuche es erneut.' };
+  }
+
+  if (pbError?.status === 400) {
+    // Check for username-specific error from PocketBase
+    const data = pbError?.response?.data ?? {};
+    if ('username' in data) {
+      return { username: 'Dieser Benutzername ist bereits vergeben.' };
+    }
+    // PIN error from server hook
+    const pbAny = error as { message?: string };
+    if (pbAny?.message?.includes('PIN')) {
+      return { pin: 'PIN muss genau 4 Ziffern enthalten.' };
+    }
+    return { general: 'Registrierung fehlgeschlagen. Bitte überprüfe deine Eingaben.' };
+  }
+
+  if (pbError?.status === 404) {
+    return { classCode: 'Klassen-Code nicht gefunden oder Klasse nicht aktiv.' };
+  }
+
+  // Check for join_code error message from hook (returned as 400 with message)
+  const pbAny = error as { message?: string };
+  if (pbAny?.message?.includes('Klassen-Code')) {
+    return { classCode: 'Klassen-Code nicht gefunden oder Klasse nicht aktiv.' };
+  }
+
+  if (error instanceof Error) {
+    if (
+      error.message.toLowerCase().includes('network') ||
+      error.message.includes('failed to fetch')
+    ) {
+      return { general: 'Verbindung zum Server fehlgeschlagen. Bitte versuche es erneut.' };
+    }
+  }
+
+  return { general: 'Ein unerwarteter Fehler ist aufgetreten.' };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 function RegisterPage() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState<FormState>({ classCode: '', username: '', pin: '' });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleChange(field: keyof FormState) {
+    return (e: React.ChangeEvent<{ value: string }>) => {
+      const value = field === 'classCode' ? e.target.value.toUpperCase() : e.target.value;
+      setForm((prev) => ({ ...prev, [field]: value }));
+      // Clear field error on change
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
+    };
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    const validationErrors = validateForm(form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      await register(form.username.trim(), form.pin, form.classCode.toUpperCase());
+      navigate('/');
+    } catch (err) {
+      setErrors(mapRegisterError(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Registrieren</h1>
         <p className="text-gray-500 text-sm mb-6">
-          Erstelle deinen Lernplattform-Account.
+          Erstelle deinen Lernplattform-Account mit deinem Klassen-Code.
         </p>
-        <p className="text-gray-400 text-sm italic">
-          Registrierungs-Formular folgt in REQ-013.
-        </p>
+
+        {errors.general && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm"
+          >
+            {errors.general}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} noValidate>
+          {/* Klassen-Code */}
+          <div className="mb-4">
+            <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-1">
+              Klassen-Code
+            </label>
+            <input
+              id="classCode"
+              type="text"
+              value={form.classCode}
+              onChange={handleChange('classCode')}
+              maxLength={6}
+              autoComplete="off"
+              aria-invalid={errors.classCode ? 'true' : undefined}
+              aria-describedby={errors.classCode ? 'classCode-error' : undefined}
+              aria-required="true"
+              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
+                errors.classCode
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300 bg-white hover:border-gray-400'
+              }`}
+              placeholder="z.B. AB3C4D"
+            />
+            {errors.classCode && (
+              <p id="classCode-error" className="mt-1 text-xs text-red-600" role="alert">
+                {errors.classCode}
+              </p>
+            )}
+          </div>
+
+          {/* Benutzername */}
+          <div className="mb-4">
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Benutzername
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={form.username}
+              onChange={handleChange('username')}
+              autoComplete="username"
+              aria-invalid={errors.username ? 'true' : undefined}
+              aria-describedby={errors.username ? 'username-error' : undefined}
+              aria-required="true"
+              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
+                errors.username
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300 bg-white hover:border-gray-400'
+              }`}
+              placeholder="Mindestens 3 Zeichen"
+            />
+            {errors.username && (
+              <p id="username-error" className="mt-1 text-xs text-red-600" role="alert">
+                {errors.username}
+              </p>
+            )}
+          </div>
+
+          {/* PIN */}
+          <div className="mb-6">
+            <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-1">
+              PIN (4 Ziffern)
+            </label>
+            <input
+              id="pin"
+              type="password"
+              value={form.pin}
+              onChange={handleChange('pin')}
+              maxLength={4}
+              inputMode="numeric"
+              autoComplete="new-password"
+              aria-invalid={errors.pin ? 'true' : undefined}
+              aria-describedby={errors.pin ? 'pin-error' : undefined}
+              aria-required="true"
+              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
+                errors.pin
+                  ? 'border-red-400 bg-red-50'
+                  : 'border-gray-300 bg-white hover:border-gray-400'
+              }`}
+              placeholder="••••"
+            />
+            {errors.pin && (
+              <p id="pin-error" className="mt-1 text-xs text-red-600" role="alert">
+                {errors.pin}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            aria-busy={isSubmitting}
+            className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? 'Wird registriert…' : 'Registrieren'}
+          </button>
+        </form>
+
         <div className="mt-6 text-center">
           <Link
             to="/login"

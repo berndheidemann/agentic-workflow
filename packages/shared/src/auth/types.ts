@@ -32,6 +32,8 @@ export interface AuthState {
 export interface AuthContextValue extends AuthState {
   /** Login with username and 4-digit PIN. classCode is used during registration, not login. */
   login: (username: string, pin: string) => Promise<void>;
+  /** Register a new student account and auto-login. Throws on invalid classCode or duplicate username. */
+  register: (username: string, pin: string, classCode: string) => Promise<void>;
   logout: () => void;
   /** Exposed for advanced use cases (e.g. progress tracking, unlock queries). */
   pb: PocketBase;

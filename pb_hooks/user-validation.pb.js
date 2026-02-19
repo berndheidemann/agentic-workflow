@@ -1,6 +1,8 @@
 /// <reference path="../node_modules/pocketbase/jsvm.d.ts" />
 
 // REQ-008: Validate PIN and join_code on user registration.
+// REQ-013: Resolve join_code to class_id server-side to avoid unauthenticated
+//          client-side class lookups (classes collection requires auth to list).
 // Sync: packages/shared/src/validation/pin.ts and join-code.ts must implement the same logic.
 //
 // Validation rules:
@@ -23,18 +25,43 @@ onRecordCreateRequest((e) => {
   // This prevents role escalation: a client cannot self-assign role="teacher".
   e.record.set('role', 'student');
 
-  // join_code validation: if provided, the referenced class must exist and be active
-  const classId = e.record.get('class_id');
-  if (classId) {
-    let classRecord;
+  // join_code resolution: resolve the human-readable join_code to a class_id.
+  // This is done server-side so unauthenticated clients do not need read access
+  // to the classes collection.
+  const joinCode = e.requestInfo().body['join_code'];
+  if (joinCode) {
+    let classRecords;
     try {
-      classRecord = e.app.findRecordById('classes', classId);
+      classRecords = e.app.findRecordsByFilter(
+        'classes',
+        'join_code = {:code} && is_active = true',
+        { code: joinCode },
+        1,
+        0,
+      );
     } catch (_) {
       throw new BadRequestError('Klassen-Code ungültig oder Klasse nicht gefunden.');
     }
 
-    if (!classRecord.getBool('is_active')) {
-      throw new BadRequestError('Diese Klasse ist nicht mehr aktiv.');
+    if (!classRecords || classRecords.length === 0) {
+      throw new BadRequestError('Klassen-Code nicht gefunden oder Klasse nicht aktiv.');
+    }
+
+    e.record.set('class_id', classRecords[0].id);
+  } else {
+    // Legacy path: if class_id was set directly (e.g. by admin), validate it.
+    const classId = e.record.get('class_id');
+    if (classId) {
+      let classRecord;
+      try {
+        classRecord = e.app.findRecordById('classes', classId);
+      } catch (_) {
+        throw new BadRequestError('Klassen-Code ungültig oder Klasse nicht gefunden.');
+      }
+
+      if (!classRecord.getBool('is_active')) {
+        throw new BadRequestError('Diese Klasse ist nicht mehr aktiv.');
+      }
     }
   }
 
