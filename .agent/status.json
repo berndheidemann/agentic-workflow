@@ -73,12 +73,13 @@
     ]
   },
   "REQ-009": {
-    "status": "open",
+    "status": "blocked",
     "priority": "P1",
     "size": "S",
     "deps": [
       "REQ-001"
-    ]
+    ],
+    "notes": "Verifikationsumgebung fehlt: Docker nicht verfuegbar (permission denied). Kein REQ kann ohne funktionierende Verifikation als done markiert werden."
   },
   "REQ-010": {
     "status": "done",

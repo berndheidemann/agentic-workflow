@@ -1,6 +1,6 @@
 # Agent Context
 
-> Iteration REQ-024 done | 2026-02-19 | 24/44 done
+> Iteration REQ-009 blocked | 2026-02-19 | 24/44 done
 
 ## Was implementiert wurde (REQ-024 — Modul-Freischaltung im Dashboard)
 
@@ -21,14 +21,17 @@
   - Dashboard: Klassen-Verwaltung, Matrix (Aggregat + Filter + URL-Params), Freischaltung (6/6 ✅)
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
 - CookieAuthStore: Auth überlebt Page-Reload
+- `apps/hub/src/config/sites.ts`: SiteConfig-Interface + 6 Sites (REQ-009 Interface vorweggenommen durch ADR-006)
 
 ## Nächstes REQ
 
-1. **REQ-051** (P0, M) — AP1-Trainer Shared-Integration — alle Deps done
-   - Erfordert: Docker + Playwright MCP verfügbar
+- **REQ-009** (P1, S) — Site-Registry — BLOCKED (Docker nicht verfügbar)
+- **REQ-051** (P0, M) — AP1-Trainer Shared-Integration — BLOCKED (Docker nicht verfügbar)
+- **REQ-015** (P1, S) — Deps: REQ-005, REQ-006, REQ-010 alle done — BLOCKED (Docker)
 
 ## Offene Punkte / Hinweise
 
+- Docker nicht verfügbar (permission denied auf /var/run/docker.sock) → alle REQs blockiert
 - "completed" ist Heuristik ohne Manifest: mit REQ-037 verfeinerbar (nur Hook-Änderung)
 - Superuser: `admin@lernplattform.test` / `admin12345678`
 - Teacher: `testlehrer` / `1234` (join_code `L5RXKX`)
