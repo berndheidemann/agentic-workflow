@@ -206,7 +206,7 @@
     ]
   },
   "REQ-030": {
-    "status": "open",
+    "status": "done",
     "priority": "P1",
     "size": "S",
     "deps": [
@@ -246,7 +246,7 @@
     ]
   },
   "REQ-035": {
-    "status": "open",
+    "status": "done",
     "priority": "P1",
     "size": "S",
     "deps": [
