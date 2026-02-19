@@ -16,3 +16,10 @@
 {"iteration":4,"timestamp":"2026-02-19T08:45:31+00:00","duration_s":559,"cost":"4.1417","tools":101,"exit_code":0,"reqs_done":"15/44","req_hint":"REQ-020: Dashboard Grundstruktur","status_block":""}
 {"iteration":5,"timestamp":"2026-02-19T08:54:40+00:00","duration_s":549,"cost":"4.7237","tools":115,"exit_code":0,"reqs_done":"15/44","req_hint":"VALIDATION","status_block":""}
 {"iteration":6,"timestamp":"2026-02-19T09:12:39+00:00","duration_s":1079,"cost":"6.9609","tools":138,"exit_code":0,"reqs_done":"15/44","req_hint":"REQ-021: Klassen-Verwaltung","status_block":""}
+{"iteration":7,"timestamp":"2026-02-19T09:17:11+00:00","duration_s":272,"cost":"1.6558","tools":48,"exit_code":0,"reqs_done":"16/44","req_hint":"REQ-031: UnlockGate Komponente","status_block":""}
+{"iteration":8,"timestamp":"2026-02-19T09:32:46+00:00","duration_s":935,"cost":"6.9371","tools":169,"exit_code":0,"reqs_done":"16/44","req_hint":"REQ-023a: Dashboard Matrix-Ansicht (Basis)","status_block":""}
+{"iteration":9,"timestamp":"2026-02-19T09:45:02+00:00","duration_s":736,"cost":"5.7821","tools":113,"exit_code":0,"reqs_done":"16/44","req_hint":"REQ-024: Modul-Freischaltung im Dashboard","status_block":""}
+{"iteration":10,"timestamp":"2026-02-19T09:50:27+00:00","duration_s":325,"cost":"2.7730","tools":88,"exit_code":0,"reqs_done":"16/44","req_hint":"VALIDATION","status_block":""}
+{"iteration":1,"timestamp":"2026-02-19T10:11:55+00:00","duration_s":534,"cost":"4.9564","tools":107,"exit_code":0,"reqs_done":"16/44","req_hint":"REQ-023a: Dashboard Matrix-Ansicht (Basis)","status_block":""}
+{"iteration":2,"timestamp":"2026-02-19T10:13:16+00:00","duration_s":81,"cost":"0.4340","tools":9,"exit_code":0,"reqs_done":"16/44","req_hint":"REQ-024: Modul-Freischaltung im Dashboard","status_block":""}
+{"iteration":2,"timestamp":"2026-02-19T11:25:00Z","req":"REQ-023a","status":"done","summary":"Smoke-Test bestanden: Matrix zeigt Schüler×Aufgaben farbcodiert. Hook-Fixes: findRecordsByFilter-Signatur korrigiert (3 Hooks). PB password min auf 4 gesetzt. Migration angepasst.","tools_used":25,"model":"opus"}

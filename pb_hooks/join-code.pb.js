@@ -6,27 +6,18 @@
 // Charset: no confusable characters (no 0/O, no 1/I/L).
 // Length: 6 characters.
 
-const JOIN_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const JOIN_CODE_LENGTH = 6;
-
-function generateJoinCode() {
-  // $security.randomStringWithAlphabet uses crypto/rand — cryptographically secure.
-  // This prevents PRNG-based prediction of future join codes.
-  return $security.randomStringWithAlphabet(JOIN_CODE_LENGTH, JOIN_CODE_CHARSET);
-}
-
-function isValidJoinCode(code) {
-  if (!code || code.length !== JOIN_CODE_LENGTH) return false;
-  return /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]+$/.test(code);
-}
-
 // Generate a unique join_code before a class record is created.
 onRecordCreateRequest((e) => {
+  const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const codeLength = 6;
+
   // Generate and ensure uniqueness (retry up to 10 times on collision)
   let code = '';
   for (let attempt = 0; attempt < 10; attempt++) {
-    code = generateJoinCode();
-    const existing = e.app.findRecordsByFilter('classes', 'join_code = {:code}', { code });
+    // $security.randomStringWithAlphabet uses crypto/rand — cryptographically secure.
+    code = $security.randomStringWithAlphabet(codeLength, charset);
+    // findRecordsByFilter signature: (collection, filter, sort, limit, offset, params)
+    const existing = e.app.findRecordsByFilter('classes', 'join_code = {:code}', '', 1, 0, { code: code });
     if (!existing || existing.length === 0) break;
     code = '';
   }

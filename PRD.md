@@ -281,15 +281,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-023a: Dashboard Matrix-Ansicht (Basis)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-020, REQ-021
 - **Akzeptanzkriterien:**
-  - [ ] Schüler (Zeilen) × Aufgaben (Spalten), farbcodiert
-  - [ ] Farbcode: grün (geschafft), orange (versucht+falsch), grau (nicht angefangen)
-  - [ ] Darstellung für eine Klasse und einen Kurs
-  - [ ] Responsive: horizontal scrollbar bei vielen Aufgaben
+  - [x] Schüler (Zeilen) × Aufgaben (Spalten), farbcodiert
+  - [x] Farbcode: grün (geschafft), orange (versucht+falsch), grau (nicht angefangen)
+  - [x] Darstellung für eine Klasse und einen Kurs
+  - [x] Responsive: horizontal scrollbar bei vielen Aufgaben
 
 ### REQ-023b: Dashboard Matrix — Filter & Aggregation
 

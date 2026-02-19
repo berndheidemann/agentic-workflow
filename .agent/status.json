@@ -160,7 +160,7 @@
     ]
   },
   "REQ-023a": {
-    "status": "open",
+    "status": "done",
     "priority": "P0",
     "size": "M",
     "deps": [

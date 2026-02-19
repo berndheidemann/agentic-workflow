@@ -132,3 +132,30 @@ Keine neuen done-REQs seit Validation 1. Alle 15 done-REQs weiterhin korrekt (Pr
 **Muster:** Sonnet erkennt strukturelle Blocker zu spät und versucht 20+ verschiedene Workarounds statt den Blocker direkt zu adressieren. Bei wiederholtem Scheitern des gleichen Ansatzes: Hook/Schema anpassen statt Workarounds.
 
 **Teststand:** 32 E2E-Tests (6 Specs), 154 Hub-Unit-Tests, 141 Shared-Unit-Tests = 327 gesamt. Build + Lint sauber.
+
+### 2026-02-19 — PocketBase findRecordsByFilter Signatur (KRITISCH)
+
+**Korrekte Signatur:** `$app.findRecordsByFilter(collection, filter, sort, limit, offset, params)` — 6 Argumente. `params` ist das **6. Argument**, nicht das 3.!
+
+**Falscher Code (3 Iterationen lang unentdeckt):**
+```js
+e.app.findRecordsByFilter('classes', 'join_code = {:code}', { code: joinCode }, 1, 0);
+```
+**Korrekter Code:**
+```js
+e.app.findRecordsByFilter('classes', 'join_code = {:code}', '', 1, 0, { code: joinCode });
+```
+
+Alle 3 Hook-Dateien (`join-code.pb.js`, `user-validation.pb.js`, `progress-validation.pb.js`) waren betroffen. Der Fehler war schwer zu finden weil PocketBase ohne `--dev`-Flag nur generische "Something went wrong" Fehlermeldungen zurückgibt. **Immer `--dev` nutzen wenn Hooks debuggt werden.**
+
+### 2026-02-19 — PocketBase Password Min Length
+
+PocketBase users auth collection hat default `password.min = 8`. Für 4-Ziffern-PINs muss das auf 4 gesetzt werden. Entweder via Admin-API PATCH auf die Collection oder in der Migration: `users.fields.getByName("password").min = 4`.
+
+### 2026-02-19 — PocketBase CLI --dir Flag
+
+`pocketbase superuser create/upsert` nutzt per default `--dir=/usr/local/bin/pb_data`. Der laufende Server nutzt `--dir=/pb_data` (per Docker entrypoint). CLI-Befehle im Container müssen immer `--dir=/pb_data` angeben, sonst wird in die falsche DB geschrieben.
+
+### 2026-02-19 — SPA-Navigation für Smoke-Tests
+
+Full-page-Navigation (`page.goto('/dashboard')`) verliert die Auth-Session (Cookie wird nicht restored). Stattdessen `window.history.pushState` + `PopStateEvent` nutzen oder innerhalb der SPA über Links navigieren.

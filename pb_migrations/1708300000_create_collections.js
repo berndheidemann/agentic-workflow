@@ -43,6 +43,12 @@ migrate(
     // Add unique index on username (required for identityFields)
     users.addIndex("idx_users_username", true, "username", "");
 
+    // Lower password min length to 4 (students use 4-digit PINs)
+    const pwField = users.fields.getByName("password");
+    if (pwField) {
+      pwField.min = 4;
+    }
+
     // Save fields first — identityFields validation needs the fields to exist
     app.save(users);
 

@@ -9,15 +9,18 @@
 // - PIN (password): exactly 4 digits (0-9)
 // - join_code: must reference an existing active class (if provided)
 
-function isValidPin(pin) {
-  return /^\d{4}$/.test(pin);
-}
-
 // Validate user creation (registration).
 onRecordCreateRequest((e) => {
+  // Admin/superuser requests bypass PIN validation and role enforcement.
+  // Teachers are created by admins directly — they use real passwords, not PINs.
+  if (e.hasSuperuserAuth()) {
+    e.next();
+    return;
+  }
+
   // PIN validation: password must be exactly 4 digits
-  const password = e.requestInfo().body['password'] || '';
-  if (!isValidPin(password)) {
+  var password = e.requestInfo().body["password"] || "";
+  if (!/^\d{4}$/.test(password)) {
     throw new BadRequestError('PIN muss genau 4 Ziffern enthalten.');
   }
 
@@ -35,9 +38,10 @@ onRecordCreateRequest((e) => {
       classRecords = e.app.findRecordsByFilter(
         'classes',
         'join_code = {:code} && is_active = true',
-        { code: joinCode },
+        '',
         1,
         0,
+        { code: joinCode },
       );
     } catch (_) {
       throw new BadRequestError('Klassen-Code ungültig oder Klasse nicht gefunden.');
