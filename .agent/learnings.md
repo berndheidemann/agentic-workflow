@@ -205,3 +205,31 @@ React Router v6 `NavLink` with relative `to` prop resolves relative to the curre
 ### 2026-02-19 — Validation 5: REQ-024 "abgeschlossen" Heuristik ist akzeptabel
 
 Der "abgeschlossen"-Zustand in der Modul-Freischaltung wird per Heuristik bestimmt: mind. 1 Schüler mit `status="completed"` Progress-Eintrag im Modul. Das ist ausreichend für den aktuellen Stand. Die volle "X von Y Aufgaben"-Semantik kommt mit REQ-037 (Manifest). Die PRD-Checkbox wurde gecheckt.
+
+### 2026-02-19 — REQ-051: Astro/Starlight Shared-Integration Pattern (ADR-009)
+
+Astro Islands sind isolierte React-Trees — kein globaler AuthProvider möglich. Lösung:
+- Unsichtbare `SharedIntegration`-Island via Starlight `Head`-Override für Auth + Progress
+- `LernpfadWidget` wrappet sich selbst in eigenen `AuthProvider` für Unlock-Status
+- `CookieAuthStore` liest dasselbe Cookie in allen Islands — Auth-State konsistent
+- `exerciseEvents.ts` muss `window.dispatchEvent` (nicht `document`) verwenden, da `useProgress` auf `window` lauscht
+
+### 2026-02-19 — REQ-051: AP1-Trainer hat eigenes .git-Repo
+
+`sites/AP1-Trainer/.git` existiert — git-Commits für AP1-Trainer müssen im AP1-Trainer-Verzeichnis gemacht werden, nicht im Monorepo-Root. `git status` im Root zeigt keine AP1-Änderungen. Dependency via `file:../../packages/shared` (nicht npm-Workspace).
+
+### 2026-02-19 — REQ-051: Pre-existing Hydration-Fehler in AP1-Trainer
+
+`DragDropExercise` und `SzenarioEntscheidung` haben Hydration-Fehler durch `Math.random()` in `useMemo` (Server ≠ Client-Reihenfolge). Diese existierten vor REQ-051 und sind kein Blocker. React regeneriert den Tree client-seitig (kein Crash, nur Warning).
+
+### 2026-02-19 — Validation 6: Turn-Limit kann Status-Inkonsistenz verursachen
+
+**Problem:** iter-001 (REQ-051) wurde bei Turn 101 durch `error_max_turns` abgebrochen, während Sonnet gerade PRD.md updaten wollte. Resultat: Code fertig, Tests fertig, ADR geschrieben, aber `status.json` auf `in_progress` hängengeblieben und PRD.md-Checkboxen nie gesetzt. Der Validator musste den Status manuell zurücksetzen.
+
+**Muster:** Sonnet macht Status-Finalisierung (PRD.md, status.json, Git Commit) zuletzt. Wenn das Turn-Budget knapp wird, bleiben diese Schritte aus. Das ist ein systemisches Risiko bei M-sized REQs.
+
+**Empfehlung:** Bei M-sized REQs sollte Sonnet den Checkpoint-Commit (mit in_progress Status) früher machen und am Ende nur noch `status → done` setzen. So ist im schlimmsten Fall nur der letzte Status-Switch verloren, nicht die gesamte Arbeit.
+
+### 2026-02-19 — Validation 6: Sonnet arbeitet jetzt korrekt mit sudo docker
+
+Die Learning "Docker braucht sudo" (Validation 5) wurde in allen 3 nachfolgenden Iterationen korrekt umgesetzt. Kein einziger `docker compose` Aufruf ohne `sudo`. Die vorherige Blockade (4 verschwendete Iterationen) ist behoben.

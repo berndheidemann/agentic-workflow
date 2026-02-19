@@ -1,14 +1,12 @@
 # Agent Context
 
-> Iter-013 | 2026-02-19 | 28/44 done, 0 blocked, 16 open
+> Validation 6 | 2026-02-19 | 27/44 done, 0 blocked, 16 open, 1 fast-track (REQ-051)
 
-## Zuletzt abgeschlossen: REQ-015 (Profil-Bereich)
+## Validierungsergebnis
 
-- `apps/hub/src/components/profile-section.tsx` — ProfileSection-Komponente: Begrüßung, X von Y Aufgaben, Logout-Button; nur sichtbar wenn eingeloggt; `<aside aria-label="Profil">`
-- `apps/hub/src/pages/HomePage.tsx` — ProfileSection integriert; Summe completed/total aus useCourseProgress-Map berechnet
-- `apps/hub/src/components/profile-section.test.tsx` — 7 Unit-Tests (null bei Gast, Begrüßung, Fortschritt, Logout-Button, logout-Aufruf, a11y, 0/0)
-- `apps/hub/e2e/profile.spec.ts` — 4 E2E-Tests
-- 226 Unit-Tests (7 neu), Build OK, Lint OK, Smoke-Test bestanden
+3 REQs validiert und bestätigt: REQ-009, REQ-014, REQ-015 — alle Akzeptanzkriterien erfüllt, Smoke-Tests bestanden, Code-Qualität gut. Keine Regressionen.
+
+REQ-051 (AP1-Trainer Shared-Integration): Implementierung vollständig, Build grün, aber iter-001 am Turn-Limit abgebrochen → Status nie finalisiert. Sonnet muss nur noch Smoke-Test + PRD-Checkboxen + Status setzen.
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -35,9 +33,10 @@ Lernplattform-Monorepo: `npm run test/build/lint` läuft in `packages/shared` + 
 
 ## Nächste Prioritäten
 
-1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL) — abhängig von REQ-051 ✅
-2. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
-3. **REQ-025** (P1, M) — Schüler-Fortschrittsübersicht im Dashboard
+1. **REQ-051** (P0, fast-track) — Nur Smoke-Test + Status-Finalisierung nötig
+2. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
+3. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
+4. **REQ-025** (P1, M) — Schüler-Fortschrittsübersicht im Dashboard
 
 ## Wichtige Architektur-Details
 

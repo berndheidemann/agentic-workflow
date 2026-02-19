@@ -289,7 +289,7 @@
     ]
   },
   "REQ-051": {
-    "status": "in_progress",
+    "status": "open",
     "priority": "P0",
     "size": "M",
     "deps": [
@@ -298,7 +298,7 @@
       "REQ-007",
       "REQ-050"
     ],
-    "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
+    "notes": "Validator: Implementierung vollständig (Code, Tests, Build grün), aber Iteration am Turn-Limit abgebrochen. Sonnet muss: 1) Smoke-Test gegen Nginx/Docker durchführen, 2) PRD.md Checkboxen setzen, 3) Status auf done setzen."
   },
   "REQ-052": {
     "status": "open",
