@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, fireEvent, cleanup } from '@testing-library/react';
 import { AuthContext } from '@lernplattform/shared';
 import type { AuthContextValue, User, Class } from '@lernplattform/shared';
 import { StudentDetail } from './student-detail';
@@ -14,6 +14,10 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
     this.removeAttribute('open');
   });
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 // ─── Fixtures ──────────────────────────────────────────────────────────────────

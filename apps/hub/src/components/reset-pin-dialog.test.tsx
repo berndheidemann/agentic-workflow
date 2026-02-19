@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { ResetPinDialog } from './reset-pin-dialog';
 
 // jsdom does not implement HTMLDialogElement.showModal/close natively.
@@ -12,6 +12,10 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = vi.fn(function (this: HTMLDialogElement) {
     this.removeAttribute('open');
   });
+});
+
+afterEach(() => {
+  cleanup();
 });
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

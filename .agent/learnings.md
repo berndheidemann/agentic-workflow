@@ -233,3 +233,9 @@ Astro Islands sind isolierte React-Trees — kein globaler AuthProvider möglich
 ### 2026-02-19 — Validation 6: Sonnet arbeitet jetzt korrekt mit sudo docker
 
 Die Learning "Docker braucht sudo" (Validation 5) wurde in allen 3 nachfolgenden Iterationen korrekt umgesetzt. Kein einziger `docker compose` Aufruf ohne `sudo`. Die vorherige Blockade (4 verschwendete Iterationen) ist behoben.
+
+### 2026-02-19 — Vitest + jsdom: `afterEach(cleanup)` muss global in test-setup.ts sein
+
+`@testing-library/react` führt cleanup NICHT automatisch durch wenn Vitest mit `environment: 'jsdom'` konfiguriert ist. Ohne explizites `afterEach(cleanup)` akkumulieren sich gerenderte Komponenten zwischen Tests, was zu "Found multiple elements" Fehlern führt.
+**Fix:** In `apps/hub/src/test-setup.ts` global `afterEach(() => cleanup())` eintragen.
+**Wichtig:** Tests NUR via `npm run test` ausführen (workspace-aware). `npx vitest run` im Root läuft ohne die workspace-spezifischen `vitest.config.ts` und erzeugt "document is not defined" Fehler.

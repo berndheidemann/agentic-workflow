@@ -319,13 +319,13 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 
-- **Status:** in_progress
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-020, REQ-021
 - **Akzeptanzkriterien:**
-  - [ ] PIN zurücksetzen für einzelne Schüler
-  - [ ] Schüler-Details: Username, Klasse, Fortschritt-Übersicht
+  - [x] PIN zurücksetzen für einzelne Schüler
+  - [x] Schüler-Details: Username, Klasse, Fortschritt-Übersicht
 
 ### REQ-026: Dashboard Detail-Ansicht Zelle
 
