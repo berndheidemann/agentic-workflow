@@ -7,12 +7,10 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
-      // Proxy /api/ to PocketBase in development
       '/api': {
         target: 'http://pocketbase:8090',
         changeOrigin: true,
       },
-      // Proxy /_/ to PocketBase Admin UI in development
       '/_': {
         target: 'http://pocketbase:8090',
         changeOrigin: true,

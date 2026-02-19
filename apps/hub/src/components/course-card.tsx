@@ -7,10 +7,17 @@ interface CourseCardProps {
   progress?: CourseProgressItem;
 }
 
+function getCourseHref(basePath: string): string {
+  if (import.meta.env.DEV) {
+    return `${window.location.protocol}//${window.location.hostname}:8080${basePath}`;
+  }
+  return basePath;
+}
+
 export function CourseCard({ site, progress }: CourseCardProps) {
   return (
     <a
-      href={site.basePath}
+      href={getCourseHref(site.basePath)}
       className="flex flex-col gap-3 bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       aria-label={`${site.name}: ${site.description}`}
     >

@@ -1,18 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@lernplattform/shared';
-import { isValidJoinCode, isValidPin } from '@lernplattform/shared';
+import { isValidPin } from '@lernplattform/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FormState {
-  classCode: string;
   username: string;
   pin: string;
 }
 
 interface FormErrors {
-  classCode?: string;
   username?: string;
   pin?: string;
   general?: string;
@@ -22,12 +20,6 @@ interface FormErrors {
 
 function validateForm(state: FormState): FormErrors {
   const errors: FormErrors = {};
-
-  if (!state.classCode.trim()) {
-    errors.classCode = 'Bitte Klassen-Code eingeben.';
-  } else if (!isValidJoinCode(state.classCode.toUpperCase())) {
-    errors.classCode = 'Klassen-Code muss aus 6 Zeichen bestehen (Buchstaben und Ziffern).';
-  }
 
   if (!state.username.trim()) {
     errors.username = 'Bitte Benutzernamen eingeben.';
@@ -69,15 +61,13 @@ function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<FormState>({ classCode: '', username: '', pin: '' });
+  const [form, setForm] = useState<FormState>({ username: '', pin: '' });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleChange(field: keyof FormState) {
     return (e: React.ChangeEvent<{ value: string }>) => {
-      const value = field === 'classCode' ? e.target.value.toUpperCase() : e.target.value;
-      setForm((prev) => ({ ...prev, [field]: value }));
-      // Clear field error on change
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
@@ -97,8 +87,6 @@ function LoginPage() {
     setErrors({});
 
     try {
-      // The class code is validated client-side for UX context.
-      // PocketBase authenticates via username + PIN only.
       await login(form.username.trim(), form.pin);
       navigate('/');
     } catch (err) {
@@ -112,7 +100,7 @@ function LoginPage() {
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Anmelden</h1>
-        <p className="text-gray-500 text-sm mb-6">Melde dich mit deinem Klassen-Code an.</p>
+        <p className="text-gray-500 text-sm mb-6">Melde dich mit deinem Benutzernamen und PIN an.</p>
 
         {errors.general && (
           <div
@@ -125,35 +113,6 @@ function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} noValidate>
-          {/* Klassen-Code */}
-          <div className="mb-4">
-            <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-1">
-              Klassen-Code
-            </label>
-            <input
-              id="classCode"
-              type="text"
-              value={form.classCode}
-              onChange={handleChange('classCode')}
-              maxLength={6}
-              autoComplete="off"
-              aria-invalid={errors.classCode ? 'true' : undefined}
-              aria-describedby={errors.classCode ? 'classCode-error' : undefined}
-              aria-required="true"
-              className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition-colors ${
-                errors.classCode
-                  ? 'border-red-400 bg-red-50'
-                  : 'border-gray-300 bg-white hover:border-gray-400'
-              }`}
-              placeholder="z.B. AB3C4D"
-            />
-            {errors.classCode && (
-              <p id="classCode-error" className="mt-1 text-xs text-red-600" role="alert">
-                {errors.classCode}
-              </p>
-            )}
-          </div>
-
           {/* Benutzername */}
           <div className="mb-4">
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
