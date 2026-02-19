@@ -343,15 +343,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-030: LoginBanner Komponente
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-005
 - **Akzeptanzkriterien:**
-  - [ ] "Melde dich an um deinen Fortschritt zu speichern" Banner
-  - [ ] Link zur Login-Seite auf dem Hub
-  - [ ] Nur sichtbar wenn nicht eingeloggt
-  - [ ] Dismissbar (schließen-Button)
+  - [x] "Melde dich an um deinen Fortschritt zu speichern" Banner
+  - [x] Link zur Login-Seite auf dem Hub
+  - [x] Nur sichtbar wenn nicht eingeloggt
+  - [x] Dismissbar (schließen-Button)
 
 ### REQ-031: UnlockGate Komponente
 
@@ -432,17 +432,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-035: a11y-Feinschliff bestehende Komponenten
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-011, REQ-023a
 - **Akzeptanzkriterien:**
-  - [ ] Farbkontrast-Fix: `progress-matrix.tsx` — `text-gray-400` → `text-gray-600` für "Nicht angefangen"-Zellen (WCAG AA 4.5:1)
-  - [ ] `aria-live="assertive"` auf Fehler-Alerts in `ClassesPage.tsx` und `ClassDetailPage.tsx`
-  - [ ] Copy-Button (`ClassDetailPage`): `aria-label` aktualisiert sich bei Zustandswechsel ("Kopieren" → "Code kopiert")
-  - [ ] Dekorativer Pfeil in Back-Link (`ClassDetailPage`): `←` mit `aria-hidden="true"` wrappen
-  - [ ] Explizite Keyboard-Navigation-Tests (Tab-Reihenfolge) für LoginPage, RegisterPage, MatrixPage
-  - [ ] `jest-axe` als Dev-Dependency hinzufügen, mindestens 1 axe-Audit pro Page-Test
+  - [x] Farbkontrast-Fix: `progress-matrix.tsx` — `text-gray-400` → `text-gray-600` für "Nicht angefangen"-Zellen (WCAG AA 4.5:1)
+  - [x] `aria-live="assertive"` auf Fehler-Alerts in `ClassesPage.tsx` und `ClassDetailPage.tsx`
+  - [x] Copy-Button (`ClassDetailPage`): `aria-label` aktualisiert sich bei Zustandswechsel ("Kopieren" → "Code kopiert")
+  - [x] Dekorativer Pfeil in Back-Link (`ClassDetailPage`): `←` mit `aria-hidden="true"` wrappen
+  - [x] Explizite Keyboard-Navigation-Tests (Tab-Reihenfolge) für LoginPage, RegisterPage, MatrixPage
+  - [x] `jest-axe` als Dev-Dependency hinzufügen, mindestens 1 axe-Audit pro Page-Test
 
 ---
 

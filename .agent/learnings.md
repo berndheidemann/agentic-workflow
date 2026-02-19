@@ -264,3 +264,12 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 **Nginx-Cache-Falle:** Bei `browser_navigate` zum AP1-Trainer (via Nginx-Container-IP) kann der Browser eine gecachte Version der alten Test-HTML servieren. `curl` in den Container zeigt die korrekte Seite — `page.evaluate(() => window.location.reload())` löst das Problem.
 
 **Sonnet-Qualität verbessert:** Sudo-Docker wird konsistent verwendet. Smoke-Tests werden durchgeführt. `npm run test` wird (nach initialen Fehlversuchen mit `npx vitest run`) korrekt eingesetzt. Die jsdom-cleanup-Regression wurde selbständig identifiziert und global in test-setup.ts behoben.
+
+---
+
+### 2026-02-19 — vitest-axe Import-Syntax
+
+- **Falsch:** `import { toHaveNoViolations } from 'vitest-axe/matchers'; expect.extend(toHaveNoViolations);`
+- **Richtig:** `import * as matchers from 'vitest-axe/matchers'; expect.extend(matchers);`
+- Begründung: `toHaveNoViolations` ist eine Funktion, `expect.extend()` braucht aber ein Objekt mit Matcher-Funktionen als Values.
+- Symptom: "Invalid Chai property: toHaveNoViolations" trotz korrekt installiertem Paket.
