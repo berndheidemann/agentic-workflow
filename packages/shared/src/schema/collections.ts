@@ -73,6 +73,7 @@ export interface CourseUnlock {
 /**
  * Base collection `progress`.
  * UNIQUE constraint on (user_id, course, lesson, exercise).
+ * `suspicious` is set server-side by PocketBase hooks (REQ-008).
  */
 export interface Progress {
   id: string;
@@ -85,6 +86,7 @@ export interface Progress {
   max_score: number;
   attempts: number;
   completed_at: string | null;
+  suspicious: boolean;
   created: string;
   updated: string;
 }
