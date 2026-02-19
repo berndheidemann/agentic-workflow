@@ -239,3 +239,12 @@ Die Learning "Docker braucht sudo" (Validation 5) wurde in allen 3 nachfolgenden
 `@testing-library/react` führt cleanup NICHT automatisch durch wenn Vitest mit `environment: 'jsdom'` konfiguriert ist. Ohne explizites `afterEach(cleanup)` akkumulieren sich gerenderte Komponenten zwischen Tests, was zu "Found multiple elements" Fehlern führt.
 **Fix:** In `apps/hub/src/test-setup.ts` global `afterEach(() => cleanup())` eintragen.
 **Wichtig:** Tests NUR via `npm run test` ausführen (workspace-aware). `npx vitest run` im Root läuft ohne die workspace-spezifischen `vitest.config.ts` und erzeugt "document is not defined" Fehler.
+
+### 2026-02-19 — Validation 7: Stabile Codebasis, alle 3 neuen REQs bestätigt
+
+**Validiert:** REQ-051 (AP1-Trainer Integration), REQ-025 (Schüler-Verwaltung), REQ-026 (Zell-Detail-Modal).
+Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Tests grün, Build + Lint sauber.
+
+**Nginx-Cache-Falle:** Bei `browser_navigate` zum AP1-Trainer (via Nginx-Container-IP) kann der Browser eine gecachte Version der alten Test-HTML servieren. `curl` in den Container zeigt die korrekte Seite — `page.evaluate(() => window.location.reload())` löst das Problem.
+
+**Sonnet-Qualität verbessert:** Sudo-Docker wird konsistent verwendet. Smoke-Tests werden durchgeführt. `npm run test` wird (nach initialen Fehlversuchen mit `npx vitest run`) korrekt eingesetzt. Die jsdom-cleanup-Regression wurde selbständig identifiziert und global in test-setup.ts behoben.

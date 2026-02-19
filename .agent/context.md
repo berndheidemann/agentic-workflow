@@ -1,14 +1,14 @@
 # Agent Context
 
-> 2026-02-19 | 30/44 done, 0 blocked, 14 open
+> 2026-02-19 | 30/44 done, 0 blocked, 14 open | Validation 7: PASS (3/3 REQs bestätigt)
 
 ## Was zuletzt passiert ist
 
-REQ-026 (Dashboard Detail-Ansicht Zelle): done. Smoke-Test bestanden.
-- `CellDetailModal`-Komponente: zeigt Versuche, Score (X/Y), Zeitpunkt per `<dialog>` Modal
-- `ProgressMatrix` erweitert: Zellen sind klickbare `<button>`-Elemente, öffnen CellDetailModal
-- `HTMLButtonElement` in ESLint globals (prod-Block) ergänzt
-- 266 Tests grün (251 + 15 neue)
+**Validation 7 (iter-010):** REQ-051, REQ-025, REQ-026 validiert — alle PASS.
+- REQ-051: AP1-Trainer Shared-Integration via Nginx verifiziert (SharedIntegration astro-island, ProgressBridge, UnlockIndicator)
+- REQ-025: Schüler-Detail + PIN-Reset-Dialog via Playwright Smoke-Test bestätigt
+- REQ-026: CellDetailModal zeigt Versuche, Score (X/Y), Status-Badge — Smoke-Test bestanden
+- Keine Korrekturen nötig. status.json und PRD.md konsistent.
 
 ## KRITISCH: Docker braucht `sudo`
 
