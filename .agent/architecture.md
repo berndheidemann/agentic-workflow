@@ -115,3 +115,27 @@
 - Erster Aufruf pro Course hat eine kurze Latenz. Während des Ladens gibt `isModuleUnlocked` optimistisch `true` zurück.
 - Für Realtime-Updates (Lehrer schaltet frei während Schüler arbeitet) müsste PocketBase-Realtime-Subscription ergänzt werden. Aktuell: Page-Reload genügt.
 - Cache-Key ist nur der Course-Name. classId ist implizit (aus useAuth). Bei classId-Wechsel wird der gesamte Cache invalidiert.
+
+---
+
+## ADR-006: Site-Konfiguration als TypeScript-Modul (2026-02-19, REQ-011)
+
+**Kontext:** REQ-011 fordert datengetriebene Kurs-Kacheln. REQ-009 (Site-Registry als Single Source of Truth) ist noch OPEN. Eine Zwischenlösung ist nötig, die später nahtlos ersetzt werden kann.
+
+**Entscheidung:** Zentrale TypeScript-Konfigurationsdatei `apps/hub/src/config/sites.ts` mit `SiteConfig`-Interface und statischem Array. Das Interface übernimmt exakt die Felder aus der REQ-009-Spezifikation (`slug`, `name`, `description`, `icon`, `basePath`, `frameworkType`, `isActive`, `sortOrder`).
+
+**Begründung:**
+- TypeScript statt JSON: Typensicherheit, Auto-Complete, Build-Time-Validierung. Kein Laufzeit-Fetch nötig.
+- Exaktes REQ-009-Interface: Wenn REQ-009 implementiert wird, ändert sich nur die Datenquelle (JSON-Fetch oder PocketBase-Query), nicht das Interface oder die Konsumenten.
+- Icons als SVG-Path-Strings (Heroicons MIT): Serialisierbar, keine React-Abhängigkeit im Datenmodell, kompatibel mit JSON/PocketBase-Speicherung.
+
+**Migrationspfad zu REQ-009:**
+1. `sites.ts` exportiert aktuell ein statisches Array
+2. REQ-009 ersetzt dies durch eine asynchrone Quelle (Fetch aus `sites.json` oder PocketBase)
+3. `CourseGrid` und `CourseCard` bleiben unverändert (nehmen `SiteConfig[]` als Props)
+4. `HomePage` wechselt von synchronem Import zu `useEffect` + State für das Laden
+
+**Konsequenzen:**
+- Änderungen an der Site-Liste erfordern einen Rebuild. Akzeptabel, da Sites sich selten ändern.
+- Das `icon`-Feld enthält SVG-Pfaddaten als String — ein einzelner `<path d="...">` genügt für einfache Icons.
+- Bei REQ-009 entsteht ein kleiner Refactor in `HomePage` (sync zu async). `CourseGrid` und `CourseCard` bleiben stabil.

@@ -182,15 +182,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-011: Landing Page mit Kurs-Kacheln
 
-- **Status:** in_progress
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] Kurs-Kacheln mit Titel, Beschreibung und Icon — dynamisch aus Site-Registry (REQ-009) oder Konfigurationsdatei, nicht hartcodiert
-  - [ ] Kacheln verlinken auf die jeweiligen Sites (`/ap1/`, `/pandas/`, etc.)
-  - [ ] Responsive: 1 Spalte mobil, 2-3 Spalten Desktop
-  - [ ] Ohne Login: Kacheln ohne Fortschritt, direkter Link
+  - [x] Kurs-Kacheln mit Titel, Beschreibung und Icon — dynamisch aus Site-Registry (REQ-009) oder Konfigurationsdatei, nicht hartcodiert
+  - [x] Kacheln verlinken auf die jeweiligen Sites (`/ap1/`, `/pandas/`, etc.)
+  - [x] Responsive: 1 Spalte mobil, 2-3 Spalten Desktop
+  - [x] Ohne Login: Kacheln ohne Fortschritt, direkter Link
 
 ### REQ-012: Login-Seite
 

@@ -1,11 +1,11 @@
 # Agent Context
 
-> Iteration 9 | 2026-02-19 | REQ-010 + REQ-022 abgeschlossen
+> Iteration 10 | 2026-02-19 | REQ-011 abgeschlossen
 
 ## Projektstatus
 
-- Fortschritt: 11/44 REQs done (inkl. REQ-010, REQ-022)
-- Nächste REQs: REQ-011 (P0, M, dep REQ-010 ✓), REQ-009 (P1, S, dep REQ-001 ✓)
+- Fortschritt: 12/44 REQs done (inkl. REQ-011)
+- Nächste REQs: REQ-012 (P0, M, dep REQ-005+REQ-010 ✓), REQ-020 (P0, S, dep REQ-010 ✓)
 - Blocker: Keine
 
 ## Was existiert
@@ -18,16 +18,21 @@
 - `pb_migrations/`: create_collections.js (role: student|teacher), add_suspicious_field.js
 - `apps/hub`: Vite + React 18 + TS + Tailwind + React Router 7
   - Routing: `/` (HomePage), `/login` (LoginPage), `/register` (RegisterPage), `/dashboard/*` (DashboardPage), `*` (NotFoundPage)
-  - Vitest konfiguriert: 11 Unit-Tests in `src/pages/*.test.tsx`
+  - `src/config/sites.ts`: SiteConfig-Interface + 6 Sites (slug, name, description, icon, basePath, frameworkType, isActive, sortOrder)
+  - `src/components/course-card.tsx`: Einzelne Kurs-Kachel mit SVG-Icon, h2-Titel, Beschreibung, Link
+  - `src/components/course-grid.tsx`: Responsive Grid (1→2→3 Spalten), rendert CourseCards
+  - `src/pages/HomePage.tsx`: Nutzt getActiveSites() + CourseGrid — vollständig datengetrieben
+  - Vitest: 29 Unit-Tests in hub (7 sites, 6 course-card, 3 course-grid, 7 home, 3 login, 3 register)
   - Test-Dateien aus tsconfig exclude für Production-Build
 - Docker Compose: PocketBase + Nginx (COPY-basiert, pb_migrations)
-- Vitest gesamt: 144 Unit-Tests grün (133 shared + 11 hub)
+- Vitest gesamt: 162 Unit-Tests grün (133 shared + 29 hub)
 
 ## Aktuelle Erkenntnisse
 
-- **Vite Dual-React Bug:** Alter Vite-Cache erzeugt zwei React-Chunks (verschiedene Hash-Versionen) → "Invalid hook call" im Browser. Fix: `rm -rf node_modules/.vite` vor neuem Dev-Start.
-- **Dev-Port in Sandbox:** Port 3572 ist vom Sandbox-Container belegt → Vite weicht auf 3573 aus. Smoke-Tests laufen auf 3573 (intern erreichbar via Playwright MCP).
-- **Lehrer-Account (REQ-022):** Kein Code nötig. PocketBase Admin-UI erstellt Lehrer-Accounts direkt. Hook erzwingt role=student nur bei Selbstregistrierung — greift nicht für Admin-Operationen.
+- **sites.ts → REQ-009 Migration:** SiteConfig-Interface ist identisch mit dem geplanten REQ-009-Format. Migration = nur Datenquelle wechseln (sync Array → async fetch). Komponenten bleiben unverändert.
+- **SVG-Icons als d-Path-Strings:** Heroicons MIT, in SiteConfig als `icon: string` gespeichert. Serialisierbar, kompatibel mit zukünftiger JSON/PocketBase-Quelle.
+- **Vite Dual-React Bug:** Fix: `rm -rf node_modules/.vite` vor Dev-Start (ADR aus REQ-010 bestätigt).
+- **Dev-Port in Sandbox:** Port 3572 direkt nutzbar wenn der Vite-Cache frisch ist.
 - **tsconfig.json exclude:** Test-Dateien müssen in `exclude` der tsconfig.json stehen, sonst findet `tsc -b` Vitest-Globals nicht.
 - **Hub ESLint:** Separate Config-Blöcke für Test-Dateien vs. Prod-Dateien nötig (Vitest-Globals vs. Browser-Globals).
-- Nächste P0-REQs: REQ-011 (Landing Page mit Kurs-Kacheln, dep REQ-010 ✓)
+- Nächste P0-REQs: REQ-012 (Login-Seite, dep REQ-005+REQ-010 ✓), REQ-020 (Registrierungsseite MVP, dep REQ-010 ✓)
