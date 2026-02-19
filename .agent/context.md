@@ -1,15 +1,15 @@
 # Agent Context
 
-> 2026-02-19 | 34/44 done, 0 blocked, 10 open | Validation 8 bestanden
+> 2026-02-19 | 35/44 done, 0 blocked, 9 open | REQ-034 Offline-Queue implementiert
 
 ## Was zuletzt passiert ist
 
-**Validation 8:** REQ-030, REQ-035, REQ-032, REQ-033 validiert — alle 4 bestanden.
+**REQ-034 (Offline-Queue für Progress):** ✅ Implementiert und verifiziert.
 
-- **REQ-030 (LoginBanner):** ✅ Komponente im Shared-Package, in HomePage eingebunden, Dismiss funktioniert, nicht sichtbar wenn eingeloggt.
-- **REQ-035 (a11y-Feinschliff):** ✅ Alle 6 Akzeptanzkriterien erfüllt (Kontrast, aria-live, Copy-Button, Pfeil, Keyboard-Tests, vitest-axe).
-- **REQ-032 (SidebarUnlock):** ✅ Prop-basierte Komponente + DOM-Injection Injector, 3 Zustände, Klick-Hinweis, 16 Unit-Tests.
-- **REQ-033 (ProgressBar Sidebar):** ✅ DOM-Injection analog zu SidebarUnlock, nur eingeloggt sichtbar, 8 Unit-Tests.
+- `offline-queue-store.ts`: localStorage-Abstraktion mit user-spezifischen Keys (`lernplattform:progress-queue:{userId}`), Type-Guard, roundtrip-sicher.
+- `sync-engine.ts`: Erweitert um `isOffline` (navigator.onLine), localStorage-Persistence, `online`-Event-Listener für Auto-Reconnect, Retry-Logik (maxRetries=5).
+- 31 neue Tests: 16 sync-engine (offline detection, online event, retry, persistence) + 15 offline-queue-store.
+- Shared-Package: 202 Tests (vorher 171). Hub: 274 Tests unverändert.
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -19,7 +19,9 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 ## Was existiert
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
-- `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner + SidebarUnlock (171 Tests)
+- `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner + SidebarUnlock (202 Tests)
+  - **NEU:** `offline-queue-store.ts` — localStorage-Persistenz der SyncEngine-Queue
+  - **NEU:** SyncEngine: Offline-Detection, Auto-Reconnect (online-Event), Retry-Counter
 - `apps/hub`: Vite + React + TS + Tailwind + React Router (274 Tests)
   - Routing: `/`, `/login`, `/register`, `/dashboard/*`, `/datenschutz`, `/einwilligung`, `*` (404)
   - Dashboard: Klassen, Matrix, Freischaltung + Schüler-Detail
@@ -31,9 +33,9 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 ## Nächste Prioritäten
 
-1. **REQ-034** (P1, M) — Offline-Queue für Progress
-2. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
-3. **REQ-036** (P1, M) — Prerequisite Soft-Gate
+1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
+2. **REQ-036** (P1, M) — Prerequisite Soft-Gate
+3. **REQ-037** (P1, M) — Kursstruktur-Manifest
 
 ## Wichtige Architektur-Details
 
@@ -45,6 +47,7 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 - **SidebarProgressInjector Pattern:** Analog zu SidebarUnlockInjector — DOM-Injection, `cleanupRef`
 - **Starlight-Sidebar-Selektoren:** `nav[aria-label] a[href]` findet alle 40 Links korrekt
 - **Test-Mocks:** Nach `vi.clearAllMocks()` müssen Mock-Implementierungen in `beforeEach` neu gesetzt werden!
+- **Offline-Queue Storage-Key:** `lernplattform:progress-queue:{userId}` — user-spezifisch, Konflikte vermeiden
 
 ## Credentials
 

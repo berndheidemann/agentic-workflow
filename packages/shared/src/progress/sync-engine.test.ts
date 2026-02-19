@@ -348,18 +348,19 @@ describe('SyncEngine', () => {
       await engine.stop();
     });
 
-    it('does not flush after stop() removes online listener', async () => {
+    it('removes online listener after stop', async () => {
       mockCreate.mockResolvedValue({});
       const engine = makeEngineNoPersist();
       engine.start();
-      await engine.stop(); // stop removes listeners
+      await engine.stop();
 
-      engine.enqueue(makeEntry({ exercise: 'aufgabe-2' }));
+      // Spy on flush to confirm it's not called by the online event
+      const flushSpy = vi.spyOn(engine, 'flush');
+
       window.dispatchEvent(new Event('online'));
       await vi.runAllTimersAsync();
 
-      // Only the flush from stop() should have run (queue was empty at that time)
-      expect(mockCreate).not.toHaveBeenCalled();
+      expect(flushSpy).not.toHaveBeenCalled();
     });
   });
 

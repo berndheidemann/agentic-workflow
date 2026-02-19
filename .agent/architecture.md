@@ -252,3 +252,28 @@
 - Consumer muss `status` selbst bestimmen (leicht erweiterbar, aber mehr Boilerplate beim Aufrufer)
 - DOM-Injection ist fragil bei Starlight-HTML-Struktur-Änderungen (Mitigation: semantischer Selektor)
 - MutationObserver kann bei Bedarf für ViewTransitions nachgerüstet werden
+
+---
+
+## ADR-013: Offline-Queue mit localStorage-Persistence (2026-02-19, REQ-034)
+
+**Kontext:** Progress-Events gehen verloren wenn der Nutzer offline ist (z.B. Schulnetzwerk-Ausfall, mobile Verbindung im Tunnel). SyncEngine verwarf bisher fehlgeschlagene Entries stillschweigend.
+
+**Entscheidung:** localStorage-Persistence + `navigator.onLine` + `window online`-Event in der bestehenden SyncEngine. Kein Service Worker, kein IndexedDB.
+
+**Begründung:**
+- localStorage reicht für die Datenmenge (~100 Entries × ~200 Bytes = ~20KB, weit unter dem 5MB-Limit)
+- Service Worker wäre überdimensioniert (nur Progress-Tracking braucht Offline-Support)
+- `online`/`offline`-Events sind in allen Zielbrowsern unterstützt
+- Retry-Counter (maxRetries=5) verhindert Endlos-Retry-Loops
+
+**Storage-Key:** `lernplattform:progress-queue:{userId}` — user-spezifisch, verhindert Queue-Konflikte bei User-Wechsel auf geteilten Geräten.
+
+**Neue Dateien:** `packages/shared/src/progress/offline-queue-store.ts` (localStorage-Abstraktion), `QueuedEntry` Typ (extends `ProgressEntry` + `retryCount` + `queuedAt`).
+
+**Konsequenzen:**
+- localStorage ist synchron — kein Performance-Problem bei <100 Entries
+- Bei localStorage-Quota-Überschreitung wird Queue nicht persistiert (graceful degradation)
+- Einträge mit `retryCount >= maxRetries` (default 5) werden verworfen (kein Endlos-Wachstum)
+- `navigator.onLine` ist nicht 100% zuverlässig (Captive Portal) — mitigiert durch try-catch in `upsertEntry`
+- `persistQueue: false` Option ermöglicht saubere Unit-Tests ohne localStorage-Pollution

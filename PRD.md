@@ -389,14 +389,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-034: Offline-Queue für Progress
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006
 - **Akzeptanzkriterien:**
-  - [ ] Progress-Events werden in localStorage gequeued bei Offline
-  - [ ] Automatischer Sync bei Reconnect
-  - [ ] Queue wird nach erfolgreichem Sync geleert
+  - [x] Progress-Events werden in localStorage gequeued bei Offline
+  - [x] Automatischer Sync bei Reconnect
+  - [x] Queue wird nach erfolgreichem Sync geleert
 
 ### REQ-036: Prerequisite-basiertes Soft-Gate
 
