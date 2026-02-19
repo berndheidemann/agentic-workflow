@@ -1,38 +1,43 @@
 # Agent Context
 
-> Iteration 10 | 2026-02-19 | REQ-011 abgeschlossen
+> Iteration 12 | 2026-02-19 | REQ-013 abgeschlossen
 
 ## Projektstatus
 
-- Fortschritt: 12/44 REQs done (inkl. REQ-011)
-- Nächste REQs: REQ-012 (P0, M, dep REQ-005+REQ-010 ✓), REQ-020 (P0, S, dep REQ-010 ✓)
+- Fortschritt: 14/44 REQs done (inkl. REQ-013)
+- Nächste REQs: REQ-020 (P0, S, dep REQ-010 ✓), REQ-009 (P1, S, keine Deps)
 - Blocker: Keine
 
 ## Was existiert
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
 - Root: `package.json` (test-script beide Workspaces), `tsconfig.json`, `.gitignore`, `.prettierrc`
-- ESLint flat config (v9): `packages/shared/eslint.config.js`, `apps/hub/eslint.config.js` (mit Vitest-Globals für Test-Dateien)
+- ESLint flat config (v9): `packages/shared/eslint.config.js`, `apps/hub/eslint.config.js`
 - `@lernplattform/shared`: tsup Build (ESM+CJS+DTS), Auth + Progress + Unlock + Validation Module
-- `pb_hooks/`: join-code.pb.js, user-validation.pb.js (role=student erzwungen), progress-validation.pb.js
-- `pb_migrations/`: create_collections.js (role: student|teacher), add_suspicious_field.js
+  - `AuthContext` + `AuthContextValue` mit `login`, `register`, `logout`, `pb`
+  - `register(username, pin, classCode)` im AuthProvider — löst join_code serverseitig auf
+  - `isValidUsername`, `USERNAME_MIN_LENGTH` (3) in validation/username.ts
+- `pb_hooks/`: join-code.pb.js, user-validation.pb.js (erweitert: join_code → class_id Resolution)
+- `pb_migrations/`: create_collections.js, add_suspicious_field.js
 - `apps/hub`: Vite + React 18 + TS + Tailwind + React Router 7
+  - `App.tsx`: AuthProvider mit `baseUrl="/"` umschließt BrowserRouter (WICHTIG: "/" nicht "")
   - Routing: `/` (HomePage), `/login` (LoginPage), `/register` (RegisterPage), `/dashboard/*` (DashboardPage), `*` (NotFoundPage)
-  - `src/config/sites.ts`: SiteConfig-Interface + 6 Sites (slug, name, description, icon, basePath, frameworkType, isActive, sortOrder)
-  - `src/components/course-card.tsx`: Einzelne Kurs-Kachel mit SVG-Icon, h2-Titel, Beschreibung, Link
-  - `src/components/course-grid.tsx`: Responsive Grid (1→2→3 Spalten), rendert CourseCards
-  - `src/pages/HomePage.tsx`: Nutzt getActiveSites() + CourseGrid — vollständig datengetrieben
-  - Vitest: 29 Unit-Tests in hub (7 sites, 6 course-card, 3 course-grid, 7 home, 3 login, 3 register)
-  - Test-Dateien aus tsconfig exclude für Production-Build
+  - `src/config/sites.ts`: SiteConfig-Interface + 6 Sites
+  - `src/components/course-card.tsx`, `course-grid.tsx`: Kurs-Kacheln
+  - `src/pages/LoginPage.tsx`: Vollständiges Login-Formular
+  - `src/pages/RegisterPage.tsx`: Vollständiges Registrierungs-Formular (REQ-013)
+  - `src/pages/HomePage.tsx`: Landing Page mit CourseGrid
+  - `apps/hub/e2e/login.spec.ts`: Playwright E2E-Test-Datei (braucht laufenden Stack)
+  - `vitest.config.ts`: e2e/ aus Vitest ausgeschlossen
+  - Vitest: 74 Unit-Tests in hub (26 register, 25 login, 7 sites, 6 course-card, 3 course-grid, 7 home)
 - Docker Compose: PocketBase + Nginx (COPY-basiert, pb_migrations)
-- Vitest gesamt: 162 Unit-Tests grün (133 shared + 29 hub)
+- Vitest gesamt: 215 Unit-Tests grün (141 shared + 74 hub)
 
 ## Aktuelle Erkenntnisse
 
-- **sites.ts → REQ-009 Migration:** SiteConfig-Interface ist identisch mit dem geplanten REQ-009-Format. Migration = nur Datenquelle wechseln (sync Array → async fetch). Komponenten bleiben unverändert.
-- **SVG-Icons als d-Path-Strings:** Heroicons MIT, in SiteConfig als `icon: string` gespeichert. Serialisierbar, kompatibel mit zukünftiger JSON/PocketBase-Quelle.
-- **Vite Dual-React Bug:** Fix: `rm -rf node_modules/.vite` vor Dev-Start (ADR aus REQ-010 bestätigt).
-- **Dev-Port in Sandbox:** Port 3572 direkt nutzbar wenn der Vite-Cache frisch ist.
-- **tsconfig.json exclude:** Test-Dateien müssen in `exclude` der tsconfig.json stehen, sonst findet `tsc -b` Vitest-Globals nicht.
-- **Hub ESLint:** Separate Config-Blöcke für Test-Dateien vs. Prod-Dateien nötig (Vitest-Globals vs. Browser-Globals).
-- Nächste P0-REQs: REQ-012 (Login-Seite, dep REQ-005+REQ-010 ✓), REQ-020 (Registrierungsseite MVP, dep REQ-010 ✓)
+- **register() im AuthProvider**: join_code wird als Body-Feld gesendet, Server-Hook löst ihn zu class_id auf. Vermeidet unauthentifizierten classes-Collection-Zugriff.
+- **AuthContextValue Breaking Change**: register-Funktion hinzugefügt — alle Test-Mocks brauchen `register: vi.fn()`.
+- **PocketBase baseUrl MUSS "/" sein**: Mit "" (leer) baut PocketBase SDK die API-URL relativ zu window.location.pathname.
+- **vitest.config.ts exclude für e2e/**: Playwright E2E-Tests in e2e/ müssen aus Vitest ausgeschlossen werden.
+- **Hub ESLint**: Separate Config-Blöcke für Test- vs. Prod-Dateien.
+- Nächste P0-REQs: REQ-020 (Dashboard Grundstruktur, dep REQ-010 ✓)

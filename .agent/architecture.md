@@ -139,3 +139,27 @@
 - Änderungen an der Site-Liste erfordern einen Rebuild. Akzeptabel, da Sites sich selten ändern.
 - Das `icon`-Feld enthält SVG-Pfaddaten als String — ein einzelner `<path d="...">` genügt für einfache Icons.
 - Bei REQ-009 entsteht ein kleiner Refactor in `HomePage` (sync zu async). `CourseGrid` und `CourseCard` bleiben stabil.
+
+---
+
+## ADR-007: AuthProvider baseUrl="/" statt "" (2026-02-19, REQ-012)
+
+**Kontext:** ADR-001 dokumentierte `new PocketBase('')` als korrekte Konfiguration. Bei REQ-012 (Login-Seite) stellte sich heraus, dass PocketBase SDK mit leerem baseUrl die API-URL relativ zu `window.location.pathname` baut. Auf `/login` ergibt das `/login/api/...` — 404.
+
+**Entscheidung:** `AuthProvider` erhält in `App.tsx` explizit `baseUrl="/"`. PocketBase `buildURL()` berechnet dann `window.location.origin + "/" + endpoint` = `/api/...` — korrekt für Vite-Proxy und Nginx.
+
+**Begründung:** PocketBase SDK `buildURL()`: wenn baseUrl mit `http(s)://` beginnt → absolut; mit `/` → `origin + baseUrl`; leer → relativ zu `window.location.pathname`. Mit React Router (Unterrouten) muss `"/"` verwendet werden.
+
+**Konsequenzen:** ADR-001 war unvollständig — `""` nur korrekt wenn App ausschließlich von `/` servt wird. Alle Hub-Integrationen und Site-Integrationen müssen `baseUrl="/"` (oder absolute URL) verwenden.
+
+---
+
+## ADR-008: register()-Funktion im AuthProvider mit serverseitigem join_code-Lookup (2026-02-19, REQ-013)
+
+**Kontext:** Registrierung erfordert Join-Code → class_id Auflösung. Nicht-eingeloggte User haben keinen Lese-Zugriff auf die classes-Collection (listRule: '@request.auth.id != ""').
+
+**Entscheidung:** `register(username, pin, classCode)` im AuthProvider. Sendet join_code als Extra-Body-Feld an users.create. Server-Hook (user-validation.pb.js) löst join_code zu class_id auf via findRecordsByFilter — kein Client-Side-Lookup nötig.
+
+**Begründung:** Kein API-Rule-Änderung (kein Sicherheitsrisiko), Validierungslogik bleibt serverseitig, RegisterPage bleibt reine UI-Komponente.
+
+**Konsequenzen:** AuthContextValue um register erweitert — Breaking Change für Test-Mocks. Alle makeAuthContext() Hilfsfunktionen brauchen `register: vi.fn()`.

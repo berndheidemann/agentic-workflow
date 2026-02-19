@@ -194,7 +194,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-012: Login-Seite
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-010
@@ -207,16 +207,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-013: Registrierungs-Seite
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-008, REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] Formular: Klassen-Code eingeben → Username + PIN wählen
-  - [ ] Username-Validierung (Mindestlänge)
-  - [ ] PIN: genau 4 Ziffern
-  - [ ] Klassen-Code wird validiert (existiert und ist aktiv)
-  - [ ] Account wird erstellt, automatisch eingeloggt
+  - [x] Formular: Klassen-Code eingeben → Username + PIN wählen
+  - [x] Username-Validierung (Mindestlänge)
+  - [x] PIN: genau 4 Ziffern
+  - [x] Klassen-Code wird validiert (existiert und ist aktiv)
+  - [x] Account wird erstellt, automatisch eingeloggt
 
 ### REQ-014: Kurs-Kacheln mit Fortschrittsbalken
 

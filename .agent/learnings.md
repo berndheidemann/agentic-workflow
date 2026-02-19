@@ -79,3 +79,17 @@
 - **Hub ESLint für Tests:** Separate ESLint-Config-Blöcke für Test- vs. Prod-Dateien nötig: Test-Block definiert Vitest-Globals, Prod-Block definiert Browser-Globals.
 - **Lehrer-Account ohne Code:** PocketBase `onRecordCreateRequest`-Hook erzwingt role=student nur bei HTTP-Requests. Admin-UI-Operationen laufen als superuser und umgehen Hooks — Lehrer-Accounts können sicher per Admin-UI erstellt werden.
 - **npm test beide Workspaces:** Root-Skript `npm run test` muss `--workspace=packages/shared --workspace=apps/hub` enthalten wenn beide getestet werden sollen.
+
+### 2026-02-19 — REQ-012 Login-Seite
+
+- **PocketBase SDK baseUrl "" vs "/":** Mit leerem baseUrl (`""`) baut PocketBase `buildURL()` die API-URL relativ zu `window.location.pathname`. Auf `/login` ergibt das `/login/api/...` (falsch). Mit `"/"` wird `window.location.origin + "/" + "api/..."` gebaut — korrekt. AuthProvider in `App.tsx` muss immer `baseUrl="/"` erhalten, nie `""` oder kein Prop (Default wäre `""`).
+- **Vitest schließt e2e/ nicht automatisch aus:** Playwright E2E-Tests in `apps/hub/e2e/*.spec.ts` werden von Vitest aufgelöst wenn keine `exclude`-Regel gesetzt ist — `@playwright/test` ist nicht installiert → Fehler. Fix: `exclude: ['e2e/**', 'node_modules/**']` in `vitest.config.ts`.
+- **AuthContext für Test-Mocking:** `AuthContext` aus `@lernplattform/shared` exportieren erlaubt direktes `<AuthContext.Provider value={mockCtx}>` in Tests ohne real laufenden AuthProvider (inkl. PocketBase). Sauberere Alternative zu `vi.mock('@lernplattform/shared')`.
+
+### 2026-02-19 — join_code-Auflösung ohne Auth (REQ-013)
+
+Bei der Registrierung muss der Klassen-Code (join_code) in eine class_id aufgelöst werden, aber nicht-eingeloggte Nutzer haben keinen Lese-Zugriff auf die classes-Collection. Lösung: join_code als Extra-Body-Feld an users.create senden; der Server-Hook (user-validation.pb.js) löst ihn serverseitig mit findRecordsByFilter auf und setzt class_id. Das vermeidet API-Rule-Änderungen und hält Validierungslogik serverseitig.
+
+### 2026-02-19 — AuthContextValue Breaking Change durch register()
+
+Wenn register() zu AuthContextValue hinzugefügt wird, müssen ALLE Test-Mocks aktualisiert werden, die makeAuthContext() nutzen (auch LoginPage.test.tsx). TypeScript-Fehler ohne explizites `register: vi.fn()` im Mock-Objekt.

@@ -97,7 +97,7 @@
     ]
   },
   "REQ-012": {
-    "status": "open",
+    "status": "done",
     "priority": "P0",
     "size": "M",
     "deps": [
@@ -106,7 +106,7 @@
     ]
   },
   "REQ-013": {
-    "status": "open",
+    "status": "in_progress",
     "priority": "P0",
     "size": "M",
     "deps": [
