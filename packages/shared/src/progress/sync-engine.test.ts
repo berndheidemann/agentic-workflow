@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SyncEngine } from './sync-engine';
 import type { ProgressEntry } from './types';
+import { loadQueue, storageKeyFor } from './offline-queue-store';
 
 // ─── PocketBase mock ──────────────────────────────────────────────────────────
 
@@ -35,12 +36,19 @@ function makeEngine(syncInterval = 30_000): SyncEngine {
   return new SyncEngine({ pb: mockPb, userId: 'user-123', syncInterval });
 }
 
+function makeEngineNoPersist(syncInterval = 30_000): SyncEngine {
+  return new SyncEngine({ pb: mockPb, userId: 'user-123', syncInterval, persistQueue: false });
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('SyncEngine', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    localStorage.clear();
+    // Default: navigator.onLine = true
+    Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
   afterEach(() => {
@@ -287,6 +295,207 @@ describe('SyncEngine', () => {
       unsubscribe();
       engine.enqueue(makeEntry());
       expect(cb).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('offline detection', () => {
+    it('isOffline returns false when navigator.onLine is true', () => {
+      Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
+      const engine = makeEngineNoPersist();
+      expect(engine.isOffline).toBe(false);
+    });
+
+    it('isOffline returns true when navigator.onLine is false', () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+      const engine = makeEngineNoPersist();
+      expect(engine.isOffline).toBe(true);
+    });
+
+    it('flush() makes no API calls when offline', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+      const engine = makeEngineNoPersist();
+      engine.enqueue(makeEntry());
+
+      await engine.flush();
+
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+
+    it('queue stays intact after offline flush', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+      const engine = makeEngineNoPersist();
+      engine.enqueue(makeEntry());
+      engine.enqueue(makeEntry({ exercise: 'aufgabe-2' }));
+
+      await engine.flush();
+
+      expect(engine.pendingCount).toBe(2);
+    });
+  });
+
+  describe('online event (auto reconnect)', () => {
+    it('flushes when online event fires', async () => {
+      mockCreate.mockResolvedValue({});
+      const engine = makeEngineNoPersist();
+      engine.start();
+      engine.enqueue(makeEntry());
+
+      // Simulate going online
+      window.dispatchEvent(new Event('online'));
+      await vi.runAllTimersAsync();
+
+      expect(mockCreate).toHaveBeenCalledOnce();
+      await engine.stop();
+    });
+
+    it('does not flush after stop() removes online listener', async () => {
+      mockCreate.mockResolvedValue({});
+      const engine = makeEngineNoPersist();
+      engine.start();
+      await engine.stop(); // stop removes listeners
+
+      engine.enqueue(makeEntry({ exercise: 'aufgabe-2' }));
+      window.dispatchEvent(new Event('online'));
+      await vi.runAllTimersAsync();
+
+      // Only the flush from stop() should have run (queue was empty at that time)
+      expect(mockCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('retry logic', () => {
+    it('re-queues failed entries with incremented retryCount', async () => {
+      mockCreate.mockRejectedValue(new Error('network error'));
+      mockGetFirstListItem.mockRejectedValue(new Error('network error'));
+
+      const engine = makeEngineNoPersist();
+      engine.enqueue(makeEntry());
+
+      await engine.flush();
+
+      expect(engine.pendingCount).toBe(1);
+    });
+
+    it('discards entries that exceed maxRetries', async () => {
+      mockCreate.mockRejectedValue(new Error('network error'));
+      mockGetFirstListItem.mockRejectedValue(new Error('network error'));
+
+      const engine = new SyncEngine({
+        pb: mockPb,
+        userId: 'user-123',
+        maxRetries: 2,
+        persistQueue: false,
+      });
+      engine.enqueue(makeEntry());
+
+      // Each flush increments retryCount; at retryCount >= maxRetries, entry is discarded
+      await engine.flush(); // retryCount = 1
+      expect(engine.pendingCount).toBe(1);
+
+      await engine.flush(); // retryCount = 2 → discarded (2 >= maxRetries 2)
+      expect(engine.pendingCount).toBe(0);
+    });
+
+    it('keeps successful entries out of re-queue', async () => {
+      // First entry fails, second succeeds
+      mockCreate
+        .mockRejectedValueOnce(new Error('network error'))
+        .mockResolvedValueOnce({});
+      mockGetFirstListItem.mockRejectedValueOnce(new Error('network error'));
+
+      const engine = makeEngineNoPersist();
+      engine.enqueue(makeEntry({ exercise: 'aufgabe-1' }));
+      engine.enqueue(makeEntry({ exercise: 'aufgabe-2' }));
+
+      await engine.flush();
+
+      // Only failed entry remains
+      expect(engine.pendingCount).toBe(1);
+    });
+  });
+
+  describe('localStorage persistence', () => {
+    it('saves queue to localStorage on enqueue', () => {
+      const engine = makeEngine();
+      engine.enqueue(makeEntry());
+
+      const stored = loadQueue('user-123');
+      expect(stored).toHaveLength(1);
+      expect(stored[0].exercise).toBe('aufgabe-1');
+    });
+
+    it('loads persisted queue on construction', () => {
+      // Pre-populate localStorage
+      const engine1 = makeEngine();
+      engine1.enqueue(makeEntry({ exercise: 'aufgabe-1' }));
+      engine1.enqueue(makeEntry({ exercise: 'aufgabe-2' }));
+
+      // New engine should load from localStorage
+      const engine2 = makeEngine();
+      expect(engine2.pendingCount).toBe(2);
+    });
+
+    it('updates localStorage after successful flush', async () => {
+      mockCreate.mockResolvedValue({});
+      const engine = makeEngine();
+      engine.enqueue(makeEntry());
+
+      await engine.flush();
+
+      const stored = loadQueue('user-123');
+      expect(stored).toHaveLength(0);
+    });
+
+    it('persists failed entries to localStorage after flush', async () => {
+      mockCreate.mockRejectedValue(new Error('network error'));
+      mockGetFirstListItem.mockRejectedValue(new Error('network error'));
+
+      const engine = makeEngine();
+      engine.enqueue(makeEntry());
+
+      await engine.flush();
+
+      const stored = loadQueue('user-123');
+      expect(stored).toHaveLength(1);
+      expect(stored[0].retryCount).toBe(1);
+    });
+
+    it('persists queue to localStorage on stop()', async () => {
+      Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
+      const engine = makeEngine();
+      engine.enqueue(makeEntry());
+
+      await engine.stop();
+
+      const stored = loadQueue('user-123');
+      expect(stored).toHaveLength(1);
+    });
+
+    it('does not persist when persistQueue is false', () => {
+      const engine = makeEngineNoPersist();
+      engine.enqueue(makeEntry());
+
+      const stored = loadQueue('user-123');
+      expect(stored).toHaveLength(0);
+    });
+
+    it('uses user-specific storage keys', () => {
+      const engine1 = new SyncEngine({ pb: mockPb, userId: 'user-aaa' });
+      const engine2 = new SyncEngine({ pb: mockPb, userId: 'user-bbb' });
+
+      engine1.enqueue(makeEntry({ exercise: 'aaa-1' }));
+      engine2.enqueue(makeEntry({ exercise: 'bbb-1' }));
+
+      const queueA = loadQueue('user-aaa');
+      const queueB = loadQueue('user-bbb');
+
+      expect(queueA).toHaveLength(1);
+      expect(queueB).toHaveLength(1);
+      expect(queueA[0].exercise).toBe('aaa-1');
+      expect(queueB[0].exercise).toBe('bbb-1');
+
+      expect(localStorage.getItem(storageKeyFor('user-aaa'))).not.toBeNull();
+      expect(localStorage.getItem(storageKeyFor('user-bbb'))).not.toBeNull();
     });
   });
 });
