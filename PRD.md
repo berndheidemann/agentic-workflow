@@ -246,15 +246,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-020: Dashboard Grundstruktur
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** S
 - **Abhängig von:** REQ-010
 - **Akzeptanzkriterien:**
-  - [ ] Route `/dashboard/` in der Hub-App
-  - [ ] Nur für User mit role=teacher zugänglich
-  - [ ] Redirect auf Login wenn nicht eingeloggt oder nicht Lehrer
-  - [ ] Navigation: Klassen, Matrix, Freischaltung
+  - [x] Route `/dashboard/` in der Hub-App
+  - [x] Nur für User mit role=teacher zugänglich
+  - [x] Redirect auf Login wenn nicht eingeloggt oder nicht Lehrer
+  - [x] Navigation: Klassen, Matrix, Freischaltung
 
 ### REQ-021: Klassen-Verwaltung
 

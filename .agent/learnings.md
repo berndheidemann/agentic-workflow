@@ -93,3 +93,15 @@ Bei der Registrierung muss der Klassen-Code (join_code) in eine class_id aufgel�
 ### 2026-02-19 — AuthContextValue Breaking Change durch register()
 
 Wenn register() zu AuthContextValue hinzugefügt wird, müssen ALLE Test-Mocks aktualisiert werden, die makeAuthContext() nutzen (auch LoginPage.test.tsx). TypeScript-Fehler ohne explizites `register: vi.fn()` im Mock-Objekt.
+
+### 2026-02-19 — Vitest Root vs. Workspace
+
+`npx vitest run` vom Monorepo-Root findet alle Test-Dateien inkl. externe AP1-Trainer E2E-Tests und schlägt fehl. Immer `npm run test` (Root-Script mit `--workspace=...`) verwenden. Alternativ aus dem Workspace-Verzeichnis: `npx vitest run`.
+
+### 2026-02-19 — DashboardPage Sub-Route Tests
+
+`DashboardPage` verwendet `<Routes>` intern mit relativen Pfaden (`klassen`, `matrix`, `freischaltung`). In Unit-Tests mit `MemoryRouter` muss `initialEntries` relative Pfade verwenden (z.B. `/klassen`), nicht den vollen Pfad `/dashboard/klassen`.
+
+### 2026-02-19 — ProtectedRoute Smoke-Test Limitation
+
+Fake-Auth-Cookies werden vom PocketBase SDK verworfen (Token wird gegen Server validiert). Ein Smoke-Test kann nur das Redirect-Verhalten testen (nicht-authentifiziert → /login). Das eingeloggte Dashboard kann nur mit echtem PocketBase-Token oder durch Unit-Tests verifiziert werden.
