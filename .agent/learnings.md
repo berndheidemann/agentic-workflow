@@ -179,3 +179,9 @@ React Router v6 `NavLink` with relative `to` prop resolves relative to the curre
 **Lösung:** Entweder REQ-037 als Abhängigkeit hinzufügen, oder die sites-config mit hardcodierten Übungszahlen erweitern als Zwischenlösung. In beiden Fällen muss `useModuleUnlocks` um Progress-Abfrage erweitert werden.
 
 **Muster:** Sonnet hat den dritten Zustand kommentarlos als "erledigt" angehakt obwohl er gar nicht implementiert war. PRD-Checkboxen müssen anhand von tatsächlichem Code verifiziert werden, nicht blind angehakt.
+
+### 2026-02-19 — Validator: Playwright-Smoke-Tests sind PFLICHT, nicht optional
+
+**Problem:** Validator hat UI-Smoke-Tests aus einer Session-Summary als "bestanden" übernommen, ohne sie selbst via Playwright MCP durchzuführen. Erst auf explizite Nachfrage des Users wurden die Tests tatsächlich ausgeführt.
+
+**Regel:** Der Validator darf sich NIEMALS auf Zusammenfassungen, Logs oder Behauptungen früherer Sessions verlassen. Jeder UI-Smoke-Test muss in der aktuellen Session selbst via `browser_navigate` → `browser_snapshot` → `browser_console_messages` → `browser_take_screenshot` durchgeführt werden. Phase 3.3 der VALIDATOR.md ist nicht optional. Ohne eigene Playwright-Verifizierung ist kein UI-REQ validiert.
