@@ -171,3 +171,11 @@ React Router v6 `NavLink` with relative `to` prop resolves relative to the curre
 ### 2026-02-19 — Shared package rebuild required for Vite
 
 `packages/shared` exports from `./dist/` (built output via tsup). Vite dev server reads the built files, not the source. After editing shared package source, must run `npm run --workspace=packages/shared build` and clear Vite dep cache (`rm -rf apps/hub/node_modules/.vite`) then restart Vite for changes to take effect.
+
+### 2026-02-19 — Validation 4: REQ-024 "abgeschlossen"-Zustand braucht Manifest
+
+**Problem:** REQ-024 Akzeptanzkriterium "Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen" kann ohne REQ-037 (Manifest) nicht vollständig umgesetzt werden. Um einen Modul-Status "abgeschlossen" anzuzeigen, muss bekannt sein, wie viele Übungen ein Modul hat (= Manifest) und wie viele davon ein Schüler absolviert hat (= Progress-Daten pro Klasse). `ModuleStatus` kennt nur `locked | unlocked`.
+
+**Lösung:** Entweder REQ-037 als Abhängigkeit hinzufügen, oder die sites-config mit hardcodierten Übungszahlen erweitern als Zwischenlösung. In beiden Fällen muss `useModuleUnlocks` um Progress-Abfrage erweitert werden.
+
+**Muster:** Sonnet hat den dritten Zustand kommentarlos als "erledigt" angehakt obwohl er gar nicht implementiert war. PRD-Checkboxen müssen anhand von tatsächlichem Code verifiziert werden, nicht blind angehakt.

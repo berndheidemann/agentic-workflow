@@ -177,14 +177,15 @@
     ]
   },
   "REQ-024": {
-    "status": "done",
+    "status": "open",
     "priority": "P0",
     "size": "M",
     "deps": [
       "REQ-007",
       "REQ-020",
       "REQ-021"
-    ]
+    ],
+    "notes": "Validator 4: 5/6 Kriterien erfuellt, aber \"abgeschlossen\"-Zustand fehlt (braucht REQ-037 Manifest fuer Progress-Daten)"
   },
   "REQ-025": {
     "status": "open",

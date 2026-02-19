@@ -305,7 +305,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-024: Modul-Freischaltung im Dashboard
 
-- **Status:** done
+- **Status:** open
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-007, REQ-020, REQ-021
@@ -315,7 +315,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [x] Bulk-Aktion: "Alle Module bis einschließlich Modul X freischalten" als Ein-Klick-Aktion
   - [x] Default-Zustand bei neuer Klasse: alles freigeschaltet (Lehrer sperrt bewusst, nicht andersrum)
   - [x] Änderungen werden sofort in PocketBase gespeichert
-  - [x] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen
+  - [ ] Drei Zustände sichtbar: gesperrt, freigeschaltet, abgeschlossen *(Validator: "abgeschlossen" benötigt Progress-Daten aus REQ-037 Manifest)*
 
 ### REQ-025: Schüler-Verwaltung im Dashboard
 
