@@ -1,26 +1,15 @@
 # Agent Context
 
-> 2026-02-19 | 34/44 done, 0 blocked, 10 open | REQ-033 abgeschlossen
+> 2026-02-19 | 34/44 done, 0 blocked, 10 open | Validation 8 bestanden
 
 ## Was zuletzt passiert ist
 
-**REQ-033 (ProgressBar Komponente — Sidebar):** Vollständig implementiert.
+**Validation 8:** REQ-030, REQ-035, REQ-032, REQ-033 validiert — alle 4 bestanden.
 
-- **`SidebarProgressInjector`** (AP1-Trainer): React-Island die per DOM-Injection
-  Fortschrittsbalken unter jeden Starlight-Sidebar-Link injiziert.
-  - Liest `useAuth().isLoggedIn` → nur bei eingeloggtem Nutzer sichtbar
-  - Liest `useProgressStore().getTopicProgress()` für completed/total pro Modul
-  - Nutzt `EXERCISE_COUNTS` Registry für Gesamtzahl
-  - Fortschrittsbalken: `role="progressbar"`, `aria-valuenow`, `aria-label` mit Text
-  - Grüne Farbe bei 100%, Accent-Farbe bei Fortschritt
-  - 8 Unit-Tests (alle grün)
-- **`Sidebar.astro`** Override: mountet `SidebarProgressInjector client:load`
-  neben dem bestehenden `SidebarUnlockInjector`
-
-**REQ-032 (SidebarUnlock Komponente):** Weiterhin aktiv.
-
-- `SidebarUnlockInjector`: DOM-Injection für Lock/Check-Icons
-- `SidebarUnlock` im Shared-Package: Prop-basierte Komponente
+- **REQ-030 (LoginBanner):** ✅ Komponente im Shared-Package, in HomePage eingebunden, Dismiss funktioniert, nicht sichtbar wenn eingeloggt.
+- **REQ-035 (a11y-Feinschliff):** ✅ Alle 6 Akzeptanzkriterien erfüllt (Kontrast, aria-live, Copy-Button, Pfeil, Keyboard-Tests, vitest-axe).
+- **REQ-032 (SidebarUnlock):** ✅ Prop-basierte Komponente + DOM-Injection Injector, 3 Zustände, Klick-Hinweis, 16 Unit-Tests.
+- **REQ-033 (ProgressBar Sidebar):** ✅ DOM-Injection analog zu SidebarUnlock, nur eingeloggt sichtbar, 8 Unit-Tests.
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -42,7 +31,7 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 ## Nächste Prioritäten
 
-1. **REQ-034** (P1, M) — Details prüfen
+1. **REQ-034** (P1, M) — Offline-Queue für Progress
 2. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
 3. **REQ-036** (P1, M) — Prerequisite Soft-Gate
 

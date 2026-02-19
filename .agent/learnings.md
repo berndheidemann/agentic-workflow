@@ -291,3 +291,13 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 - `DragDropExercise`, `SzenarioEntscheidung`, `SicherheitskonzeptUebung` haben Hydration-Fehler durch randomisierte Optionen-Reihenfolge.
 - Diese Fehler existieren vor REQ-032 und sind keine Regression. React erholt sich automatisch davon (re-hydration).
 - Nicht auf REQ-Scope ausweiten — separate Aufgabe wenn überhaupt nötig.
+
+### 2026-02-19 — Validation 8: Alle 4 neuen REQs sauber
+
+**Validiert:** REQ-030 (LoginBanner), REQ-035 (a11y-Feinschliff), REQ-032 (SidebarUnlock), REQ-033 (ProgressBar Sidebar). Alle bestanden.
+
+**Sonnet-Qualität:** Gute Arbeit in diesen 4 Iterationen. Smoke-Tests werden konsequent durchgeführt. `vitest-axe` Import-Problem wurde selbständig gelöst (nach initialem Fehlversuch). LoginBanner-Integration in HomePage wurde erst durch den Smoke-Test entdeckt — zeigt den Wert der Playwright-Verifikation.
+
+**Muster: Status-Blöcke fehlen bei Abbruch.** iter-001 und iter-002 haben keinen Status-Block produziert. Das ist ein bekanntes Problem bei Turn-Limit-Abbrüchen (vgl. Validation 6, REQ-051). Kein neues Muster, aber weiterhin relevant.
+
+**Lücke: E2E-Tests für Shared-Komponenten.** LoginBanner und a11y-Fixes haben keine eigenen Playwright-E2E-Specs. Die Unit-Tests und Smoke-Tests decken die Funktionalität ab, aber laut PRD sind E2E-Tests für jedes UI-REQ Pflicht. Bei zukünftigen Validierungen beobachten.
