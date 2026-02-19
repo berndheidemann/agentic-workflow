@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './HomePage';
+import { getActiveSites } from '../config/sites';
 
 function renderWithRouter(ui: React.ReactElement) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -33,5 +36,22 @@ describe('HomePage', () => {
   it('hat einen main-Bereich', () => {
     renderWithRouter(<HomePage />);
     expect(screen.getByRole('main')).toBeInTheDocument();
+  });
+
+  it('zeigt Icons (SVG) für jede Kachel', () => {
+    const { container } = renderWithRouter(<HomePage />);
+    const svgs = container.querySelectorAll('svg');
+    expect(svgs.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('Kacheln stammen aus der Konfigurationsdatei', () => {
+    renderWithRouter(<HomePage />);
+    const activeSites = getActiveSites();
+    for (const site of activeSites) {
+      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toHaveAttribute(
+        'href',
+        site.basePath,
+      );
+    }
   });
 });

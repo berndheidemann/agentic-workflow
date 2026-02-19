@@ -182,7 +182,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-011: Landing Page mit Kurs-Kacheln
 
-- **Status:** open
+- **Status:** in_progress
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-010
