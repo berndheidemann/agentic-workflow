@@ -240,6 +240,22 @@ Die Learning "Docker braucht sudo" (Validation 5) wurde in allen 3 nachfolgenden
 **Fix:** In `apps/hub/src/test-setup.ts` global `afterEach(() => cleanup())` eintragen.
 **Wichtig:** Tests NUR via `npm run test` ausführen (workspace-aware). `npx vitest run` im Root läuft ohne die workspace-spezifischen `vitest.config.ts` und erzeugt "document is not defined" Fehler.
 
+### 2026-02-19 — Smoke-Tests: Immer aus ECHTER Nutzerperspektive testen
+
+**Problem:** Login-Smoke-Test hat den Klassen-Code korrekt ausgefüllt (mit internem Wissen: `S9VFB6`), obwohl ein echter Nutzer diesen Code gar nicht kennen würde. Das Feld war im Login-Formular vorhanden, wurde aber für die Authentifizierung nicht verwendet — ein klarer UX-Bug, den der Test nicht entdeckt hat.
+
+**Regel:** Bei Smoke-Tests und User-Journey-Tests IMMER als ein Nutzer testen, der die App zum ersten Mal sieht:
+- KEIN internes Wissen verwenden (Seed-Daten, Klassen-Codes, API-Details)
+- Bei jedem Formularfeld fragen: "Wüsste ein neuer Nutzer, was hier einzutragen ist?"
+- Wenn ein Pflichtfeld nur mit internem Wissen ausfüllbar ist → UX-Bug melden
+- Testdaten nur verwenden, die ein Nutzer auf normalem Weg erhalten würde
+
+**Konsequenz:** AGENT.md und VALIDATOR.md wurden um "KARDINALREGEL: Teste wie ein ECHTER Nutzer" erweitert. Opus plant User Journeys pro REQ (Phase 2.5), Validator erstellt dynamische Journeys aus Akzeptanzkriterien.
+
+### 2026-02-19 — Login-Formular: Klassen-Code entfernt
+
+Das Login-Formular hatte ein Klassen-Code-Feld, das client-seitig validiert wurde, aber **nie an den Server gesendet** wurde (`login(username, pin)` — nur 2 Parameter). Der Code blockierte Nutzer, die ihren Klassen-Code nicht auswendig wussten. Entfernt — Klassen-Code ist nur bei der Registrierung nötig.
+
 ### 2026-02-19 — Validation 7: Stabile Codebasis, alle 3 neuen REQs bestätigt
 
 **Validiert:** REQ-051 (AP1-Trainer Integration), REQ-025 (Schüler-Verwaltung), REQ-026 (Zell-Detail-Modal).

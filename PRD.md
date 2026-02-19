@@ -199,7 +199,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-010
 - **Akzeptanzkriterien:**
-  - [x] Formular: Klassen-Code + Username + 4-stelliger PIN
+  - [x] Formular: Username + 4-stelliger PIN (Klassen-Code nur bei Registrierung)
   - [x] Validierung mit Fehlermeldungen (deutsch)
   - [x] Erfolgreicher Login → Redirect auf Landing Page
   - [x] Session: Cookie, 14 Tage gültig

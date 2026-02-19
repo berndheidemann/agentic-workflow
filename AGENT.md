@@ -31,20 +31,27 @@ Du bist ein autonomer Entwicklungs-Agent für die Lernplattform. Du arbeitest **
 2. Falls Build-Tools vorhanden: `npm run build` muss erfolgreich sein
 3. Falls Tests vorhanden: `npx vitest run` muss grün sein
 4. Falls Linter vorhanden: `npm run lint` muss erfolgreich sein (Warnungen ok, Fehler nicht)
-5. **Verifikationsumgebung prüfen (PFLICHT — außer bei `SANDBOX_MODE=1`):**
-   - **Wenn `SANDBOX_MODE=1`** (Umgebungsvariable): Docker- und Playwright-Checks überspringen. Verifikation erfolgt nur über Build + Unit-Tests + Lint. Smoke-Tests entfallen. Weiter mit Phase 3.
-   - **Docker:** `docker compose ps` — PocketBase und Nginx müssen laufen. Falls nicht: `docker compose up -d` und warten bis healthy.
-   - **Playwright MCP:** `browser_snapshot` aufrufen — Browser muss erreichbar sein.
-   - **Wenn Docker ODER Playwright nicht verfügbar → SOFORT STOPPEN.** Kein REQ bearbeiten. Meldung:
+5. **Verifikationsumgebung prüfen (PFLICHT):**
+   - **Playwright MCP (IMMER — auch bei `SANDBOX_MODE=1`):** `browser_snapshot` aufrufen — Browser muss erreichbar sein. Ohne Playwright wird NICHT implementiert. Keine Ausnahmen.
+   - **Docker (nur ohne `SANDBOX_MODE`):** `sudo docker compose ps` — PocketBase und Nginx müssen laufen. Falls nicht: `sudo docker compose up -d` und warten bis healthy. Bei `SANDBOX_MODE=1`: Docker-Check überspringen.
+   - **Wenn Playwright nicht verfügbar → SOFORT STOPPEN:**
      ```
      ===STATUS===
      req: PREFLIGHT
      status: blocked
-     notes: Verifikationsumgebung fehlt: [Docker nicht verfügbar | Playwright MCP nicht erreichbar]. Kein REQ kann ohne funktionierende Verifikation als done markiert werden.
+     notes: Verifikationsumgebung fehlt: Playwright MCP nicht erreichbar. Kein REQ kann ohne Browser-Verifikation als done markiert werden.
+     ===END_STATUS===
+     ```
+   - **Wenn Docker nicht verfügbar (ohne SANDBOX_MODE) → SOFORT STOPPEN:**
+     ```
+     ===STATUS===
+     req: PREFLIGHT
+     status: blocked
+     notes: Verifikationsumgebung fehlt: Docker nicht verfügbar. Kein REQ kann ohne Docker-Stack als done markiert werden.
      ===END_STATUS===
      ```
 
-   **ACHTUNG — Keine Ausnahmen:** Dieser Check gilt für ALLE REQs — egal ob UI-REQ, Backend-REQ, Infrastruktur-REQ oder Hook/Library-REQ. Die Unterscheidung "UI-REQ vs. Nicht-UI-REQ" existiert NUR in Phase 4.2 (Smoke-Tests). Hier in Phase 2 gibt es diese Unterscheidung NICHT. Wenn Docker nicht erreichbar ist, wird NICHT implementiert — Punkt. Rationalisierungen wie "ist ja kein UI-REQ, also brauche ich kein Docker" sind explizit verboten.
+   **ACHTUNG — Playwright ist IMMER Pflicht:** SANDBOX_MODE befreit nur von Docker, NICHT von Playwright. Der Vite-Dev-Server läuft ohne Docker. Die App im Browser zu öffnen und zu testen ist die absolute Mindestanforderung. Rationalisierungen wie "ist ja kein UI-REQ" oder "SANDBOX_MODE überspringt Playwright" sind explizit verboten.
 
 ### Preflight-Failure → Regressions-Check
 
@@ -103,6 +110,12 @@ Task(subagent_type="general-purpose", model="opus", prompt="
   3. Welche Funktionen/Komponenten implementieren? (Signaturen)
   4. Welche Tests schreiben? (Test-Cases auflisten)
   5. Gibt es neue Architektur-Entscheidungen? (für architecture.md)
+  6. **User Journeys für Smoke-Test definieren** (PFLICHT):
+     - Definiere 2–4 realistische User Journeys für dieses REQ
+     - Jede Journey aus Sicht eines ECHTEN Nutzers (Schüler, Lehrer, Gast)
+     - Beschreibe Schritt für Schritt: Wo startet der Nutzer? Was klickt/tippt er? Was erwartet er?
+     - KEIN internes Wissen verwenden — nur was der Nutzer im UI sehen kann
+     - Mindestens eine Journey muss einen Fehlerfall testen (leere Felder, falscher Input etc.)
 
   Antworte mit einem strukturierten Plan, keinem Code.
 ")
@@ -164,50 +177,74 @@ Bevor ein REQ als `done` markiert wird, prüfe **jedes** Akzeptanzkriterium aus 
 
 Kein REQ wird `done` ohne dass alle Akzeptanzkriterien explizit abgehakt sind.
 
-### 4.2 Für UI-REQs: Smoke-Test gegen echten Stack
+### 4.2 App-Smoke-Test (JEDE Iteration — KEINE Ausnahmen)
 
-**Definition UI-REQ:** Ein REQ ist ein UI-REQ wenn es sichtbare Benutzeroberfläche erzeugt oder ändert (HTML, React-Komponenten, CSS, Layouts, Formulare, Buttons, Navigation). Reine Backend-/Config-/Infrastruktur-REQs (Docker, PocketBase-Schema, Nginx-Config, npm-Packages ohne UI) sind KEINE UI-REQs.
+**Playwright MCP braucht kein Docker.** Der Vite-Dev-Server läuft standalone. Deshalb gilt:
 
-**Bei `SANDBOX_MODE=1`:** Diesen gesamten Abschnitt überspringen. Verifikation erfolgt nur über Phase 4.1 (Build + Tests + Lint). REQs können trotzdem `done` werden.
+- **SANDBOX_MODE befreit NICHT von Playwright-Tests.** SANDBOX_MODE überspringt nur Docker-abhängige Checks (PocketBase-API, Nginx-Routing). Die App im Browser zu öffnen und zu prüfen ist IMMER Pflicht.
+- **JEDE Iteration** muss den Core-App-Smoke-Test bestehen — egal ob UI-REQ, Backend-REQ, Infrastruktur-REQ.
+- **Kein `done` ohne bestandenen Smoke-Test.** Wenn Playwright MCP nicht erreichbar ist → REQ ist `blocked`.
 
-**Ohne SANDBOX_MODE:** Jedes UI-REQ muss diesen Smoke-Test bestehen. Kein `done` ohne Smoke-Test.
-
-**Voraussetzung — Docker-Stack muss laufen:**
+#### Dev-Server starten
 
 ```bash
-# Prüfe ob PocketBase + Nginx laufen
-docker compose ps --format json | jq -e '.[] | select(.State == "running")' > /dev/null
-# Falls nicht → starten und warten
-docker compose up -d
+cd apps/hub && npx vite --port 3572 --host &
+DEV_PID=$!
+for i in $(seq 1 15); do curl -s http://localhost:3572 > /dev/null 2>&1 && break; sleep 1; done
+```
+
+#### 4.2a Core-App-Smoke-Test (immer, jede Iteration)
+
+Minimaler Baseline-Check: Die App als Ganzes darf nicht kaputt sein.
+
+1. `browser_navigate` → `http://localhost:3572/` → Seite lädt ohne Crash/Whitescreen
+2. `browser_snapshot` → Grundstruktur sichtbar (Überschrift, Hauptinhalt)
+3. `browser_console_messages` mit Level `error` → Keine unbehandelten Fehler
+4. Klicke auf mindestens einen internen Link → Navigation funktioniert, kein Crash
+5. `browser_take_screenshot` → Screenshot für Archiv
+
+**Abbruchkriterium:** Wenn einer dieser Checks fehlschlägt → REQ ist `blocked`. Eine kaputte App wird nicht ausgeliefert.
+
+#### 4.2b REQ-spezifische User Journeys (aus Opus-Plan, Phase 2.5)
+
+**Führe die User Journeys aus, die Opus in Phase 2.5 definiert hat.** Bei S-REQs ohne Opus-Plan: Definiere selbst 1–2 realistische Journeys.
+
+**KARDINALREGEL — Teste wie ein ECHTER Nutzer:**
+- Verwende KEIN internes Wissen (Seed-Daten, Klassen-Codes, API-Details) das ein Schüler/Lehrer nicht hätte
+- Frage dich bei jedem Formularfeld: "Wüsste ein neuer Nutzer, was hier einzutragen ist?"
+- Wenn ein Pflichtfeld nur mit internem Wissen ausfüllbar ist → UX-Bug melden, nicht am Bug vorbeitesten
+- Teste nicht nur den Happy-Path — teste den realistischen Pfad eines echten Nutzers
+
+Für jede Journey:
+1. Navigiere zur Seite, interagiere wie ein echter Nutzer
+2. Prüfe: Sind Fehlermeldungen klar? Sind Hinweise vorhanden? Ist die UX verständlich?
+3. `browser_console_messages` → keine Fehler
+4. `browser_take_screenshot` → Screenshot für Archiv
+
+#### 4.2c Stack-Test (nur ohne SANDBOX_MODE)
+
+**Nur wenn Docker verfügbar ist** (nicht in SANDBOX_MODE):
+
+```bash
+# Docker-Stack prüfen/starten
+sudo docker compose ps --format json | jq -e '.[] | select(.State == "running")' > /dev/null
+# Falls nicht → starten
+sudo docker compose up -d
 for i in $(seq 1 30); do curl -s http://localhost:8090/api/health > /dev/null 2>&1 && break; sleep 1; done
 ```
 
-**Dev-Server starten (Port 3572 — einziger erreichbarer Preview-Port):**
+Dann: PocketBase-API-Calls, Auth-Flows gegen echten Server, Nginx-Routing testen.
 
-```bash
-npm run dev -- --port 3572 &
-DEV_PID=$!
-for i in $(seq 1 30); do curl -s http://localhost:3572 > /dev/null 2>&1 && break; sleep 1; done
-```
-
-**Smoke-Test via Playwright MCP (~5 Tool-Calls):**
-
-1. `browser_navigate` zur relevanten Seite (Port 3572)
-2. `browser_snapshot` — prüfe ob die Kernelemente sichtbar sind
-3. Klicke auf das Hauptelement des REQs — prüfe ob es reagiert
-4. Prüfe dass keine Console-Errors vorliegen (`browser_console_messages`)
-5. `browser_take_screenshot` für das Archiv
-
-**Wenn Playwright MCP nicht verfügbar → REQ ist `blocked`, NICHT `done`:**
-
-Das REQ bekommt Status `blocked` mit Begründung "Verifikationsumgebung fehlt: Playwright MCP nicht erreichbar". Es wird **nicht** übersprungen, nicht ignoriert, nicht als `done` markiert.
-
-**Dev-Server stoppen:**
+#### Dev-Server stoppen
 
 ```bash
 kill $DEV_PID 2>/dev/null || true
-lsof -ti:3572,5173,5174,4321,3000 | xargs kill -9 2>/dev/null || true
+pkill -f "vite.*3572" 2>/dev/null || true
 ```
+
+#### Wenn Playwright MCP nicht verfügbar
+
+REQ ist `blocked` mit Begründung "Playwright MCP nicht erreichbar". Kein `done`, kein Überspringen, keine Ausnahmen. SANDBOX_MODE ändert daran nichts.
 
 ### 4.3 Full Verification (alle 3 Iterationen oder Security-REQ)
 
@@ -269,9 +306,9 @@ Bei CHANGES_NEEDED: Fixes implementieren, Phase 4.1 wiederholen.
 ### 4.5 Fehlerbehandlung
 
 - **Verify-Fehler** (Build/Tests/Lint) → beheben (max 3 Versuche)
-- **Playwright/Docker nicht verfügbar:**
-  - **Bei `SANDBOX_MODE=1`:** Kein Blocker. REQ wird über Build + Unit-Tests + Lint verifiziert.
-  - **Ohne SANDBOX_MODE:** REQ ist `blocked` mit Begründung "Verifikationsumgebung fehlt: [Details]". **Nicht** überspringen, **nicht** als `done` markieren. Dies gilt für ALLE REQ-Typen — auch für Backend- und Library-REQs. (Hinweis: Wenn Docker im Preflight fehlte, hätte Phase 2 bereits gestoppt. Dieser Fall tritt nur ein wenn Docker während der Iteration ausfällt.)
+- **Playwright nicht verfügbar:** REQ ist `blocked`. Immer. Auch bei `SANDBOX_MODE=1`.
+- **Docker nicht verfügbar (ohne SANDBOX_MODE):** REQ ist `blocked`.
+- **Core-App-Smoke-Test fehlgeschlagen:** REQ ist `blocked` — auch wenn das REQ selbst kein UI-REQ ist. Die App muss als Ganzes funktionieren. Erst den Fehler beheben, dann erneut testen.
 - **UI-Fehler** (sichtbar in Snapshot/Screenshot) → beheben (max 3 Versuche)
 - **Nicht behebbar** → Status `blocked`, Begründung, Screenshot als Beleg
 
@@ -422,8 +459,8 @@ Bei S-Batch: einen Status-Block pro REQ.
 10. **Status-Block immer ausgeben** — auch bei Failure/Blocked
 11. **Preflight muss grün sein** bevor Implementation beginnt
 12. **Bei Failure:** `blocked` in status.json + PRD.md, Begründung, Commit, Status-Block, beenden
-13. **Kein `done` ohne Smoke-Test für UI-REQs** — außer bei `SANDBOX_MODE=1`. Ohne Sandbox: Jedes UI-REQ braucht einen bestandenen Smoke-Test gegen den echten Stack (Docker + Playwright MCP).
-14. **Docker + Playwright sind Preflight-Voraussetzungen für ALLE REQs** — außer bei `SANDBOX_MODE=1`. Ohne Sandbox: Wenn Docker oder Playwright im Preflight (Phase 2) nicht verfügbar sind, wird KEIN REQ bearbeitet — weder UI-REQs noch Backend-/Infrastruktur-/Library-REQs. Die gesamte Iteration stoppt sofort. Es gibt keine Selbst-Ausnahmen basierend auf REQ-Typ.
+13. **Kein `done` ohne App-Smoke-Test** — JEDE Iteration, JEDES REQ (auch Backend/Infra). Der Core-App-Smoke-Test (Phase 4.2a) ist Pflicht. SANDBOX_MODE befreit nur von Docker, NICHT von Playwright.
+14. **Playwright ist Preflight-Voraussetzung für ALLE REQs** — IMMER, auch bei `SANDBOX_MODE=1`. Ohne Playwright wird NICHT implementiert. Docker ist nur ohne SANDBOX_MODE Pflicht.
 15. **Mocks nur für externe APIs** — PocketBase SDK Calls, fetch, localStorage dürfen gemockt werden. Eigene Module (CookieAuthStore, Provider, Hook-Komposition) werden real getestet oder per Integrations-Test abgedeckt.
 16. **CLAUDE.md lesen** für Konventionen und Projektkontext
 17. **REQUIREMENTS.md konsultieren** bei Detailfragen zu einem REQ

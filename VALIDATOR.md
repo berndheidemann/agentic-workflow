@@ -56,25 +56,67 @@ docker compose exec pocketbase wget -qO- http://localhost:8090/api/health
 docker compose exec pocketbase wget -qO- --post-data='...' http://localhost:8090/api/collections/users/records
 ```
 
-### 3.3 UI-Smoke-Test (Playwright)
+### 3.3 User-Journey-Smoke-Test (Playwright — IMMER)
 
-Für REQs die UI erzeugt haben:
+**PFLICHT bei jeder Validierung.** Teste die App aus **echter Nutzersicht**.
 
-1. Dev-Server starten: `npm run dev -- --port 3572 &`
-2. `browser_navigate` zur Seite
-3. `browser_snapshot` — Kernelemente sichtbar?
-4. `browser_console_messages` — keine Fehler?
-5. `browser_take_screenshot` — Screenshot für Archiv
-6. Dev-Server stoppen
+**KARDINALREGEL: Teste wie ein ECHTER Nutzer.**
+- Verwende KEIN internes Wissen (Klassen-Codes, Seed-Daten, API-Details) das ein normaler Schüler/Lehrer nicht hätte
+- Frage dich bei JEDEM Formularfeld: "Wüsste ein neuer Nutzer, was hier einzutragen ist?"
+- Wenn ein Pflichtfeld Informationen verlangt die der Nutzer nicht kennen kann → UX-Bug, REQ zurücksetzen
+- Teste NICHT nur den Happy-Path mit perfektem Vorwissen — teste den realistischen Pfad
+
+Dev-Server starten:
+```bash
+cd apps/hub && npx vite --port 3572 --host &
+DEV_PID=$!
+for i in $(seq 1 15); do curl -s http://localhost:3572 > /dev/null 2>&1 && break; sleep 1; done
+```
+
+#### Baseline-Check (immer)
+
+1. `browser_navigate` → `http://localhost:3572/` → Seite lädt, Grundstruktur sichtbar
+2. Klicke auf mindestens einen internen Link → Navigation funktioniert, kein Crash
+3. `browser_console_messages` mit Level `error` → Keine unbehandelten Fehler
+
+#### REQ-spezifische Journeys (dynamisch)
+
+Für jedes zu validierende REQ: **Entwirf eigene User Journeys basierend auf dem, was das REQ tut.** Keine festen Journeys — jedes REQ braucht passende Tests.
+
+**Vorgehen:**
+1. Lies die Akzeptanzkriterien des REQs
+2. Überlege: Welche Nutzergruppe ist betroffen? (Gast, Schüler, Lehrer)
+3. Entwirf 2–3 realistische Journeys aus Sicht dieser Nutzer
+4. Führe jede Journey durch — **ohne internes Wissen**
+5. Bei Formularen: UX-Audit jedes Felds ("Wüsste der Nutzer das?")
+6. Screenshot + Console-Check pro Journey
+
+**Beispiel-Heuristiken** (nicht als feste Liste, sondern als Denkanstoß):
+- REQ ändert Login? → Teste Login als Nutzer der nur Username + PIN kennt
+- REQ ändert Landing Page? → Teste als Gast ohne Account
+- REQ ändert Dashboard? → Teste als eingeloggter Lehrer UND als Schüler
+- REQ ändert Registrierung? → Teste als Schüler der zum ersten Mal die Plattform sieht
+
+**Abbruchkriterium:** Wenn eine Journey fehlschlägt, ist das ein Validierungsfehler — unabhängig davon welches REQ geprüft wird. **Besonders kritisch:** UX-Bugs bei denen der Validator internes Wissen benutzt um am Bug vorbeizutesten statt ihn zu melden.
+
+Dev-Server stoppen:
+```bash
+kill $DEV_PID 2>/dev/null || true
+pkill -f "vite.*3572" 2>/dev/null || true
+```
 
 ### 3.4 Log-Analyse
 
 Prüfe die Iteration-Logs auf:
 
-- **Regel-Umgehungen:** Hat der Agent Preflight-Checks übersprungen? Docker ignoriert? SANDBOX_MODE angenommen?
-- **Falsche Rationalisierungen:** Hat der Agent sich Ausnahmen konstruiert ("ist ja kein UI-REQ")?
+- **Playwright-Smoke-Test übersprungen?** Hat der Agent den Core-App-Smoke-Test (Phase 4.2a) durchgeführt? Wurde die App wirklich im Browser geöffnet und geklickt? Wenn nicht: REQ zurück auf `open`.
+- **Internes Wissen statt Nutzerperspektive:** Hat der Agent Formulare mit Daten befüllt, die ein echter Nutzer nicht kennt? (z.B. Klassen-Codes aus Seed-Daten, interne IDs, Test-Credentials die nicht im UI stehen) → Wenn ja: Der Test war wertlos. REQ zurück auf `open`.
+- **Happy-Path-Only-Testing:** Hat der Agent nur den perfekten Pfad getestet, ohne realistische Szenarien? (z.B. Login nur mit allen Feldern korrekt befüllt, nie aus Nutzersicht gefragt "woher weiß ich das?")
+- **UX-Bugs ignoriert:** Hat der Agent ein überflüssiges Pflichtfeld gesehen, es einfach befüllt und weitergemacht, statt es als Bug zu melden?
+- **Regel-Umgehungen:** Hat der Agent Preflight-Checks übersprungen? SANDBOX_MODE als Ausrede für fehlende Playwright-Tests benutzt?
+- **Falsche Rationalisierungen:** Hat der Agent sich Ausnahmen konstruiert ("ist ja kein UI-REQ, braucht keinen Smoke-Test")?
 - **Ungetesteter Code:** Code geschrieben aber keine Tests? Tests nur mit vollständigem Mocking eigener Module?
-- **Ignorierte Fehler:** Fehler gesehen aber weitergemaht als wäre nichts?
+- **Ignorierte Fehler:** Fehler gesehen aber weitergemacht als wäre nichts?
 
 ---
 
