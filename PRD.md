@@ -378,14 +378,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-033: ProgressBar Komponente (Sidebar)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-006
 - **Akzeptanzkriterien:**
-  - [ ] Fortschrittsbalken pro Modul in der Sidebar
-  - [ ] Zeigt completed/total als Prozent
-  - [ ] Nur sichtbar wenn eingeloggt
+  - [x] Fortschrittsbalken pro Modul in der Sidebar
+  - [x] Zeigt completed/total als Prozent
+  - [x] Nur sichtbar wenn eingeloggt
 
 ### REQ-034: Offline-Queue für Progress
 
