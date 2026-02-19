@@ -1,20 +1,20 @@
 # Agent Context
 
-> Validation 1 | 2026-02-19 | REQ-011, REQ-012, REQ-013, REQ-020 validiert
+> Validation 2 | 2026-02-19 | Stichproben-Validation, keine neuen done-REQs
 
 ## Validierungsergebnis
 
-- **4 REQs validiert:** REQ-011 ✅, REQ-012 ✅, REQ-013 ✅, REQ-020 ✅
-- **0 REQs zurückgesetzt** — alle Implementierungen funktionieren korrekt
-- **Korrekturen:** REQ-012 PRD-Checkboxen nachträglich angehakt (Bookkeeping-Fehler)
+- **0 neue REQs seit Validation 1** — iter-006 startete REQ-021, wurde abgebrochen
+- **0 REQs zurückgesetzt** — alle 15 done-REQs weiterhin korrekt
+- **Preflight:** Build ✅, 228 Tests ✅, Lint ✅, Docker ✅, Playwright MCP ✅
+- **Smoke-Tests:** Landing, Login, Register, Dashboard-Redirect, 404 — alle bestanden
 - **Fortschritt:** 15/44 REQs done
-- **Nächste REQs:** REQ-021 (P0, M, dep REQ-020 ✓), REQ-009 (P1, S, keine Deps)
 
 ## Offene Punkte für Sonnet
 
-1. **E2E-Test-Dateien fehlen:** Nur `e2e/login.spec.ts` existiert. Es fehlen E2E-Tests für REQ-011 (Landing), REQ-013 (Register), REQ-020 (Dashboard). Playwright ist nicht als npm-Paket installiert — muss nachgeholt werden.
-2. **E2E-Tests nie ausgeführt:** `npx playwright test` wurde nie gestartet. Voraussetzung: `npm i -D @playwright/test && npx playwright install`.
-3. **verify_level: quick überall** — Sonnet sollte `verify_level: full` anstreben wenn Docker + Playwright MCP verfügbar sind.
+1. **E2E-Tests fehlen weiterhin:** Nur `e2e/login.spec.ts` existiert. Playwright nicht als npm-Paket installiert. Muss vor nächster Validation nachgeholt werden.
+2. **act() Warnings:** use-unlock, LoginPage, RegisterPage Tests haben act()-Warnings. Keine Failures, aber sollten bereinigt werden.
+3. **REQ-021 war angefangen:** iter-006 startete REQ-021 (Klassenverwaltung), wurde abgebrochen. Sonnet kann dort weitermachen.
 
 ## Was existiert
 
@@ -28,9 +28,8 @@
 - Docker Compose: PocketBase (healthy) + Nginx
 - 228 Unit-Tests gesamt grün, Build + Lint sauber
 
-## Aktuelle Erkenntnisse
+## Nächste REQs
 
-- `npm run test` (Workspace-Script) statt `npx vitest run` (Root)
-- PocketBase baseUrl MUSS "/" sein (nicht "")
-- ProtectedRoute Smoke-Test: nur Redirect testbar, Dashboard-Inhalt nur via Unit-Tests
-- Nächste P0-REQs: REQ-021 (Klassenverwaltung, M, dep REQ-020 ✓)
+- **REQ-021** (P0, M, Klassenverwaltung — Deps ✓) — war bereits angefangen
+- **REQ-050** (P0, S, Site-Integration Nginx — dep REQ-002 ✓)
+- **REQ-009** (P1, S, Site-Registry — dep REQ-001 ✓)

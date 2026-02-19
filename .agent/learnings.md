@@ -117,3 +117,7 @@ Fake-Auth-Cookies werden vom PocketBase SDK verworfen (Token wird gegen Server v
 ### 2026-02-19 — Validator: PRD-Checkboxen nachpflegen
 
 Sonnet hat bei REQ-012 die PRD-Checkboxen nicht angehakt obwohl status.json auf `done` gesetzt wurde. Jede Iteration muss PRD.md-Checkboxen **und** status.json synchron halten. Validator hat die Checkboxen nachträglich korrigiert.
+
+### 2026-02-19 — Validation 2: Stabile Codebasis, E2E-Lücke besteht weiter
+
+Keine neuen done-REQs seit Validation 1. Alle 15 done-REQs weiterhin korrekt (Preflight + Smoke-Tests bestanden). E2E-Test-Lücke aus Validation 1 besteht unverändert — Sonnet hat in iter-006 (REQ-021) nicht mit E2E-Setup begonnen. act()-Warnings in mehreren Test-Dateien sind technische Schuld, keine Failures. iter-006 wurde abgebrochen (kein Status-Block) — REQ-021 korrekt als `open` geblieben.
