@@ -65,7 +65,7 @@
     ]
   },
   "REQ-008": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P0",
     "size": "M",
     "deps": [
