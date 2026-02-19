@@ -150,18 +150,18 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-009: Site-Registry (Single Source of Truth)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-001
 - **Hinweis:** Zentrale Konfiguration aller Lernsituationen. Eliminiert hartcodierte Site-Listen in nginx.conf, Landing Page, Dashboard und Deploy-Script. Entscheidend für die Vision "zukünftig deutlich mehr Lernsituationen".
 - **Akzeptanzkriterien:**
-  - [ ] Konfigurationsdatei `sites.json` (oder PocketBase Collection `sites`) mit: slug, name, description, icon, base_path, framework_type (starlight|react-spa), is_active, sort_order
-  - [ ] Landing Page (REQ-011) liest Kurs-Kacheln aus der Registry statt aus hartcodiertem Code
-  - [ ] Dashboard-Kursfilter (REQ-023b) liest verfügbare Kurse aus der Registry
-  - [ ] Deploy-Script (REQ-071) validiert Site-Namen gegen die Registry
-  - [ ] Nginx-Config kann aus der Registry generiert werden (Template oder Script)
-  - [ ] Neue Lernsituation einbinden = 1 Eintrag in der Registry + Dateien deployen
+  - [x] Konfigurationsdatei `sites.json` (oder PocketBase Collection `sites`) mit: slug, name, description, icon, base_path, framework_type (starlight|react-spa), is_active, sort_order
+  - [x] Landing Page (REQ-011) liest Kurs-Kacheln aus der Registry statt aus hartcodiertem Code
+  - [x] Dashboard-Kursfilter (REQ-023b) liest verfügbare Kurse aus der Registry
+  - [x] Deploy-Script (REQ-071) validiert Site-Namen gegen die Registry
+  - [x] Nginx-Config kann aus der Registry generiert werden (Template oder Script)
+  - [x] Neue Lernsituation einbinden = 1 Eintrag in der Registry + Dateien deployen
 
 ---
 

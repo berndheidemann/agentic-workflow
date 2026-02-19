@@ -163,3 +163,49 @@
 **Begründung:** Kein API-Rule-Änderung (kein Sicherheitsrisiko), Validierungslogik bleibt serverseitig, RegisterPage bleibt reine UI-Komponente.
 
 **Konsequenzen:** AuthContextValue um register erweitert — Breaking Change für Test-Mocks. Alle makeAuthContext() Hilfsfunktionen brauchen `register: vi.fn()`.
+
+---
+
+## ADR-009: AP1-Trainer Shared-Integration via Head Override + Integration Island (2026-02-19, REQ-051)
+
+**Kontext:** Astro/Starlight-Seiten sind keine React SPAs. Es gibt keinen einzigen React-Root der die ganze Seite umschließt. Stattdessen gibt es isolierte "Islands" — unabhängige React-Bäume. `AuthProvider` und `useProgress` benötigen React Context, der nicht global über alle Islands gelegt werden kann.
+
+**Entscheidung:**
+- Unsichtbare `SharedIntegration`-React-Island wird via Starlight `Head`-Component-Override in jede Seite eingebunden (`client:load`)
+- Diese Island mountet `AuthProvider baseUrl="/"` und `ProgressBridge` (aktiviert `useProgress`)
+- Islands die Unlock-Status benötigen (z.B. `LernpfadWidget`) erhalten einen eigenen `AuthProvider` (gleicher Cookie → gleicher Auth-State)
+- `exerciseEvents.ts` dispatcht auf `window` (nicht `document`) — `useProgress` lauscht auf `window`
+
+**Begründung:**
+- Kein Umbau des bestehenden Island-Systems nötig
+- Gast-Modus funktioniert ohne Änderung (Hooks geben sichere Defaults zurück)
+- `CookieAuthStore` liest dasselbe Cookie in allen Islands — Auth-State konsistent
+- Pattern ist wiederverwendbar für alle Astro/Starlight-Sites (pandas-lernen, REST/NoSQL)
+
+**Konsequenzen:**
+- Jede Island mit eigenem `AuthProvider` macht einen eigenen `authRefresh`-Call (akzeptabel bei 2 Islands pro Seite)
+- `notifyExerciseComplete` MUSS auf `window` dispatchen (nicht `document`)
+- Hydration-Fehler in Komponenten mit `Math.random()` sind pre-existing und kein Blocker
+- AP1-Trainer hat ein eigenes `.git`-Repo — Commits dort separat vom Monorepo
+
+---
+
+## ADR-010: Site-Registry als `sites.json` in `public/` (2026-02-19, REQ-009)
+
+**Kontext:** REQ-009 fordert eine Single Source of Truth für alle Lernsituationen. ADR-006 hatte TypeScript-Modul (`sites.ts`) als Zwischenlösung gewählt. REQ-009 löst diese technische Schuld auf.
+
+**Entscheidung:** `apps/hub/public/sites.json` ist die autoritative Registry. Sie wird von Vite als statisches Asset ausgeliefert. `getSites()` (async) fetcht `/sites.json` und konvertiert snake_case → camelCase. `useSites()` React Hook startet mit statischen Fallback-Sites (kein Loading-Flash) und aktualisiert nach Fetch. `sites.ts` behält TypeScript-Typen + Fallback-Array.
+
+**Begründung:**
+- JSON in `public/`: kein Build-Step nötig, kann direkt von Nginx / Produktionsdienst serviert werden
+- Fallback auf statisches Array: App bleibt funktional ohne Netzwerk (Offline, Test-Env)
+- `useSites()` mit initialem Fallback: kein Loading-Spinner auf der Landing Page
+- snake_case im JSON: konsistent mit REST-API-Konventionen und PocketBase-Schema
+
+**Skripte aus Registry:**
+- `scripts/generate-nginx.sh`: generiert nginx.conf location-Blöcke für alle aktiven Sites
+- `scripts/validate-sites.sh`: validiert Site-Slugs gegen Registry (für Deploy-Scripts)
+
+**Migrationspfad:**
+- Neue Site = 1 Eintrag in `sites.json` + `generate-nginx.sh` ausführen + Dateien deployen
+- Zukünftig: `getSites()` kann auf PocketBase-Collection wechseln — `useSites()` und Konsumenten bleiben stabil
