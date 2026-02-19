@@ -92,3 +92,26 @@
 - `exercise-complete` CustomEvent ist der einzige Integrationspunkt mit bestehenden Sites
 - SyncEngine ist unabhängig von React testbar
 - Bei Netzwerk-Fehler bleibt Eintrag in Queue und wird beim nächsten Flush erneut versucht
+
+---
+
+## ADR-005: useUnlock Lazy-Cache-Architektur (2026-02-19, REQ-007)
+
+**Kontext:** Der useUnlock Hook muss `course_unlocks` Einträge aus PocketBase abfragen, um zu prüfen welche Module für die Klasse des aktuellen Users freigeschaltet sind. Die Abfrage soll effizient sein (minimale API-Calls) und im Gast-Modus komplett ohne Netzwerk-Traffic funktionieren.
+
+**Entscheidung:** Lazy-Loading pro Course mit lokalem In-Memory-Cache.
+- Kein initialer Bulk-Fetch aller Courses. Beim ersten Aufruf von `isModuleUnlocked(course, module)` oder `getUnlockedModules(course)` wird ein Fetch für genau diesen Course getriggert.
+- Cache als `Map<string, CourseUnlock[]>` in einem `useRef`. Ein `useState`-Version-Counter triggert Re-Renders.
+- Cache-Lifetime: bis zum Unmount oder classId-Wechsel. Kein TTL.
+- Gast-Modus und User ohne classId: stabile `GUEST_RETURN`-Konstante, kein API-Call, alles offen.
+- Default-Offenheit: Leere Ergebnismenge (keine Unlock-Regeln für Course/Klasse) = alles freigeschaltet.
+
+**Begründung:**
+- Lazy statt Eager: Sites nutzen typischerweise nur einen Course. Bulk-Fetch aller 6 Courses wäre Verschwendung.
+- In-Memory statt localStorage: Unlock-Status ändert sich potentiell pro Session. Kein Risiko von Stale-Daten.
+- Kein SyncEngine/Queue nötig: Unlock-Daten sind read-only aus Sicht des Hooks.
+
+**Konsequenzen:**
+- Erster Aufruf pro Course hat eine kurze Latenz. Während des Ladens gibt `isModuleUnlocked` optimistisch `true` zurück.
+- Für Realtime-Updates (Lehrer schaltet frei während Schüler arbeitet) müsste PocketBase-Realtime-Subscription ergänzt werden. Aktuell: Page-Reload genügt.
+- Cache-Key ist nur der Course-Name. classId ist implizit (aus useAuth). Bei classId-Wechsel wird der gesamte Cache invalidiert.

@@ -123,15 +123,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-007: useUnlock Hook
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003, REQ-004
 - **Akzeptanzkriterien:**
-  - [ ] `useUnlock` Hook: isModuleUnlocked(course, module), getUnlockedModules(course)
-  - [ ] Fragt `course_unlocks` Collection ab für aktuelle Klasse
-  - [ ] Ohne Login: alles offen (Gast-Modus)
-  - [ ] Cacht Unlock-Status lokal (minimale API-Calls)
+  - [x] `useUnlock` Hook: isModuleUnlocked(course, module), getUnlockedModules(course)
+  - [x] Fragt `course_unlocks` Collection ab für aktuelle Klasse
+  - [x] Ohne Login: alles offen (Gast-Modus)
+  - [x] Cacht Unlock-Status lokal (minimale API-Calls)
 
 ### REQ-008: PocketBase Hooks & Server-Validierung
 

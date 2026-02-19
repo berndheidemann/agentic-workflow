@@ -57,3 +57,10 @@
 - **SyncEngine-Timer-Tests:** `vi.runAllTimersAsync()` feuert alle ausstehenden Timer, inkl. dem 30s-Sync-Timer. Bei "negativ"-Tests (sollte NICHT flush) einen langen syncInterval (60s) nutzen und nur `vi.advanceTimersByTimeAsync(100)` aufrufen.
 - **visibilitychange-Tests:** `document.visibilityState` muss via `Object.defineProperty` mit `configurable: true` überschrieben werden — direktes Assignment schlägt fehl.
 - **Stabile Guest-Return-Referenz:** `GUEST_RETURN`-Konstante außerhalb der Render-Funktion deklarieren (nicht `useMemo`), damit bei Guest-Mode keine unnötigen Re-Renders entstehen und die Referenz stabil ist.
+
+### 2026-02-19: REQ-007 useUnlock Hook
+
+- **renderHook + Wrapper-Wechsel:** `rerender({ wrapper: newWrapper })` in `@testing-library/react` ändert den Wrapper-Kontext für bereits gemountete Hooks nicht korrekt. Stattdessen: Mutable variable als closure über den Wrapper nutzen (`let authValue = ...; const DynamicWrapper = ({ children }) => <AuthContext.Provider value={authValue}>...`) und `rerender()` ohne Argumente aufrufen.
+- **Lazy-Cache mit Version-Counter:** `useRef<Map>` als Cache + `useState<number>` als Version-Counter ist das Pattern für cachebasierte Hooks ohne externe State-Library. Cache-Reads sind synchron, Cache-Writes triggern Re-Renders via `setVersion(v => v + 1)`.
+- **Preflight-Befehl:** `npm run test` (workspace-spezifisch) statt `npx vitest run` (pickt sites/-Tests auf). In der Iteration-Root ist `npm run test` der korrekte Befehl.
+- **Docker-Netzwerk Sandbox:** `sudo docker network connect project_default claude-sandbox-sonstige_learn-szut-dev` verbindet den Sandbox-Container mit dem Compose-Netzwerk. Muss nach jedem Neustart wiederholt werden wenn die Verbindung fehlt.
