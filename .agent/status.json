@@ -56,7 +56,7 @@
     ]
   },
   "REQ-007": {
-    "status": "open",
+    "status": "done",
     "priority": "P0",
     "size": "M",
     "deps": [
