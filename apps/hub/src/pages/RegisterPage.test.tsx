@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
+import { axe } from 'vitest-axe';
 import RegisterPage from './RegisterPage';
 import { AuthContext } from '@lernplattform/shared';
 import type { AuthContextValue } from '@lernplattform/shared';
@@ -310,5 +312,37 @@ describe('RegisterPage', () => {
     });
     const alerts = screen.getAllByRole('alert');
     expect(alerts.length).toBeGreaterThan(0);
+  });
+
+  // ── Keyboard-Navigation ───────────────────────────────────────────────────
+
+  it('Tab-Reihenfolge: Klassen-Code → Benutzername → PIN → Registrieren-Button', async () => {
+    const user = userEvent.setup();
+    renderRegisterPage();
+
+    const classCodeInput = screen.getByLabelText('Klassen-Code');
+    const usernameInput = screen.getByLabelText('Benutzername');
+    const pinInput = screen.getByLabelText('PIN (4 Ziffern)');
+    const submitButton = screen.getByRole('button', { name: 'Registrieren' });
+
+    await user.tab();
+    expect(classCodeInput).toHaveFocus();
+
+    await user.tab();
+    expect(usernameInput).toHaveFocus();
+
+    await user.tab();
+    expect(pinInput).toHaveFocus();
+
+    await user.tab();
+    expect(submitButton).toHaveFocus();
+  });
+
+  // ── Axe-Audit ─────────────────────────────────────────────────────────────
+
+  it('hat keine automatisch erkennbaren a11y-Verletzungen', async () => {
+    const { container } = renderRegisterPage();
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

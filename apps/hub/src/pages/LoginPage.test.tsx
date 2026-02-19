@@ -1,9 +1,12 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
+import { axe } from 'vitest-axe';
 import LoginPage from './LoginPage';
 import { AuthContext } from '@lernplattform/shared';
 import type { AuthContextValue } from '@lernplattform/shared';
+
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -263,5 +266,52 @@ describe('LoginPage', () => {
     });
     const alerts = screen.getAllByRole('alert');
     expect(alerts.length).toBeGreaterThan(0);
+  });
+
+  // ── Keyboard-Navigation ───────────────────────────────────────────────────
+
+  it('Tab-Reihenfolge: Benutzername → PIN → Anmelden-Button → Registrieren-Link', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+
+    const usernameInput = screen.getByLabelText('Benutzername');
+    const pinInput = screen.getByLabelText('PIN (4 Ziffern)');
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    const registerLink = screen.getByRole('link', { name: /registrieren/i });
+
+    await user.tab();
+    expect(usernameInput).toHaveFocus();
+
+    await user.tab();
+    expect(pinInput).toHaveFocus();
+
+    await user.tab();
+    expect(submitButton).toHaveFocus();
+
+    await user.tab();
+    expect(registerLink).toHaveFocus();
+  });
+
+  it('Anmelden-Button per Enter aktivierbar', async () => {
+    const mockLogin = vi.fn().mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderLoginPage(makeAuthContext({ login: mockLogin }));
+
+    fillForm();
+    const submitButton = screen.getByRole('button', { name: 'Anmelden' });
+    submitButton.focus();
+    await user.keyboard('{Enter}');
+
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalled();
+    });
+  });
+
+  // ── Axe-Audit ─────────────────────────────────────────────────────────────
+
+  it('hat keine automatisch erkennbaren a11y-Verletzungen', async () => {
+    const { container } = renderLoginPage();
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

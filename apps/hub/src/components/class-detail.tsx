@@ -84,7 +84,7 @@ export function ClassDetail({ classId, onBack, onSelectStudent }: ClassDetailPro
           className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
           aria-label="Zurück zur Klassen-Liste"
         >
-          ← Zurück
+          <span aria-hidden="true">←</span> Zurück
         </button>
       </div>
 
@@ -95,7 +95,7 @@ export function ClassDetail({ classId, onBack, onSelectStudent }: ClassDetailPro
       )}
 
       {state.error && (
-        <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div role="alert" aria-live="assertive" className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {state.error}
         </div>
       )}
@@ -122,8 +122,8 @@ export function ClassDetail({ classId, onBack, onSelectStudent }: ClassDetailPro
               <button
                 type="button"
                 onClick={handleCopyCode}
-                aria-label="Klassen-Code kopieren"
-                aria-live="polite"
+                aria-label={state.copied ? 'Klassen-Code kopiert' : 'Klassen-Code kopieren'}
+                aria-pressed={state.copied}
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               >
                 {state.copied ? '✓ Kopiert!' : 'Code kopieren'}
@@ -140,7 +140,7 @@ export function ClassDetail({ classId, onBack, onSelectStudent }: ClassDetailPro
             {state.students.length === 0 ? (
               <div className="py-8 text-center">
                 <p className="text-gray-500 text-sm">Noch keine Schüler in dieser Klasse.</p>
-                <p className="text-gray-400 text-xs mt-1">
+                <p className="text-gray-500 text-xs mt-1">
                   Schüler treten der Klasse bei, indem sie sich mit dem Klassen-Code registrieren.
                 </p>
               </div>

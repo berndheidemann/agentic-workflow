@@ -1,5 +1,6 @@
 export { AuthProvider, AuthContext } from './auth-context';
 export { useAuth } from './use-auth';
+export { LoginBanner } from './login-banner';
 export { CookieAuthStore } from './cookie-auth-store';
 export { createPocketBaseClient } from './pb-client';
 export type {

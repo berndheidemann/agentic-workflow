@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { axe } from 'vitest-axe';
 import { ProgressMatrix } from './progress-matrix';
 import type { MatrixColumn, MatrixRow } from '../hooks/use-class-progress';
 import type { User } from '@lernplattform/shared';
@@ -202,5 +203,38 @@ describe('ProgressMatrix', () => {
   it('zeigt keine Aggregat-Zeile wenn keine Daten', () => {
     render(<ProgressMatrix columns={[]} rows={[]} isLoading={false} error={null} />);
     expect(screen.queryByText(/Klasse gesamt/i)).not.toBeInTheDocument();
+  });
+
+  // ── Keyboard-Navigation ───────────────────────────────────────────────────
+
+  it('Tabellen-Zellen-Buttons sind per Tab erreichbar', () => {
+    const row = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'correct' });
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.length).toBeGreaterThan(0);
+    // All buttons should be focusable (no tabIndex=-1)
+    for (const btn of buttons) {
+      expect(btn).not.toHaveAttribute('tabindex', '-1');
+    }
+  });
+
+  // ── Axe-Audit ─────────────────────────────────────────────────────────────
+
+  it('hat keine automatisch erkennbaren a11y-Verletzungen (leere Matrix)', async () => {
+    const { container } = render(
+      <ProgressMatrix columns={[]} rows={[]} isLoading={false} error={null} />
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('hat keine automatisch erkennbaren a11y-Verletzungen (Matrix mit Daten)', async () => {
+    const row = makeRow(makeStudent('s1', 'anna'), { 'lektion-1::aufgabe-1': 'correct' });
+    const { container } = render(
+      <ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />
+    );
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
   });
 });

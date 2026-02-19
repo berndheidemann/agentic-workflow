@@ -45,8 +45,8 @@ describe('HomePage', () => {
   it('zeigt alle 6 Kurs-Kacheln als Links plus Footer-Link und Gast-CTA-Links', () => {
     renderWithRouter();
     const links = screen.getAllByRole('link');
-    // 6 courses + Datenschutzerklärung + Anmelden + Registrieren (Gast-CTA)
-    expect(links).toHaveLength(9);
+    // 6 courses + Datenschutzerklärung + Anmelden + Registrieren (Gast-CTA) + Melde dich an (LoginBanner)
+    expect(links).toHaveLength(10);
   });
 
   it('zeigt Datenschutzerklärung-Link im Footer', () => {
@@ -90,5 +90,16 @@ describe('HomePage', () => {
   it('zeigt keine Fortschrittsbalken im Gast-Modus', () => {
     const { container } = renderWithRouter(false);
     expect(container.querySelector('[role="progressbar"]')).not.toBeInTheDocument();
+  });
+
+  it('zeigt LoginBanner im Gast-Modus', () => {
+    renderWithRouter(false);
+    expect(screen.getByRole('complementary', { name: 'Anmelde-Hinweis' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Melde dich an/i })).toBeInTheDocument();
+  });
+
+  it('zeigt keinen LoginBanner wenn eingeloggt', () => {
+    renderWithRouter(true);
+    expect(screen.queryByRole('complementary', { name: 'Anmelde-Hinweis' })).not.toBeInTheDocument();
   });
 });
