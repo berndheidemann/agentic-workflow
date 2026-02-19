@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@lernplattform/shared';
 import type { CourseUnlock, User, Progress } from '@lernplattform/shared';
 
@@ -59,6 +59,14 @@ export function useModuleUnlocks(
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Stabilize moduleIds reference to avoid re-triggering the effect on every render.
+  // The effect only re-runs when the actual content of moduleIds changes.
+  const moduleIdsKey = moduleIds.join(',');
+  const moduleIdsRef = useRef(moduleIds);
+  if (moduleIdsRef.current.join(',') !== moduleIdsKey) {
+    moduleIdsRef.current = moduleIds;
+  }
+
   // Load unlock records + progress data in parallel
   useEffect(() => {
     if (!classId || !course) {
@@ -69,6 +77,7 @@ export function useModuleUnlocks(
       return;
     }
 
+    const currentModuleIds = moduleIdsRef.current;
     let stale = false;
 
     async function load() {
@@ -99,7 +108,7 @@ export function useModuleUnlocks(
         const completed = new Set<string>();
         for (const p of progressRecords) {
           if (!studentIds.has(p.user_id)) continue;
-          for (const moduleId of moduleIds) {
+          for (const moduleId of currentModuleIds) {
             if (lessonBelongsToModule(p.lesson, moduleId)) {
               completed.add(moduleId);
               break;
@@ -122,7 +131,7 @@ export function useModuleUnlocks(
 
     load();
     return () => { stale = true; };
-  }, [pb, classId, course, moduleIds]);
+  }, [pb, classId, course, moduleIdsKey]);
 
   // Derive module states from records + completed progress
   const modules: ModuleUnlockState[] = (!classId || !course) ? [] : moduleIds.map((moduleId) => {
@@ -175,7 +184,7 @@ export function useModuleUnlocks(
     setError(null);
     try {
       // Ensure all modules have records first
-      let allRecords = await ensureAllRecords(records, moduleIds, true);
+      let allRecords = await ensureAllRecords(records, moduleIdsRef.current, true);
 
       const record = allRecords.find((r) => r.module === moduleId);
       if (record) {
@@ -203,7 +212,7 @@ export function useModuleUnlocks(
     } finally {
       setIsSaving(false);
     }
-  }, [pb, classId, course, user?.id, records, moduleIds, ensureAllRecords]);
+  }, [pb, classId, course, user?.id, records, ensureAllRecords]);
 
   // Unlock all modules up to and including the given module
   const unlockUpTo = useCallback(async (moduleId: string, allModuleIds: string[]) => {
