@@ -220,14 +220,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-014: Kurs-Kacheln mit Fortschrittsbalken
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-006, REQ-011
 - **Akzeptanzkriterien:**
-  - [ ] Nach Login: Kacheln zeigen Fortschrittsbalken pro Kurs
-  - [ ] Prozent basierend auf completed/total Exercises
-  - [ ] Ansprechende Visualisierung (farbiger Balken)
+  - [x] Nach Login: Kacheln zeigen Fortschrittsbalken pro Kurs
+  - [x] Prozent basierend auf completed/total Exercises
+  - [x] Ansprechende Visualisierung (farbiger Balken)
 
 ### REQ-015: Profil-Bereich
 

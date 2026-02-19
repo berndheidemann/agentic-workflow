@@ -209,3 +209,24 @@
 **Migrationspfad:**
 - Neue Site = 1 Eintrag in `sites.json` + `generate-nginx.sh` ausführen + Dateien deployen
 - Zukünftig: `getSites()` kann auf PocketBase-Collection wechseln — `useSites()` und Konsumenten bleiben stabil
+
+---
+
+## ADR-011: Fortschrittsbalken mit `total_exercises` als Zwischenlösung (2026-02-19, REQ-014)
+
+**Kontext:** REQ-014 fordert Fortschrittsbalken mit "Prozent basierend auf completed/total". REQ-037 (Manifest, liefert echte Gesamtzahl) ist `open`. Ohne "total" ist keine Prozentberechnung möglich.
+
+**Entscheidung:** `total_exercises` als manuell gepflegtes Feld in `sites.json` und `SiteConfig`. Neuer Hook `useCourseProgress` im Hub (nicht im Shared-Package) holt alle Progress-Records des Users in einem Bulk-Query und gruppiert nach Kurs.
+
+**Begründung:**
+- Manuell gepflegte Zahl ist akzeptabel (Kursinhalt ändert sich selten)
+- Ein Bulk-Query (alle Kurse in einem API-Call) statt 6 Einzel-Queries — Performance
+- Hook im Hub statt im Shared-Package: Fortschrittsbalken-Logik ist UI-spezifisch
+- `ProgressBar` als eigene Komponente: wiederverwendbar für REQ-015 und andere
+
+**Migrationspfad:** Wenn REQ-037 implementiert wird, ersetzt die Manifest-Zahl das `total_exercises`-Feld. Hook behält seine Signatur (`CourseProgressItem`), nur die Quelle für `totalExercises` ändert sich.
+
+**Konsequenzen:**
+- `total_exercises` muss bei Kursinhalt-Änderungen manuell aktualisiert werden
+- Wenn `total_exercises = 0`: kein Fortschrittsbalken (Division-by-Zero-Schutz)
+- Gast-Modus: kein API-Call, kein Balken — explizit gewollt (AK: "Nach Login")
