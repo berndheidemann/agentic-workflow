@@ -13,6 +13,7 @@ const mockSite: SiteConfig = {
   frameworkType: 'starlight',
   isActive: true,
   sortOrder: 1,
+  modules: [],
 };
 
 describe('CourseCard', () => {

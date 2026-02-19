@@ -23,6 +23,7 @@ export default [
         navigator: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
+        fetch: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLFormElement: 'readonly',
         URLSearchParams: 'readonly',

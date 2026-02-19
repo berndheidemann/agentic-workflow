@@ -3,10 +3,18 @@ import { CourseCard } from './course-card';
 
 interface CourseGridProps {
   sites: SiteConfig[];
+  isLoading?: boolean;
 }
 
-export function CourseGrid({ sites }: CourseGridProps) {
-  if (sites.length === 0) {
+export function CourseGrid({ sites, isLoading }: CourseGridProps) {
+  if (isLoading && sites.length === 0) {
+    return (
+      <p className="text-gray-500 text-center py-8" aria-busy="true" aria-live="polite">
+        Kurse werden geladen…
+      </p>
+    );
+  }
+  if (!isLoading && sites.length === 0) {
     return <p className="text-gray-500 text-center py-8">Keine Kurse verfügbar.</p>;
   }
 

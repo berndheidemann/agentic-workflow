@@ -13,6 +13,7 @@ const makeSite = (slug: string, sortOrder: number): SiteConfig => ({
   frameworkType: 'starlight',
   isActive: true,
   sortOrder,
+  modules: [],
 });
 
 describe('CourseGrid', () => {
@@ -26,6 +27,18 @@ describe('CourseGrid', () => {
   it('zeigt Leer-Meldung bei leerem Array', () => {
     render(<CourseGrid sites={[]} />);
     expect(screen.getByText('Keine Kurse verfügbar.')).toBeInTheDocument();
+  });
+
+  it('zeigt Lade-Meldung wenn isLoading=true und keine Sites vorhanden', () => {
+    render(<CourseGrid sites={[]} isLoading={true} />);
+    expect(screen.getByText('Kurse werden geladen…')).toBeInTheDocument();
+  });
+
+  it('zeigt Sites auch wenn isLoading=true (kein Loading-Flash bei Fallback)', () => {
+    const sites = [makeSite('ap1', 1)];
+    render(<CourseGrid sites={sites} isLoading={true} />);
+    // Sites are visible even while loading (static fallback prevents flash)
+    expect(screen.getAllByRole('link')).toHaveLength(1);
   });
 
   it('rendert Kacheln in der übergebenen Reihenfolge', () => {

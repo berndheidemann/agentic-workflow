@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { sites, getActiveSites } from './sites';
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { sites, getActiveSites, getSites, useSites } from './sites';
 
-describe('sites config', () => {
+describe('sites static config', () => {
   it('enthält genau 6 Sites', () => {
     expect(sites).toHaveLength(6);
   });
@@ -63,5 +65,145 @@ describe('sites config', () => {
     expect(slugs).toContain('zuul');
     expect(slugs).toContain('numpy');
     expect(slugs).toContain('uml');
+  });
+});
+
+describe('getSites (async, fetch from sites.json)', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('liefert Sites aus sites.json (camelCase konvertiert)', async () => {
+    const mockJson = {
+      version: 1,
+      sites: [
+        {
+          slug: 'test-site',
+          name: 'Test Site',
+          description: 'A test site',
+          icon: 'M0 0',
+          base_path: '/test/',
+          framework_type: 'react-spa',
+          is_active: true,
+          sort_order: 1,
+          modules: [{ id: 'mod1', name: 'Modul 1', sort_order: 1 }],
+        },
+      ],
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockJson),
+      }),
+    );
+
+    const result = await getSites();
+    expect(result).toHaveLength(1);
+    expect(result[0].slug).toBe('test-site');
+    expect(result[0].basePath).toBe('/test/');
+    expect(result[0].frameworkType).toBe('react-spa');
+    expect(result[0].isActive).toBe(true);
+    expect(result[0].sortOrder).toBe(1);
+    expect(result[0].modules[0].sortOrder).toBe(1);
+  });
+
+  it('fällt auf statische Sites zurück wenn fetch fehlschlägt', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
+
+    const result = await getSites();
+    // Falls back to static array
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.find((s) => s.slug === 'ap1')).toBeDefined();
+  });
+
+  it('fällt auf statische Sites zurück wenn HTTP-Status nicht ok', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+      }),
+    );
+
+    const result = await getSites();
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.find((s) => s.slug === 'ap1')).toBeDefined();
+  });
+});
+
+describe('useSites Hook', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('startet mit statischen Sites (kein Loading-Flash)', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(() => new Promise(() => {})), // never resolves
+    );
+
+    const { result } = renderHook(() => useSites());
+    // Initial render has static sites immediately
+    expect(result.current.sites.length).toBeGreaterThan(0);
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('aktualisiert Sites nach erfolgreichem Fetch', async () => {
+    const mockJson = {
+      version: 1,
+      sites: [
+        {
+          slug: 'from-json',
+          name: 'From JSON',
+          description: 'Loaded from registry',
+          icon: 'M0 0',
+          base_path: '/from-json/',
+          framework_type: 'react-spa' as const,
+          is_active: true,
+          sort_order: 1,
+          modules: [],
+        },
+      ],
+    };
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockJson),
+      }),
+    );
+
+    const { result } = renderHook(() => useSites());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.sites).toHaveLength(1);
+    expect(result.current.sites[0].slug).toBe('from-json');
+  });
+
+  it('setzt isLoading auf false und behält Fallback-Sites bei Fetch-Fehler', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+
+    const { result } = renderHook(() => useSites());
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Fallback: static sites still present
+    expect(result.current.sites.length).toBeGreaterThan(0);
   });
 });

@@ -10,7 +10,7 @@ import { ProgressMatrix } from '../components/progress-matrix';
 import { useClassProgress } from '../hooks/use-class-progress';
 import { ModuleUnlockList } from '../components/module-unlock-list';
 import { useModuleUnlocks } from '../hooks/use-module-unlocks';
-import { getActiveSites } from '../config/sites';
+import { useSites } from '../config/sites';
 
 // ─── Klassen View ─────────────────────────────────────────────────────────────
 
@@ -121,9 +121,8 @@ function KlassenDetailView() {
 
 // ─── Matrix View ──────────────────────────────────────────────────────────────
 
-const activeSites = getActiveSites();
-
 function MatrixView() {
+  const { sites: activeSites } = useSites();
   const { pb, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [classes, setClasses] = useState<Class[]>([]);
@@ -300,6 +299,7 @@ function MatrixView() {
 
 function FreischaltungView() {
   const { pb, user } = useAuth();
+  const { sites: activeSites } = useSites();
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [classes, setClasses] = useState<Class[]>([]);

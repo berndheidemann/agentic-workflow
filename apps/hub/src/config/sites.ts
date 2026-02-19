@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 export interface ModuleConfig {
   id: string;
   name: string;
@@ -18,8 +20,101 @@ export interface SiteConfig {
   modules: ModuleConfig[];
 }
 
-// Heroicons MIT License — https://github.com/tailwindlabs/heroicons
+// ─── JSON shape (snake_case, matches sites.json) ──────────────────────────────
+
+interface ModuleJson {
+  id: string;
+  name: string;
+  sort_order: number;
+}
+
+interface SiteJson {
+  slug: string;
+  name: string;
+  description: string;
+  icon: string;
+  base_path: string;
+  framework_type: 'starlight' | 'react-spa';
+  is_active: boolean;
+  sort_order: number;
+  modules: ModuleJson[];
+}
+
+interface SitesJson {
+  version: number;
+  sites: SiteJson[];
+}
+
+// ─── Conversion ───────────────────────────────────────────────────────────────
+
+function siteFromJson(raw: SiteJson): SiteConfig {
+  return {
+    slug: raw.slug,
+    name: raw.name,
+    description: raw.description,
+    icon: raw.icon,
+    basePath: raw.base_path,
+    frameworkType: raw.framework_type,
+    isActive: raw.is_active,
+    sortOrder: raw.sort_order,
+    modules: raw.modules.map((m) => ({
+      id: m.id,
+      name: m.name,
+      sortOrder: m.sort_order,
+    })),
+  };
+}
+
+// ─── Async loader (Single Source of Truth: public/sites.json) ─────────────────
+
+/**
+ * Fetch sites from public/sites.json (the canonical registry).
+ * Falls back to the static array if the fetch fails (e.g. offline, test env).
+ */
+export async function getSites(): Promise<SiteConfig[]> {
+  try {
+    const response = await fetch('/sites.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = (await response.json()) as SitesJson;
+    return data.sites.map(siteFromJson);
+  } catch {
+    // Fallback to static list (ensures app works without network in dev/test)
+    return sites;
+  }
+}
+
+/**
+ * React hook that loads sites from the registry and returns them sorted/filtered.
+ * Starts with the static list so the UI renders immediately (no loading flash).
+ */
+export function useSites(): { sites: SiteConfig[]; isLoading: boolean } {
+  const [loadedSites, setLoadedSites] = useState<SiteConfig[]>(getActiveSites());
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSites()
+      .then((result) => {
+        if (!cancelled) {
+          setLoadedSites(result.filter((s) => s.isActive).sort((a, b) => a.sortOrder - b.sortOrder));
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { sites: loadedSites, isLoading };
+}
+
+// ─── Static fallback (Heroicons MIT License — https://github.com/tailwindlabs/heroicons) ──
 // clipboard-document-check, table-cells, globe-alt, puzzle-piece, calculator, rectangle-group
+// This array is the fallback when sites.json cannot be fetched.
+// The canonical data lives in public/sites.json — keep both in sync!
 export const sites: SiteConfig[] = [
   {
     slug: 'ap1',
