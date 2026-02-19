@@ -511,16 +511,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-051: AP1-Trainer Shared-Integration
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-006, REQ-007, REQ-050
 - **Akzeptanzkriterien:**
-  - [ ] `@lernplattform/shared` als Dependency
-  - [ ] `AuthProvider` im Layout eingebunden
-  - [ ] `ProgressTracker` lauscht auf `exercise-complete` Events
-  - [ ] Sidebar zeigt Unlock-Status
-  - [ ] Gast-Modus funktioniert (alles offen, kein Tracking)
+  - [x] `@lernplattform/shared` als Dependency
+  - [x] `AuthProvider` im Layout eingebunden
+  - [x] `ProgressTracker` lauscht auf `exercise-complete` Events
+  - [x] Sidebar zeigt Unlock-Status
+  - [x] Gast-Modus funktioniert (alles offen, kein Tracking)
 
 ---
 

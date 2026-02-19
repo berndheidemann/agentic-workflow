@@ -1,12 +1,12 @@
 # Agent Context
 
-> Validation 6 | 2026-02-19 | 27/44 done, 0 blocked, 16 open, 1 fast-track (REQ-051)
+> 2026-02-19 | 28/44 done, 0 blocked, 15 open
 
-## Validierungsergebnis
+## Was zuletzt passiert ist
 
-3 REQs validiert und bestätigt: REQ-009, REQ-014, REQ-015 — alle Akzeptanzkriterien erfüllt, Smoke-Tests bestanden, Code-Qualität gut. Keine Regressionen.
-
-REQ-051 (AP1-Trainer Shared-Integration): Implementierung vollständig, Build grün, aber iter-001 am Turn-Limit abgebrochen → Status nie finalisiert. Sonnet muss nur noch Smoke-Test + PRD-Checkboxen + Status setzen.
+REQ-051 (AP1-Trainer Shared-Integration): done. Smoke-Test gegen echten Docker-Stack bestanden.
+AP1-Trainer-Build (`sites/AP1-Trainer/dist/`) in `sites/ap1/` kopiert, Nginx-Image neu gebaut.
+`SharedIntegration` als `astro-island` korrekt im Head, `LernpfadWidget` in Sidebar, 54 Tests grün.
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -27,20 +27,24 @@ Lernplattform-Monorepo: `npm run test/build/lint` läuft in `packages/shared` + 
   - `apps/hub/src/components/profile-section.tsx`: Profil-Bereich (Begrüßung + Logout)
 - `sites/AP1-Trainer`: Astro/Starlight mit Shared-Integration (ADR-009, 54 Tests)
   - Eigenes `.git`-Repo in `sites/AP1-Trainer/.git`
+  - SharedIntegration (AuthProvider + ProgressBridge) in Head.astro
+  - LernpfadWidget + UnlockIndicator in Sidebar
+- `sites/ap1/`: Build-Output des AP1-Trainers (für Nginx-Docker-Image)
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
 - `scripts/generate-nginx.sh`: nginx.conf Generator aus sites.json
 - `scripts/validate-sites.sh`: Site-Slug-Validator für Deploy-Scripts
 
 ## Nächste Prioritäten
 
-1. **REQ-051** (P0, fast-track) — Nur Smoke-Test + Status-Finalisierung nötig
-2. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
-3. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
-4. **REQ-025** (P1, M) — Schüler-Fortschrittsübersicht im Dashboard
+1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL) [Abhängigkeit REQ-051 jetzt done]
+2. **REQ-035** (P1, S) — a11y-Feinschliff bestehende Komponenten
+3. **REQ-025** (P1, M) — Schüler-Fortschrittsübersicht im Dashboard
 
 ## Wichtige Architektur-Details
 
 - AP1-Trainer hat **eigenes `.git`-Repo** (`sites/AP1-Trainer/.git`) — Commits dort separat!
+- `sites/ap1/` ist der Build-Output der in den Nginx-Docker-Container kopiert wird
+- Nach AP1-Trainer-Änderungen: `sites/AP1-Trainer/dist/` nach `sites/ap1/` kopieren + Docker rebuild
 - `sites.json` ist SSOT — bei neuer Site: 1 Eintrag + generate-nginx.sh ausführen
 - `useSites()` startet mit statischen Fallback-Sites → kein Loading-Flash
 - `useCourseProgress()` ist Hub-spezifisch (nicht in @lernplattform/shared) — Bulk-Query, Gast-Modus: kein Fetch
