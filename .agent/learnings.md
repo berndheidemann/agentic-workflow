@@ -64,3 +64,10 @@
 - **Lazy-Cache mit Version-Counter:** `useRef<Map>` als Cache + `useState<number>` als Version-Counter ist das Pattern für cachebasierte Hooks ohne externe State-Library. Cache-Reads sind synchron, Cache-Writes triggern Re-Renders via `setVersion(v => v + 1)`.
 - **Preflight-Befehl:** `npm run test` (workspace-spezifisch) statt `npx vitest run` (pickt sites/-Tests auf). In der Iteration-Root ist `npm run test` der korrekte Befehl.
 - **Docker-Netzwerk Sandbox:** `sudo docker network connect project_default claude-sandbox-sonstige_learn-szut-dev` verbindet den Sandbox-Container mit dem Compose-Netzwerk. Muss nach jedem Neustart wiederholt werden wenn die Verbindung fehlt.
+
+### 2026-02-19: REQ-008 PocketBase Hooks & Server-Validierung
+
+- **Opus Security Review:** Role Escalation war kritisch — ohne explizites `e.record.set('role', 'student')` im `onRecordCreateRequest`-Hook können Clients sich als Teacher registrieren. Immer erzwingen.
+- **PocketBase JSVM Crypto:** `$security.randomStringWithAlphabet(length, alphabet)` ist die korrekte API für kryptografisch sichere Zufallsstrings (nutzt `crypto/rand`). `Math.random()` ist für Join-Codes unzureichend.
+- **Hook-Reihenfolge:** Server-seitige Hooks überschreiben Client-Felder via `e.record.set()` — `suspicious`, `role` etc. können so nicht vom Client manipuliert werden.
+- **Parameterisierte Filter:** PocketBase JSVM nutzt `{:param}`-Syntax für sichere Queries — kein String-Concat in findRecordsByFilter nötig/erlaubt.

@@ -10,11 +10,9 @@ const JOIN_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const JOIN_CODE_LENGTH = 6;
 
 function generateJoinCode() {
-  let code = '';
-  for (let i = 0; i < JOIN_CODE_LENGTH; i++) {
-    code += JOIN_CODE_CHARSET[Math.floor(Math.random() * JOIN_CODE_CHARSET.length)];
-  }
-  return code;
+  // $security.randomStringWithAlphabet uses crypto/rand — cryptographically secure.
+  // This prevents PRNG-based prediction of future join codes.
+  return $security.randomStringWithAlphabet(JOIN_CODE_LENGTH, JOIN_CODE_CHARSET);
 }
 
 function isValidJoinCode(code) {

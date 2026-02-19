@@ -135,18 +135,18 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-008: PocketBase Hooks & Server-Validierung
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003
 - **Akzeptanzkriterien:**
-  - [ ] Klassen-Code-Generierung: 6 Zeichen, Zeichensatz ABCDEFGHJKLMNPQRSTUVWXYZ23456789
-  - [ ] Klassen-Code-Validierung bei Registrierung
-  - [ ] PIN-Validierung: genau 4 Ziffern
-  - [ ] Progress-Status kann nur aufsteigen (started → completed, nie zurück)
-  - [ ] Rate-Limiting: Max 60 Progress-Events pro Stunde pro User
-  - [ ] User kann nur eigenen Progress schreiben (API Rule)
-  - [ ] Plausibilitäts-Flag: `suspicious: true` wenn >5 Aufgaben/Minute
+  - [x] Klassen-Code-Generierung: 6 Zeichen, Zeichensatz ABCDEFGHJKLMNPQRSTUVWXYZ23456789
+  - [x] Klassen-Code-Validierung bei Registrierung
+  - [x] PIN-Validierung: genau 4 Ziffern
+  - [x] Progress-Status kann nur aufsteigen (started → completed, nie zurück)
+  - [x] Rate-Limiting: Max 60 Progress-Events pro Stunde pro User
+  - [x] User kann nur eigenen Progress schreiben (API Rule)
+  - [x] Plausibilitäts-Flag: `suspicious: true` wenn >5 Aufgaben/Minute
 
 ### REQ-009: Site-Registry (Single Source of Truth)
 

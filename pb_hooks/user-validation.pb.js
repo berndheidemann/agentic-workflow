@@ -19,6 +19,10 @@ onRecordCreateRequest((e) => {
     throw new BadRequestError('PIN muss genau 4 Ziffern enthalten.');
   }
 
+  // Force role to "student" — teacher accounts are created by admins only.
+  // This prevents role escalation: a client cannot self-assign role="teacher".
+  e.record.set('role', 'student');
+
   // join_code validation: if provided, the referenced class must exist and be active
   const classId = e.record.get('class_id');
   if (classId) {
