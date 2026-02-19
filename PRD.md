@@ -281,7 +281,7 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-023a: Dashboard Matrix-Ansicht (Basis)
 
-- **Status:** in_progress
+- **Status:** open
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-020, REQ-021
