@@ -1,53 +1,57 @@
 # Agent Context
 
-> 2026-02-19 | 32/44 done, 0 blocked, 12 open | REQ-030 + REQ-035 abgeschlossen
+> 2026-02-19 | 33/44 done, 0 blocked, 11 open | REQ-032 abgeschlossen
 
 ## Was zuletzt passiert ist
 
-**REQ-030 (LoginBanner):** Komponente in packages/shared implementiert + in HomePage.tsx eingebunden. Für Gäste: dismissbarer blauer Banner "Melde dich an um deinen Fortschritt zu speichern" mit /login-Link.
+**REQ-032 (SidebarUnlock Komponente):** Vollständig implementiert.
 
-**REQ-035 (a11y-Feinschliff):** Alle Kriterien im Code vorhanden:
-- `text-gray-600` in progress-matrix.tsx (war text-gray-400)
-- `aria-live="assertive"` auf Error-Alerts (class-detail.tsx, LoginPage, RegisterPage)
-- Copy-Button aria-label dynamisch ("Kopieren" → "Code kopiert") in class-detail.tsx
-- `← aria-hidden="true"` Back-Link in class-detail.tsx
-- Keyboard-Navigation-Tests + Axe-Audits in Login/Register/Matrix-Tests
+- **`SidebarUnlock`** (Shared-Package): Prop-basierte React-Komponente mit 3 Status-Icons:
+  - `locked`: Schloss-Icon + `onLockedClick`-Callback oder Inline-Hint-Toggle
+  - `unlocked`: kein Icon (unauffällig, Standard)
+  - `completed`: Checkmark-Icon in grün
+  - 16 Unit-Tests (alle grün)
+- **`SidebarUnlockInjector`** (AP1-Trainer): React-Island die Starlight-Sidebar per DOM-Injection mit Icons versieht
+  - Liest `useUnlock()` + `useProgressStore()` für 3-Zustands-Logik
+  - Gesperrte Links: opacity 0.65, Navigation geblockt, Tooltip-Hinweis bei Klick
+  - 7 Unit-Tests (alle grün)
+- **`Sidebar.astro`** Override (AP1-Trainer): mountet `SidebarUnlockInjector` neben Standard-Sidebar
+- **CSS** in `custom.css`: Styles für `.sl-injected-lock-icon`, `.sl-injected-lock-hint`, `.sidebar-unlock-*`
 
-**vitest-axe Fix:** test-setup.ts Import-Syntax repariert (`import * as matchers`). 274 Hub + 155 Shared Tests grün.
+**Bestätigte pre-existierende Hydration-Fehler** in DragDrop/SzenarioEntscheidung/SicherheitskonzeptUebung (randomisierte Optionen). Nicht durch REQ-032 verursacht.
 
 ## KRITISCH: Docker braucht `sudo`
 
 Sonnet muss `sudo docker compose` statt `docker compose` verwenden.
-Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest run` im Root.
+Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest run` im Root!
 
 ## Was existiert
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
-- `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner (155 Tests)
+- `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner + **SidebarUnlock** (171 Tests)
 - `apps/hub`: Vite + React + TS + Tailwind + React Router (274 Tests)
   - Routing: `/`, `/login`, `/register`, `/dashboard/*`, `/datenschutz`, `/einwilligung`, `*` (404)
-  - Dashboard: Klassen, Matrix (Zell-Klick → Detail-Modal), Freischaltung + Schüler-Detail
-  - Login: Username + PIN (kein Klassen-Code mehr)
-  - Gast-CTA: Anmelden/Registrieren-Links + dismissbarer LoginBanner
-  - `getCourseHref()`: Dev-Modus → localhost:8080, Prod → relativ
-- `sites/AP1-Trainer`: Astro/Starlight mit Shared-Integration (54 Tests)
+  - Dashboard: Klassen, Matrix, Freischaltung + Schüler-Detail
+  - Login: Username + PIN
+- `sites/AP1-Trainer`: Astro/Starlight mit Shared-Integration (61 Tests)
+  - **NEU:** `SidebarUnlockInjector` + `Sidebar.astro`-Override
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
-- E2E: 32+ Playwright-Tests (login, register, profile, dashboard, landing, 404)
-- vitest-axe: Axe-Audits in LoginPage, RegisterPage, progress-matrix Tests
+- E2E: 32+ Playwright-Tests
 
 ## Nächste Prioritäten
 
-1. **REQ-032** (P1, M) — SidebarUnlock Komponente (Icons: gesperrt/freigeschaltet/abgeschlossen)
-2. **REQ-033** (P1, S) — ProgressBar Komponente (Sidebar)
+1. **REQ-033** (P1, S) — ProgressBar Komponente (Sidebar)
+2. **REQ-034** (P1, M) — Details prüfen
 3. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL)
 
 ## Wichtige Architektur-Details
 
 - AP1-Trainer hat **eigenes `.git`-Repo** (`sites/AP1-Trainer/.git`) — Commits dort separat!
 - `sites.json` ist SSOT — bei neuer Site: 1 Eintrag + generate-nginx.sh ausführen
-- `useSites()` startet mit statischen Fallback-Sites → kein Loading-Flash
 - **Test-Ausführung:** `npm run test` (workspace-aware), nie `npx vitest run` im Root!
 - **vitest-axe Import:** `import * as matchers from 'vitest-axe/matchers'` + `expect.extend(matchers)`
+- **SidebarUnlock Pattern (ADR-012):** Prop-basiert. Consumer bestimmt Status, Komponente rendert Icon.
+- **Starlight-Sidebar-Selektoren:** `nav[aria-label] a[href]` findet alle 40 Links korrekt
 
 ## Credentials
 

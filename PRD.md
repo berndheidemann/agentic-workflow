@@ -367,14 +367,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-032: SidebarUnlock Komponente
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-007
 - **Akzeptanzkriterien:**
-  - [ ] Icons in Sidebar: gesperrt, freigeschaltet, abgeschlossen
-  - [ ] Gesperrte Lektionen: sichtbar in Sidebar, Klick zeigt Hinweis
-  - [ ] Kompatibel mit Starlight-Sidebar und React-Router
+  - [x] Icons in Sidebar: gesperrt, freigeschaltet, abgeschlossen
+  - [x] Gesperrte Lektionen: sichtbar in Sidebar, Klick zeigt Hinweis
+  - [x] Kompatibel mit Starlight-Sidebar und React-Router
 
 ### REQ-033: ProgressBar Komponente (Sidebar)
 

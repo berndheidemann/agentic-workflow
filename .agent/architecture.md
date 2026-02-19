@@ -230,3 +230,25 @@
 - `total_exercises` muss bei Kursinhalt-Änderungen manuell aktualisiert werden
 - Wenn `total_exercises = 0`: kein Fortschrittsbalken (Division-by-Zero-Schutz)
 - Gast-Modus: kein API-Call, kein Balken — explizit gewollt (AK: "Nach Login")
+
+---
+
+## ADR-012: SidebarUnlock — Prop-basierte Komponente + DOM-Injection für Starlight (2026-02-19, REQ-032)
+
+**Kontext:** REQ-032 fordert drei Status-Icons (gesperrt/freigeschaltet/abgeschlossen) in der Sidebar. Starlight rendert die linke Sidebar als server-seitiges Astro-HTML; direkte JSX-Manipulation ist nicht möglich. Der "abgeschlossen"-Zustand erfordert Progress-Daten, die nicht im Unlock-Modul liegen.
+
+**Entscheidung:**
+- `SidebarUnlock` im Shared-Package ist **prop-basiert**: nimmt `status: 'locked' | 'unlocked' | 'completed'` als Prop, rendert Icon + Verhalten. Bestimmt Status nicht selbst.
+- Für **Starlight-Sites**: `SidebarUnlockInjector` (React Island) liest `useUnlock()` + lokalen Progress-Store, findet Sidebar-Links via `nav[aria-label] a[href]` und injiziert Icons + Handler per DOM-Manipulation.
+- Für **React-Router/SPA-Sites**: `SidebarUnlock` wird direkt als JSX verwendet.
+- Starlight-Sidebar-Override via `Sidebar.astro` der Default-Sidebar + `<SidebarUnlockInjector client:load />` rendert.
+
+**Begründung:**
+- Prop-basiert: Entkoppelt Unlock-Logik von Progress-Logik. Shared-Package hat keine Abhängigkeit auf site-spezifische Stores.
+- DOM-Injection: Vermeidet Copy-Paste von Starlight-Internals. Zukunftssicher bei Starlight-Updates.
+- Selektor `nav[aria-label] a[href]` ist semantisch stabil (nicht auf Starlight-CSS-Klassen angewiesen).
+
+**Konsequenzen:**
+- Consumer muss `status` selbst bestimmen (leicht erweiterbar, aber mehr Boilerplate beim Aufrufer)
+- DOM-Injection ist fragil bei Starlight-HTML-Struktur-Änderungen (Mitigation: semantischer Selektor)
+- MutationObserver kann bei Bedarf für ViewTransitions nachgerüstet werden

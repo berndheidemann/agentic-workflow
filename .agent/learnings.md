@@ -273,3 +273,21 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 - **Richtig:** `import * as matchers from 'vitest-axe/matchers'; expect.extend(matchers);`
 - Begründung: `toHaveNoViolations` ist eine Funktion, `expect.extend()` braucht aber ein Objekt mit Matcher-Funktionen als Values.
 - Symptom: "Invalid Chai property: toHaveNoViolations" trotz korrekt installiertem Paket.
+
+### 2026-02-19 — Starlight-Sidebar DOM-Selektoren
+
+- Starlight rendert alle linken Sidebar-Links unter `nav[aria-label] a[href]` — dieser Selektor findet alle 40 Links (ohne Starlight-Klassen-Abhängigkeit).
+- Die Starlight-Sidebar-Struktur: `nav > ul > li > details > ul > li > a`. Kein festes Klassen-Attribut, daher Selektor auf `nav[aria-label]` abgestützt.
+- `Sidebar.astro`-Override (für linke Nav) und `PageSidebar.astro`-Override (für rechte Sidebar) können unabhängig koexistieren.
+
+### 2026-02-19 — Shared Package Test-Environment
+
+- Tests im Shared-Package laufen in `node`-Environment (vitest.config.ts `environment: 'node'`).
+- Tests die React Testing Library / DOM-APIs brauchen: `// @vitest-environment jsdom` + `import '@testing-library/jest-dom'` am Anfang der Datei.
+- Ohne `@testing-library/jest-dom` sind Matcher wie `toBeInTheDocument()`, `toHaveClass()`, `toHaveAttribute()` nicht verfügbar.
+
+### 2026-02-19 — Pre-existierende AP1-Hydration-Fehler
+
+- `DragDropExercise`, `SzenarioEntscheidung`, `SicherheitskonzeptUebung` haben Hydration-Fehler durch randomisierte Optionen-Reihenfolge.
+- Diese Fehler existieren vor REQ-032 und sind keine Regression. React erholt sich automatisch davon (re-hydration).
+- Nicht auf REQ-Scope ausweiten — separate Aufgabe wenn überhaupt nötig.
