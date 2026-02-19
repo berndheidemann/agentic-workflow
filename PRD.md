@@ -258,15 +258,15 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-021: Klassen-Verwaltung
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P0
 - **Größe:** M
 - **Abhängig von:** REQ-003, REQ-020
 - **Akzeptanzkriterien:**
-  - [ ] Klasse erstellen: Name + Schuljahr → generierter 6-stelliger Code
-  - [ ] Klassen-Liste: Name, Code, Schüler-Anzahl
-  - [ ] Klassen-Code anzeigen (zum Teilen mit Schülern)
-  - [ ] Schüler-Liste pro Klasse
+  - [x] Klasse erstellen: Name + Schuljahr → generierter 6-stelliger Code
+  - [x] Klassen-Liste: Name, Code, Schüler-Anzahl
+  - [x] Klassen-Code anzeigen (zum Teilen mit Schülern)
+  - [x] Schüler-Liste pro Klasse
 
 ### REQ-022: Lehrer-Account erstellen (Backend)
 
