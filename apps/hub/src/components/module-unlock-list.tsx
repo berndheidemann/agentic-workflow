@@ -23,6 +23,7 @@ const STATUS_STYLES = {
     textColor: 'text-green-700',
     buttonLabel: 'Sperren',
     buttonStyle: 'bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500',
+    isUnlocked: true,
   },
   locked: {
     bg: 'bg-red-50 border-red-200',
@@ -31,6 +32,16 @@ const STATUS_STYLES = {
     textColor: 'text-red-700',
     buttonLabel: 'Freischalten',
     buttonStyle: 'bg-green-100 text-green-700 hover:bg-green-200 focus:ring-green-500',
+    isUnlocked: false,
+  },
+  completed: {
+    bg: 'bg-blue-50 border-blue-200',
+    icon: '✅',
+    label: 'Abgeschlossen',
+    textColor: 'text-blue-700',
+    buttonLabel: 'Sperren',
+    buttonStyle: 'bg-red-100 text-red-700 hover:bg-red-200 focus:ring-red-500',
+    isUnlocked: true,
   },
 } as const;
 
@@ -124,8 +135,8 @@ export function ModuleUnlockList({
                 type="button"
                 onClick={() => onToggle(mod.moduleId)}
                 disabled={isSaving}
-                aria-label={`Modul "${moduleName}" ${mod.status === 'unlocked' ? 'sperren' : 'freischalten'}`}
-                aria-pressed={mod.status === 'unlocked'}
+                aria-label={`Modul "${moduleName}" ${style.isUnlocked ? 'sperren' : 'freischalten'}`}
+                aria-pressed={style.isUnlocked}
                 className={`px-3 py-1.5 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${style.buttonStyle}`}
               >
                 {style.buttonLabel}

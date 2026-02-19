@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@lernplattform/shared';
-import type { CourseUnlock } from '@lernplattform/shared';
+import type { CourseUnlock, User, Progress } from '@lernplattform/shared';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type ModuleStatus = 'unlocked' | 'locked';
+export type ModuleStatus = 'unlocked' | 'locked' | 'completed';
 
 export interface ModuleUnlockState {
   moduleId: string;
@@ -21,6 +21,17 @@ export interface UseModuleUnlocksReturn {
   unlockUpTo: (moduleId: string, allModuleIds: string[]) => Promise<void>;
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if a progress lesson belongs to the given module.
+ * lesson is the full path after the course segment (e.g. "wirtschaft/lektion-1").
+ * moduleId is the first segment (e.g. "wirtschaft").
+ */
+function lessonBelongsToModule(lesson: string, moduleId: string): boolean {
+  return lesson === moduleId || lesson.startsWith(moduleId + '/');
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 /**
@@ -29,6 +40,12 @@ export interface UseModuleUnlocksReturn {
  *
  * Default behavior: no records = all unlocked.
  * Once a teacher creates ANY lock for a course+class, all modules get explicit records.
+ *
+ * Status derivation:
+ *   - 'locked':    unlock record exists with is_unlocked = false
+ *   - 'completed': module is unlocked AND at least one student in the class has a
+ *                  completed progress entry for this module
+ *   - 'unlocked':  module is unlocked, no completed progress yet
  */
 export function useModuleUnlocks(
   classId: string | null,
@@ -37,14 +54,16 @@ export function useModuleUnlocks(
 ): UseModuleUnlocksReturn {
   const { pb, user } = useAuth();
   const [records, setRecords] = useState<CourseUnlock[]>([]);
+  const [completedModules, setCompletedModules] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load existing unlock records
+  // Load unlock records + progress data in parallel
   useEffect(() => {
     if (!classId || !course) {
       setRecords([]);
+      setCompletedModules(new Set());
       setIsLoading(false);
       setError(null);
       return;
@@ -56,15 +75,46 @@ export function useModuleUnlocks(
       setIsLoading(true);
       setError(null);
       try {
-        const result = await pb.collection('course_unlocks').getFullList<CourseUnlock>({
-          filter: `class_id = "${classId}" && course = "${course}" && user_id = ""`,
-        });
-        if (!stale) setRecords(result);
+        // Run all three queries in parallel
+        const [unlockRecords, students, progressRecords] = await Promise.all([
+          pb.collection('course_unlocks').getFullList<CourseUnlock>({
+            filter: `class_id = "${classId}" && course = "${course}" && user_id = ""`,
+          }),
+          pb.collection('users').getFullList<User>({
+            filter: `class_id = "${classId}"`,
+            fields: 'id',
+          }),
+          pb.collection('progress').getFullList<Progress>({
+            filter: `course = "${course}" && status = "completed"`,
+            fields: 'lesson,user_id',
+          }),
+        ]);
+
+        if (stale) return;
+
+        // Build set of student IDs for this class
+        const studentIds = new Set(students.map((s) => s.id));
+
+        // Find which modules have at least one completed entry from a class student
+        const completed = new Set<string>();
+        for (const p of progressRecords) {
+          if (!studentIds.has(p.user_id)) continue;
+          for (const moduleId of moduleIds) {
+            if (lessonBelongsToModule(p.lesson, moduleId)) {
+              completed.add(moduleId);
+              break;
+            }
+          }
+        }
+
+        setRecords(unlockRecords);
+        setCompletedModules(completed);
       } catch (err) {
         if (stale) return;
         const message = err instanceof Error ? err.message : 'Unbekannter Fehler';
         setError(`Freischaltungsdaten konnten nicht geladen werden: ${message}`);
         setRecords([]);
+        setCompletedModules(new Set());
       } finally {
         if (!stale) setIsLoading(false);
       }
@@ -72,20 +122,23 @@ export function useModuleUnlocks(
 
     load();
     return () => { stale = true; };
-  }, [pb, classId, course]);
+  }, [pb, classId, course, moduleIds]);
 
-  // Derive module states from records (only when both classId and course are selected)
+  // Derive module states from records + completed progress
   const modules: ModuleUnlockState[] = (!classId || !course) ? [] : moduleIds.map((moduleId) => {
     const record = records.find((r) => r.module === moduleId);
-    if (!record) {
-      // No record = default unlocked
-      return { moduleId, status: 'unlocked' as ModuleStatus, recordId: null };
+    const isLocked = record ? !record.is_unlocked : false;
+
+    if (isLocked) {
+      return { moduleId, status: 'locked' as ModuleStatus, recordId: record!.id };
     }
-    return {
-      moduleId,
-      status: record.is_unlocked ? 'unlocked' : 'locked',
-      recordId: record.id,
-    };
+
+    // Module is unlocked — check if any student has completed work here
+    if (completedModules.has(moduleId)) {
+      return { moduleId, status: 'completed' as ModuleStatus, recordId: record?.id ?? null };
+    }
+
+    return { moduleId, status: 'unlocked' as ModuleStatus, recordId: record?.id ?? null };
   });
 
   // Ensure all modules have explicit records (create missing ones)

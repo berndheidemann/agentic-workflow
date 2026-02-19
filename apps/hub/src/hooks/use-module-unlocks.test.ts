@@ -53,6 +53,22 @@ function makeUnlockRecord(overrides: Partial<CourseUnlock> = {}): CourseUnlock {
   };
 }
 
+// Helper: mock 3 parallel getFullList calls (unlock records, users, progress)
+function mockParallelFetch(
+  unlockRecords: CourseUnlock[],
+  studentIds: string[],
+  progressRecords: Array<{ lesson: string; user_id: string }>,
+) {
+  // All three calls happen in parallel via Promise.all — mockGetFullList gets called 3×
+  let callCount = 0;
+  mockGetFullList.mockImplementation(async () => {
+    callCount++;
+    if (callCount === 1) return unlockRecords;
+    if (callCount === 2) return studentIds.map((id) => ({ id }));
+    return progressRecords;
+  });
+}
+
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('useModuleUnlocks', () => {
@@ -75,7 +91,7 @@ describe('useModuleUnlocks', () => {
   });
 
   it('default state: all modules unlocked when no records exist', async () => {
-    mockGetFullList.mockResolvedValueOnce([]);
+    mockParallelFetch([], [], []);
 
     const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -85,11 +101,15 @@ describe('useModuleUnlocks', () => {
     expect(result.current.modules.every((m) => m.recordId === null)).toBe(true);
   });
 
-  it('maps existing records to module states', async () => {
-    mockGetFullList.mockResolvedValueOnce([
-      makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: true }),
-      makeUnlockRecord({ id: 'r2', module: 'modul-2', is_unlocked: false }),
-    ]);
+  it('maps existing records to module states (unlocked/locked)', async () => {
+    mockParallelFetch(
+      [
+        makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: true }),
+        makeUnlockRecord({ id: 'r2', module: 'modul-2', is_unlocked: false }),
+      ],
+      [],
+      [],
+    );
 
     const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -108,12 +128,87 @@ describe('useModuleUnlocks', () => {
     expect(result.current.error).toContain('Netzwerkfehler');
   });
 
-  it('toggleModule creates missing records and toggles', async () => {
-    mockGetFullList.mockResolvedValueOnce([
-      makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: true }),
-    ]);
+  // ─── completed state tests ────────────────────────────────────────────────
 
-    // When toggling modul-1 (unlocked → locked), ensureAllRecords creates missing records first
+  it('shows completed status when unlocked module has progress from class student', async () => {
+    mockParallelFetch(
+      [makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: true })],
+      ['student-1'],
+      [{ lesson: 'modul-1/lektion-1', user_id: 'student-1' }],
+    );
+
+    const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.modules[0].status).toBe('completed');
+  });
+
+  it('shows completed when lesson equals moduleId exactly', async () => {
+    mockParallelFetch(
+      [],
+      ['student-1'],
+      [{ lesson: 'modul-2', user_id: 'student-1' }],
+    );
+
+    const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.modules[1].status).toBe('completed');
+  });
+
+  it('shows unlocked (not completed) when progress belongs to student outside the class', async () => {
+    mockParallelFetch(
+      [],
+      ['student-1'],
+      [{ lesson: 'modul-1/lektion-1', user_id: 'other-student' }], // not in class
+    );
+
+    const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.modules[0].status).toBe('unlocked');
+  });
+
+  it('locked status takes priority over completed when module has progress but is locked', async () => {
+    mockParallelFetch(
+      [makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: false })],
+      ['student-1'],
+      [{ lesson: 'modul-1/lektion-1', user_id: 'student-1' }],
+    );
+
+    const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Locked takes priority — even if there's progress
+    expect(result.current.modules[0].status).toBe('locked');
+  });
+
+  it('completed is set only for the module matching the lesson prefix', async () => {
+    mockParallelFetch(
+      [],
+      ['student-1'],
+      [{ lesson: 'modul-1/lektion-1', user_id: 'student-1' }],
+    );
+
+    const { result } = renderHook(() => useModuleUnlocks('cls-1', 'ap1', MODULE_IDS), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.modules[0].status).toBe('completed'); // modul-1 → has progress
+    expect(result.current.modules[1].status).toBe('unlocked'); // modul-2 → no progress
+    expect(result.current.modules[2].status).toBe('unlocked'); // modul-3 → no progress
+  });
+
+  // ─── toggle tests ─────────────────────────────────────────────────────────
+
+  it('toggleModule creates missing records and toggles', async () => {
+    // First load: 3 parallel calls
+    mockParallelFetch(
+      [makeUnlockRecord({ id: 'r1', module: 'modul-1', is_unlocked: true })],
+      [],
+      [],
+    );
+
+    // When toggling, ensureAllRecords creates missing records then update is called
     mockCreate.mockImplementation(async (data: Record<string, unknown>) => ({
       ...makeUnlockRecord({ module: data.module as string, is_unlocked: data.is_unlocked as boolean }),
       id: `new-${data.module}`,
@@ -140,7 +235,7 @@ describe('useModuleUnlocks', () => {
       makeUnlockRecord({ id: 'r2', module: 'modul-2', is_unlocked: false }),
       makeUnlockRecord({ id: 'r3', module: 'modul-3', is_unlocked: false }),
     ];
-    mockGetFullList.mockResolvedValueOnce(records);
+    mockParallelFetch(records, [], []);
     mockCreate.mockImplementation(async () => ({}));
     mockUpdate.mockImplementation(async (id: string, data: Record<string, unknown>) => ({
       ...records.find((r) => r.id === id),

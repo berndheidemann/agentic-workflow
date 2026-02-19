@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ModuleUnlockList } from './module-unlock-list';
 import type { ModuleConfig } from '../config/sites';
-import type { ModuleUnlockState } from '../hooks/use-module-unlocks';
+import type { ModuleUnlockState, ModuleStatus } from '../hooks/use-module-unlocks';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -13,7 +13,7 @@ const moduleConfigs: ModuleConfig[] = [
   { id: 'modul-3', name: 'Praxis', sortOrder: 3 },
 ];
 
-function makeModules(statuses: Array<'unlocked' | 'locked'>): ModuleUnlockState[] {
+function makeModules(statuses: ModuleStatus[]): ModuleUnlockState[] {
   return statuses.map((status, i) => ({
     moduleId: `modul-${i + 1}`,
     status,
@@ -204,5 +204,78 @@ describe('ModuleUnlockList', () => {
     const lockBtn = screen.getByRole('button', { name: /Modul "Vertiefung" freischalten/i });
     expect(unlockBtn).toHaveAttribute('aria-pressed', 'true');
     expect(lockBtn).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  // ─── completed state tests ────────────────────────────────────────────────
+
+  it('zeigt "Abgeschlossen"-Status korrekt an', () => {
+    const modules = makeModules(['completed']);
+    render(
+      <ModuleUnlockList
+        modules={modules}
+        moduleConfigs={moduleConfigs}
+        isSaving={false}
+        isLoading={false}
+        error={null}
+        onToggle={vi.fn()}
+        onUnlockUpTo={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('(Abgeschlossen)')).toBeInTheDocument();
+  });
+
+  it('zeigt "Sperren"-Button bei completed-Modul', () => {
+    const modules = makeModules(['completed']);
+    render(
+      <ModuleUnlockList
+        modules={modules}
+        moduleConfigs={moduleConfigs}
+        isSaving={false}
+        isLoading={false}
+        error={null}
+        onToggle={vi.fn()}
+        onUnlockUpTo={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /Modul "Grundlagen" sperren/i })).toBeInTheDocument();
+  });
+
+  it('aria-pressed ist true fuer completed-Modul (weil freigeschaltet)', () => {
+    const modules = makeModules(['completed']);
+    render(
+      <ModuleUnlockList
+        modules={modules}
+        moduleConfigs={moduleConfigs}
+        isSaving={false}
+        isLoading={false}
+        error={null}
+        onToggle={vi.fn()}
+        onUnlockUpTo={vi.fn()}
+      />,
+    );
+
+    const btn = screen.getByRole('button', { name: /Modul "Grundlagen" sperren/i });
+    expect(btn).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('zeigt alle drei Zustaende gleichzeitig sichtbar', () => {
+    const modules = makeModules(['unlocked', 'locked', 'completed']);
+    render(
+      <ModuleUnlockList
+        modules={modules}
+        moduleConfigs={moduleConfigs}
+        isSaving={false}
+        isLoading={false}
+        error={null}
+        onToggle={vi.fn()}
+        onUnlockUpTo={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('(Freigeschaltet)')).toBeInTheDocument();
+    expect(screen.getByText('(Gesperrt)')).toBeInTheDocument();
+    expect(screen.getByText('(Abgeschlossen)')).toBeInTheDocument();
   });
 });

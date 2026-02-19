@@ -25,6 +25,7 @@ export default [
         clearTimeout: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLFormElement: 'readonly',
+        URLSearchParams: 'readonly',
         React: 'readonly',
       },
     },
