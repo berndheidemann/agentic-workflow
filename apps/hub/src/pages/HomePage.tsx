@@ -3,14 +3,23 @@ import { useSites } from '../config/sites';
 import { CourseGrid } from '../components/course-grid';
 import { useCourseProgress } from '../hooks/use-course-progress';
 import { useManifests } from '../hooks/use-manifests';
+import { useCourseVisibility } from '../hooks/use-course-visibility';
 import { useAuth, LoginBanner } from '@lernplattform/shared';
 import { ProfileSection } from '../components/profile-section';
 
 function HomePage() {
   const { sites, isLoading } = useSites();
   const { isLoggedIn } = useAuth();
+  const { visibleCourses } = useCourseVisibility();
   const { manifests } = useManifests(sites);
-  const { progress } = useCourseProgress(isLoggedIn ? sites : [], manifests);
+
+  // Filter courses for logged-in students based on class unlock records.
+  // Guests and teachers (visibleCourses === null) see all courses.
+  const visibleSites = visibleCourses
+    ? sites.filter((site) => visibleCourses.has(site.slug))
+    : sites;
+
+  const { progress } = useCourseProgress(isLoggedIn ? visibleSites : [], manifests);
 
   // Sum completed and total exercises across all courses for the profile section
   let totalCompleted = 0;
@@ -29,7 +38,7 @@ function HomePage() {
         </header>
         <ProfileSection totalCompleted={totalCompleted} totalExercises={totalExercises} />
         <LoginBanner loginHref="/login" />
-        <CourseGrid sites={sites} isLoading={isLoading} courseProgress={progress} />
+        <CourseGrid sites={visibleSites} isLoading={isLoading} courseProgress={progress} />
         <footer className="mt-12 pt-6 border-t border-gray-200 text-center text-sm text-gray-400">
           <Link
             to="/datenschutz"

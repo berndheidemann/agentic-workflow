@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthContext } from '@lernplattform/shared';
 import type { AuthContextValue } from '@lernplattform/shared';
@@ -9,11 +9,15 @@ import { getActiveSites } from '../config/sites';
 
 const mockGetFullList = vi.fn().mockResolvedValue([]);
 
-function makeAuthContext(isLoggedIn = false): AuthContextValue {
+function makeAuthContext(
+  isLoggedIn = false,
+  role: 'student' | 'teacher' = 'student',
+  classId: string | null = null,
+): AuthContextValue {
   return {
     isLoggedIn,
     user: isLoggedIn
-      ? { id: 'u1', username: 'schüler', email: '', role: 'student', classId: null, displayName: '', verified: true }
+      ? { id: 'u1', username: 'schüler', email: '', role, classId, displayName: '', verified: true }
       : null,
     token: isLoggedIn ? 'tok' : null,
     isLoading: false,
@@ -26,9 +30,13 @@ function makeAuthContext(isLoggedIn = false): AuthContextValue {
   };
 }
 
-function renderWithRouter(isLoggedIn = false) {
+function renderWithRouter(
+  isLoggedIn = false,
+  role: 'student' | 'teacher' = 'student',
+  classId: string | null = null,
+) {
   return render(
-    <AuthContext.Provider value={makeAuthContext(isLoggedIn)}>
+    <AuthContext.Provider value={makeAuthContext(isLoggedIn, role, classId)}>
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>
@@ -37,6 +45,11 @@ function renderWithRouter(isLoggedIn = false) {
 }
 
 describe('HomePage', () => {
+  beforeEach(() => {
+    mockGetFullList.mockReset();
+    mockGetFullList.mockResolvedValue([]);
+  });
+
   it('zeigt die Hauptüberschrift', () => {
     renderWithRouter();
     expect(screen.getByRole('heading', { name: 'Lernplattform', level: 1 })).toBeInTheDocument();
@@ -101,5 +114,64 @@ describe('HomePage', () => {
   it('zeigt keinen LoginBanner wenn eingeloggt', () => {
     renderWithRouter(true);
     expect(screen.queryByRole('complementary', { name: 'Anmelde-Hinweis' })).not.toBeInTheDocument();
+  });
+
+  // ─── Kurs-Filterung nach Klassen-Zuordnung ──────────────────────────────────
+
+  it('zeigt alle 6 Kurse im Gast-Modus (kein API-Call)', () => {
+    renderWithRouter(false);
+    const activeSites = getActiveSites();
+    for (const site of activeSites) {
+      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toBeInTheDocument();
+    }
+    expect(mockGetFullList).not.toHaveBeenCalled();
+  });
+
+  it('zeigt alle 6 Kurse für Lehrer (sieht immer alle Kurse)', () => {
+    renderWithRouter(true, 'teacher', 'class-123');
+    const activeSites = getActiveSites();
+    for (const site of activeSites) {
+      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toBeInTheDocument();
+    }
+  });
+
+  it('zeigt alle 6 Kurse für Schüler ohne Klasse (classId=null)', () => {
+    renderWithRouter(true, 'student', null);
+    const activeSites = getActiveSites();
+    for (const site of activeSites) {
+      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toBeInTheDocument();
+    }
+  });
+
+  it('zeigt alle 6 Kurse wenn keine Unlock-Records für die Klasse existieren (Default-offen)', async () => {
+    mockGetFullList.mockResolvedValue([]); // no records → default-open
+    renderWithRouter(true, 'student', 'class-123');
+    await waitFor(() => expect(mockGetFullList).toHaveBeenCalled());
+    const activeSites = getActiveSites();
+    for (const site of activeSites) {
+      expect(screen.getByRole('link', { name: new RegExp(site.name, 'i') })).toBeInTheDocument();
+    }
+  });
+
+  it('zeigt nur freigeschaltete Kurse für Schüler mit Klasse und Records', async () => {
+    mockGetFullList.mockResolvedValue([
+      { course: 'ap1' },
+      { course: 'pandas' },
+      { course: 'zuul' },
+    ]);
+    renderWithRouter(true, 'student', 'class-123');
+    await waitFor(() => expect(mockGetFullList).toHaveBeenCalled());
+
+    // Visible courses
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: /AP1-Trainer/i })).toBeInTheDocument();
+    });
+    expect(screen.getByRole('link', { name: /Pandas/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /World of Zuul/i })).toBeInTheDocument();
+
+    // Hidden courses
+    expect(screen.queryByRole('link', { name: /REST & NoSQL/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /NumPy/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /UML/i })).not.toBeInTheDocument();
   });
 });
