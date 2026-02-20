@@ -331,12 +331,13 @@
     ]
   },
   "REQ-060": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "size": "M",
     "deps": [
       "REQ-051"
-    ]
+    ],
+    "notes": "pandas + REST/NoSQL SharedIntegration, 13+39 Tests grün, Builds 45+10 Seiten"
   },
   "REQ-061": {
     "status": "open",
