@@ -312,7 +312,7 @@
     "notes": "Validator: Implementierung vollständig (Code, Tests, Build grün), aber Iteration am Turn-Limit abgebrochen. Sonnet muss: 1) Smoke-Test gegen Nginx/Docker durchführen, 2) PRD.md Checkboxen setzen, 3) Status auf done setzen."
   },
   "REQ-052": {
-    "status": "open",
+    "status": "in_progress",
     "priority": "P1",
     "size": "M",
     "deps": [

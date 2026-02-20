@@ -484,20 +484,20 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-052: World of Zuul — Docusaurus → Astro/Starlight Migration
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-001
 - **Hinweis:** Quell-Repo liegt in `sites/lf05_worldOfZuul/` (Docusaurus). Ziel: Astro/Starlight-Projekt wie AP1/pandas/REST.
 - **Akzeptanzkriterien:**
-  - [ ] Neues Astro/Starlight-Projekt mit `base: '/zuul'`
-  - [ ] Alle 25 Markdown-Seiten migriert (Arbeitsblätter + Infoblätter)
-  - [ ] Sidebar-Struktur aus `sidebars.js` in Starlight-Config übertragen
-  - [ ] Alle 22 React-Komponenten übernommen und funktionsfähig
-  - [ ] `@site/src/components/...` Imports auf Starlight-kompatible Pfade umgestellt
-  - [ ] Admonitions angepasst (Docusaurus → Starlight Syntax)
-  - [ ] Build erfolgreich mit Subpfad `/zuul/`
-  - [ ] Bisheriges localStorage-Progress-Tracking (`progress.js`) funktioniert weiterhin
+  - [x] Neues Astro/Starlight-Projekt mit `base: '/zuul'`
+  - [x] Alle 25 Markdown-Seiten migriert (Arbeitsblätter + Infoblätter)
+  - [x] Sidebar-Struktur aus `sidebars.js` in Starlight-Config übertragen
+  - [x] Alle 22 React-Komponenten übernommen und funktionsfähig
+  - [x] `@site/src/components/...` Imports auf Starlight-kompatible Pfade umgestellt
+  - [x] Admonitions angepasst (Docusaurus → Starlight Syntax)
+  - [x] Build erfolgreich mit Subpfad `/zuul/`
+  - [x] Bisheriges localStorage-Progress-Tracking (`progress.js`) funktioniert weiterhin
 
 ### REQ-053: World of Zuul — Shared-Integration
 

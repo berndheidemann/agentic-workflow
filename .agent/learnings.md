@@ -330,3 +330,52 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 **Teststand:** 297 Hub + 236 Shared + 76 AP1-Trainer = 609 Tests. Build + Lint sauber.
 
 **Beobachtung:** Log-Zusammenfassungen brechen bei 3/4 Iterationen ab. Kein Sonnet-Problem, aber technisches Monitoring-Defizit.
+
+### 2026-02-20 — Sandbox-Testbarkeit: Nur AP1-Trainer ist gebaut
+
+**Zustand:** Von 6 Sites hat nur `AP1-Trainer` installierte `node_modules` und eine fertige `dist/`. Die anderen 5 Sites (pandas-lernen, World of Zuul, NumPy, UML, REST/NoSQL) haben weder Dependencies noch Build-Output.
+
+**Konsequenz für Tests:** Smoke-Tests und E2E-Tests die Kurs-Navigation, Freischaltung oder Progress-Tracking gegen echte Sites testen müssen aktuell **AP1-Trainer als Pilot-Site** verwenden. Erst wenn weitere Sites gebaut werden, können Multi-Site-Flows getestet werden.
+
+**Regel:** Bei neuen Features (Unlock, Manifest, Kurs-Filterung) immer AP1-Trainer als erste Test-Site verwenden. Kein Feature als `done` markieren das gegen nicht-existierende Sites getestet wurde.
+
+### 2026-02-20 — Kurs-Filterung (REQ-039) ist geplantes Feature, kein Bug
+
+**Ist-Zustand:** Das Unlock-System (`useUnlock`) arbeitet ausschließlich auf **Modul-Ebene** innerhalb von Kursen. Kurs-Level-Filterung auf der Landing Page existiert nicht. Alle eingeloggten User sehen alle 6 Kurse.
+
+**Login-Page-Beschreibung ist aspirational:** Der Hinweis "sieht nur AP1, Pandas, Zuul" auf der Login-Seite beschreibt das Zielverhalten, nicht den Ist-Zustand. Das sollte bis zur Implementierung von REQ-039 angepasst oder als "geplant" markiert werden.
+
+### 2026-02-20 — pandas-lernen gebaut und unter /pandas/ verfügbar
+
+**Build:** `cd sites/pandas-lernen && npm install && npm run build` — 45 Seiten, ~10s Build-Zeit.
+
+**Base-Path-Fix:** `astro.config.mjs` hatte `base: 'pandas-lernen'` (GitHub-Pages-Default). Für die Lernplattform auf `base: 'pandas'` geändert, damit die Site unter `/pandas/` statt `/pandas-lernen/` erreichbar ist. **Alle Astro-Sites müssen ihren `base`-Wert auf den Lernplattform-Subpfad anpassen** wenn sie in den Stack integriert werden.
+
+**Static-Server:** `scripts/serve-sites.mjs` serviert gebaute Sites auf Port 8080 unter ihren Subpfaden — Ersatz für Nginx im Sandbox-Modus. Neue Sites werden dort eingetragen.
+
+**Gebaute Sites (Stand 2026-02-20):**
+
+| Site | dist/ vorhanden | Base-Path korrekt |
+|------|----------------|-------------------|
+| AP1-Trainer | ja | ja (`/ap1/`) |
+| pandas-lernen | ja | ja (`/pandas/`) — gefixt |
+| lf05_worldOfZuul | nein | unbekannt |
+| numpy-lernsituation | nein | unbekannt |
+| uml-site | nein | unbekannt |
+| rest_noSQL_datenformate | nein | unbekannt |
+
+**Regel:** Für Smoke-Tests und E2E-Tests AP1-Trainer und pandas-lernen als Pilot-Sites verwenden. `node scripts/serve-sites.mjs` starten um die Sites auf Port 8080 zu servieren.
+
+### 2026-02-20 — Vite-Proxy: vite.config.js hat Vorrang vor vite.config.ts
+
+**Problem:** `vite.config.ts` wurde auf `localhost` geändert, aber Vite las weiterhin `vite.config.js` (mit altem `pocketbase`-Hostname). Beide Dateien existieren parallel.
+
+**Regel:** Wenn `vite.config.js` UND `vite.config.ts` existieren, hat `.js` Vorrang. Immer BEIDE Dateien synchron halten oder die redundante Datei löschen.
+
+### 2026-02-20 — Astro/Starlight: stale Dist-Cache verursacht "slug not found" Fehler
+
+**Problem:** Zuul-Build schlug fehl mit `AstroUserError: The slug "arbeitsblaetter/00-vorbereitungen" does not exist` — obwohl die Datei korrekt vorhanden war. Der Fehler trat auf weil das alte `dist/`-Verzeichnis aus einem früheren Build mit anderer Konfiguration cached war.
+
+**Fix:** `rm -rf sites/zuul/dist/` vor dem Build. Nach sauberem Rebuild: alle 26 Seiten erfolgreich.
+
+**Regel:** Bei Astro "slug not found"-Fehlern die eindeutig auf vorhandene Dateien zeigen: zuerst `dist/` löschen und neu bauen, bevor tiefer debuggt wird.

@@ -1,15 +1,18 @@
 # Agent Context
 
-> 2026-02-20 | 39/44 done, 0 blocked, 0 in_progress, 5 open | REQ-040: Suspicious-Markierung im Dashboard
+> 2026-02-20 | 40/44 done, 0 blocked, 0 in_progress, 4 open | REQ-052: World of Zuul Migration
 
 ## Was zuletzt passiert ist
 
-**REQ-040 (Dashboard zeigt verdächtige Einträge):** Fertiggestellt.
-- `MatrixCell`-Interface um `suspicious?: boolean` erweitert
-- `useClassProgress`-Hook setzt `suspicious` aus `progress.suspicious`
-- `ProgressMatrix`: zeigt ⚠-Icon mit `title`-Tooltip bei `suspicious: true`
-- `CellDetailModal`: zeigt "Verdächtig"-Badge + `role="note"` mit Erklärung + "kein automatischer Block"
-- 12 neue Tests, gesamt 323 Tests grün
+**REQ-052 (World of Zuul — Docusaurus → Astro/Starlight Migration):** Crash Recovery — Implementierung war bereits vollständig vorhanden.
+- `sites/zuul/` Astro/Starlight-Projekt mit `base: '/zuul'` existierte bereits
+- 25 Markdown-Seiten migriert (13 Arbeitsblätter + 11 Infoblätter + Index = 26 Seiten)
+- 22 React-Komponenten übernommen (AbstractClassBuilder, ClassExtractionVisualizer etc.)
+- Sidebar-Struktur aus `sidebars.js` korrekt übertragen
+- localStorage-Progress-Tracking via `public/progress-script.js` (Starlight-kompatibel, gleicher Storage-Key)
+- Build-Problem durch stale Dist-Cache — `rm -rf dist/` + sauberer Rebuild → 26 Seiten OK
+- `scripts/serve-sites.mjs`: `/zuul/` Route eingetragen (war auskommentiert)
+- Smoke-Test bestanden: Site lädt, Checkboxen funktionieren, keine Console-Fehler
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -21,39 +24,34 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
 - `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner + SidebarUnlock + Prerequisite + Manifest
   - `manifest/types.ts` — CourseManifest, ManifestModule, ManifestLesson, ManifestExercise
-  - `manifest/index.ts` — validateManifest() + Re-Exports
   - SyncEngine: Offline-Detection, Auto-Reconnect, persistente Queue
 - `apps/hub`: Vite + React + TS + Tailwind + React Router (323 Tests)
-  - `use-manifests.ts` — fetcht course-manifest.json pro Site
-  - `use-manifest-columns.ts` — manifestToColumns(), manifestToModuleOptions()
-  - `use-course-progress.ts` — nutzt Manifest-totalExercises statt sites.json-Fallback
-  - `use-class-progress.ts` — Matrix-Spalten aus Manifest, MatrixCell mit `suspicious`-Flag
-  - `use-course-visibility.ts` — Kurs-Level-Filterung nach Klassen-Zuordnung (REQ-039)
-  - `progress-matrix.tsx` — ⚠-Icon mit Tooltip für suspicious Zellen
-  - `cell-detail-modal.tsx` — "Verdächtig"-Badge + note-Region mit Erklärung
+  - `use-class-progress.ts` (MatrixCell + suspicious-Flag), `use-course-visibility.ts`
+  - `progress-matrix.tsx`, `cell-detail-modal.tsx`
   - Dashboard/MatrixView: Manifest-basierte Modul-Filter und Spalten
-  - HomePage: useCourseVisibility → visibleSites → CourseGrid + useCourseProgress
-- `sites/AP1-Trainer`: Astro/Starlight (eigenes .git)
-  - `manifest-generator.ts` — Astro-Integration, generiert course-manifest.json beim Build
-  - Integration in `astro.config.mjs` aktiv
+- `sites/AP1-Trainer`: Astro/Starlight (eigenes .git), manifest-generator, SharedIntegration
+- `sites/pandas-lernen`: Astro/Starlight, gebaut, unter `/pandas/` erreichbar
+- `sites/zuul`: Astro/Starlight (FERTIG), base `/zuul`, 26 Seiten gebaut, Progress-Script vorhanden
+- `scripts/serve-sites.mjs`: serviert /ap1/, /pandas/, /zuul/ auf Port 8080
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
 - E2E: 32+ Playwright-Tests
 
 ## Nächste Prioritäten
 
 1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL) (dep: REQ-051 done)
-2. **REQ-052** (P1, M) — Benutzerprofil (dep: REQ-001 done)
+2. **REQ-053** (P1, M) — World of Zuul Shared-Integration (dep: REQ-052 → jetzt done)
+3. **REQ-061** (P1, M) — NumPy/UML-Sites integrieren (dep: REQ-051 done)
 
 ## Wichtige Architektur-Details
 
 - AP1-Trainer hat **eigenes `.git`-Repo** (`sites/AP1-Trainer/.git`) — Commits dort separat!
+- `sites/zuul/` ist KEIN eigenes git-Repo — Commits im Monorepo-Root
 - `sites.json` ist SSOT — bei neuer Site: 1 Eintrag + generate-nginx.sh ausführen
 - **Test-Ausführung:** `npm run test` (workspace-aware), nie `npx vitest run` im Root!
 - **Starlight v0.37+:** `Astro.locals.starlightRoute.entry.data` für Frontmatter (NICHT `Astro.props.entry`)
 - **PrerequisiteInjector:** `client:only="react"` (nicht `client:load`) — DOM-Zugriff im Funktionskörper
-- **Offline-Queue Storage-Key:** `lernplattform:progress-queue:{userId}` — user-spezifisch
-- **Manifest-URL:** `{basePath}course-manifest.json` — static file aus Build-Output
-- **useCourseVisibility:** filter `class_id = "{id}" && user_id = ""` — nur Klassen-Records (kein user_id)
+- **Zuul Build:** Bei Build-Fehler "slug not found" → stale cache. Fix: `rm -rf sites/zuul/dist/` dann rebuild.
+- **serve-sites.mjs:** Neue Sites hier als Route eintragen wenn dist/ gebaut
 
 ## Credentials
 
