@@ -379,3 +379,39 @@ Alle 3 bestanden Smoke-Tests via Playwright MCP. 266 Hub-Tests + 148 Shared-Test
 **Fix:** `rm -rf sites/zuul/dist/` vor dem Build. Nach sauberem Rebuild: alle 26 Seiten erfolgreich.
 
 **Regel:** Bei Astro "slug not found"-Fehlern die eindeutig auf vorhandene Dateien zeigen: zuerst `dist/` löschen und neu bauen, bevor tiefer debuggt wird.
+
+### 2026-02-20 — React-Versions-Konflikt in npm-Workspaces (Zuul Tests)
+
+- **Problem:** `@testing-library/react` wird im Root hoisted (React 18). Zuul hat React 19 lokal. Beim Test-Run werden verschiedene React-Instanzen gemischt → "Objects are not valid as React child"-Fehler.
+- **Fix:** `@testing-library/react` explizit als `devDependency` im Site-Package installieren. Dann nutzt Vitest die lokale Version (React 19).
+- **Alias-Ansatz funktioniert nicht** für CJS-Module in npm-Workspaces — nur lokale Installation hilft.
+- **Gilt für alle Sites** die eigene React-Version haben (zuul: React 19, Root: React 18).
+
+### 2026-02-20 — SharedIntegration Pattern für Zuul (ADR-016)
+
+- `sites/` ist im `.gitignore` — Site-Dateien werden nicht im Root-Repo committed (nur Artefakte wie context.md, status.json).
+- Zuul-Tests: `cd sites/zuul && npm run test` (eigene vitest.config.ts ohne @vitejs/plugin-react).
+- Checkbox-to-Event-Bridge: `progress-script.js` + `window.dispatchEvent(new CustomEvent('exercise-complete', { detail }))` im change-Handler funktioniert korrekt — Event wird tatsächlich gefeuert (via evaluate verifiziert).
+- `exercise-complete` Event-Format: `{ exerciseId: string, score: 0|1, maxScore: 1 }` — keine `courseSlug`/`topicSlug` nötig, `useProgress()` parsed URL selbst via `parseUrlToCoursePath()`.
+
+### 2026-02-20 — Validation 11: REQ-053 + REQ-060 validiert
+
+**PRD-Checkbox-Muster setzt sich fort:** REQ-053 hatte `status.json: done` aber PRD.md mit allen 6 Checkboxen unchecked. Exakt dasselbe Muster wie REQ-012 (Validation 1) und REQ-024 (Validation 4). Sonnet aktualisiert status.json zuverlässig, vergisst aber PRD-Checkboxen. Der Validator muss weiterhin bei jeder Validation alle done-REQs gegen PRD.md abgleichen.
+
+**serve-sites.mjs: REST/NoSQL auskommentiert.** Die `/rest/`-Route in `scripts/serve-sites.mjs` (Zeile 24) ist auskommentiert. Sonnet hat den Build korrekt durchgeführt (10 Seiten), aber vergessen die Route im Sandbox-Server einzukommentieren. Kein Code-Bug — nur Sandbox-Konfiguration. Bei nächster Iteration einkommentieren.
+
+**iter-007 und iter-008 ohne STATUS-Block:** Beide Iterationen haben das Turn-Limit erreicht ohne einen STATUS-Block zu produzieren. Das bestätigt das bekannte Muster aus Validation 6 (Turn-Limit → keine Finalisierung). Die Iterationen haben aber trotzdem produktive Arbeit geleistet — iter-007 hat REQ-053 umgesetzt, iter-008 hat den Checkpoint aufgegriffen.
+
+**Happy-Path-Only-Testing:** Sonnet testet primär den Golden Path. Negative Tests (falsche Credentials, Netzwerk-Fehler, ungültige Eingaben) werden selten geschrieben. Kein akuter Blocker, aber bei sicherheitskritischen Features (Auth, Registrierung) sollte der Validator explizit nach Negative Tests fragen.
+
+### 2026-02-20 — PocketBase Custom API Endpoints: routerAdd() vs. onRecordXRequest()
+
+Für kaskadierende DSGVO-Löschungen ist `routerAdd()` (Custom API Endpoint) besser geeignet als `onRecordXRequest()` Hooks, weil: (1) `app.delete()` innerhalb des Endpoints umgeht API-Rules und erlaubt Löschung trotz `deleteRule: null`; (2) die gesamte Operation läuft in einem HTTP-Request (quasi-atomar); (3) Auth-Validierung und Ownership-Check können serverseitig erzwungen werden ohne `deleteRule` zu öffnen. Pattern: `routerAdd("POST", "/api/resource/:id/action", handler)` + Client nutzt `pb.send(path, {method: "POST"})`.
+
+### 2026-02-20 — ESLint react-hooks/set-state-in-effect: setState-Reset in Dialogs
+
+Das ESLint-Plugin `eslint-plugin-react-hooks` (v5+) verbietet synchrone `setState`-Aufrufe in `useEffect`. Für Dialog-Komponenten die State zurücksetzen müssen wenn sie geöffnet werden: Statt `setState` im Effect → innere Komponente mit `key={String(isOpen)}` remounten lassen. Das setzt State automatisch zurück ohne Effect-Call. Pattern: `<DialogInner key={String(isOpen)} ... />`.
+
+### 2026-02-20 — jsdom HTMLDialogElement: showModal() setzt kein 'open'-Attribut
+
+In jsdom implementiert `HTMLDialogElement.showModal()` das native Verhalten nicht vollständig — das `open`-Attribut wird NICHT gesetzt, weshalb Dialog-Inhalte für ARIA-Queries unsichtbar sind. Fix in Tests: `HTMLDialogElement.prototype.showModal = vi.fn(function(this) { this.setAttribute('open', ''); })`. Wichtig für alle Tests die mit nativen `<dialog>`-Elementen und Testing Library interagieren.

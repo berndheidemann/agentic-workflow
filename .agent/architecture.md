@@ -301,3 +301,20 @@
 **Begründung:** Kein Schema-Änderung nötig — nutzt bestehende Daten. Konsistent mit Default-Offenheit (ADR-005). Separater Hook statt Erweiterung von `useUnlock`: unterschiedliches Zugriffsmuster (Bulk-Lookup vs. Lazy per Kurs), unterschiedlicher Scope (Landing Page vs. Site-intern). Graceful Degradation bei API-Fehler → alle Kurse sichtbar.
 
 **Konsequenzen:** Lehrer schalten Kurs-Sichtbarkeit implizit durch Modul-Freischaltung frei (mindestens ein Modul-Record = Kurs sichtbar). Bei API-Fehler: alle Kurse sichtbar (sicherer Fallback). Filter: `class_id = "{id}" && user_id = ""` (nur Klassen-Records, keine benutzer-spezifischen).
+
+---
+
+## ADR-019: Klassen-Archivierung via Custom API Endpoint (2026-02-20, REQ-075)
+
+**Kontext:** REQ-075 fordert kaskadierende Löschung: Alle Schüler-Accounts einer Klasse samt Progress-Daten und Unlock-Einträgen müssen gelöscht werden. Die bestehenden `deleteRule: null` auf `users`, `progress` und `course_unlocks` verhindern Client-seitige Löschungen. `cascadeDelete: false` auf allen Relations bedeutet: PocketBase löscht nicht automatisch.
+
+**Entscheidung:** Custom API Endpoint `POST /api/classes/:classId/archive` in `pb_hooks/archive-class.pb.js` via `routerAdd()`. Der Endpoint:
+1. Validiert Teacher-Auth und Ownership (`class.created_by === auth.id`)
+2. Setzt `class.is_active = false` (Klasse bleibt für Lehrer-Referenz)
+3. Löscht alle abhängigen Daten serverseitig via `app.delete()` (umgeht API-Rules)
+4. Reihenfolge: progress → course_unlocks (user-spezifisch) → users → course_unlocks (klassen-spezifisch)
+Client nutzt `pb.send('POST', ...)` über den `useArchiveClass` Hook.
+
+**Begründung:** `deleteRule` öffnen wäre ein Sicherheitsrisiko. Client-seitige Batch-Löschung wäre nicht atomar (Netzwerk-Abbruch = inkonsistenter Zustand). Custom Endpoint ermöglicht atomare serverseitige Logik mit vollständigem Fehler-Handling. `app.delete()` umgeht API-Rules bewusst — nur der validierte Endpoint hat Zugriff.
+
+**Konsequenzen:** Keine Änderung an bestehenden `deleteRule`s nötig. Kein `cascadeDelete`-Änderung nötig. Archivierte Klassen bleiben in der DB (Name, Schuljahr, created_by) — keine Referenz-Daten für Lehrer gehen verloren. Schüler-Accounts und alle zugehörigen Daten werden unwiderruflich gelöscht (DSGVO-Konformität). Registrierung in archivierte Klassen wird bereits durch bestehenden `user-validation.pb.js` Hook abgelehnt (`is_active = true` Check).

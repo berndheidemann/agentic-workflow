@@ -628,17 +628,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-075: Löschkonzept & Klasse archivieren
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-021, REQ-073
 - **Hinweis:** DSGVO-Pflicht: personenbezogene Daten müssen nach Wegfall des Zwecks gelöscht werden. Am Schuljahresende müssen Schüler-Daten löschbar sein.
 - **Akzeptanzkriterien:**
-  - [ ] Dashboard-Aktion "Klasse archivieren" für Lehrer
-  - [ ] Archivierung löscht: alle Schüler-Accounts der Klasse, deren Progress-Daten, Unlock-Einträge
-  - [ ] Sicherheitsabfrage vor Löschung ("Klasse FI24a mit 23 Schülern wirklich archivieren?")
-  - [ ] Klasse wird als `is_active: false` markiert, aber Name/Schuljahr bleiben für Lehrer-Referenz erhalten
-  - [ ] Löschung ist irreversibel — Hinweis im Dialog
+  - [x] Dashboard-Aktion "Klasse archivieren" für Lehrer
+  - [x] Archivierung löscht: alle Schüler-Accounts der Klasse, deren Progress-Daten, Unlock-Einträge
+  - [x] Sicherheitsabfrage vor Löschung ("Klasse FI24a mit 23 Schülern wirklich archivieren?")
+  - [x] Klasse wird als `is_active: false` markiert, aber Name/Schuljahr bleiben für Lehrer-Referenz erhalten
+  - [x] Löschung ist irreversibel — Hinweis im Dialog
 
 ---
 
