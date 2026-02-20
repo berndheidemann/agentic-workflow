@@ -414,17 +414,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-037: Kursstruktur-Manifest
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-009
 - **Hinweis:** Ohne Manifest kann das Dashboard die Matrix nicht vollständig aufbauen (es kennt nur Aufgaben mit existierenden Progress-Einträgen). Der Fortschrittsbalken kann "total" nicht berechnen.
 - **Akzeptanzkriterien:**
-  - [ ] Jede Site exportiert beim Build eine `course-manifest.json` mit: Kursname, Module (mit Titel), Lektionen (mit Titel), Aufgaben-IDs (mit Titel und Typ)
-  - [ ] Manifest-Format ist dokumentiert und einheitlich für Starlight- und React-SPA-Sites
-  - [ ] Dashboard (REQ-023a) liest Manifeste um die vollständige Matrix aufzubauen (inkl. Aufgaben ohne Progress-Einträge)
-  - [ ] Fortschrittsbalken (REQ-014, REQ-033) berechnen "total" aus dem Manifest
-  - [ ] Build-Script oder Plugin generiert das Manifest automatisch (kein manuelles Pflegen)
+  - [x] Jede Site exportiert beim Build eine `course-manifest.json` mit: Kursname, Module (mit Titel), Lektionen (mit Titel), Aufgaben-IDs (mit Titel und Typ)
+  - [x] Manifest-Format ist dokumentiert und einheitlich für Starlight- und React-SPA-Sites
+  - [x] Dashboard (REQ-023a) liest Manifeste um die vollständige Matrix aufzubauen (inkl. Aufgaben ohne Progress-Einträge)
+  - [x] Fortschrittsbalken (REQ-014, REQ-033) berechnen "total" aus dem Manifest
+  - [x] Build-Script oder Plugin generiert das Manifest automatisch (kein manuelles Pflegen)
 
 ---
 

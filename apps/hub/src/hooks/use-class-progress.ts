@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@lernplattform/shared';
-import type { Progress, User } from '@lernplattform/shared';
+import type { Progress, User, CourseManifest } from '@lernplattform/shared';
+import { manifestToColumns } from './use-manifest-columns';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,19 +49,26 @@ function cellKey(lesson: string, exercise: string): string {
  * Loads all progress data for a given class and course from PocketBase.
  * Returns a matrix of students (rows) × exercises (columns).
  *
- * Columns are derived from the union of all (lesson, exercise) combinations
- * found in progress records. Exercises not yet attempted by any student are
- * not shown (REQ-037 manifest will fill those gaps later).
+ * When a CourseManifest is provided, columns are derived from the manifest
+ * (all exercises in sidebar order, including unstarted ones). This is the
+ * REQ-037 behavior: every exercise is always visible in the matrix.
+ *
+ * Without a manifest, columns are derived from the union of progress records
+ * (backward-compatible fallback).
  */
 export function useClassProgress(
   classId: string | null,
-  course: string | null
+  course: string | null,
+  manifest?: CourseManifest | null
 ): UseClassProgressReturn {
   const { pb } = useAuth();
   const [columns, setColumns] = useState<MatrixColumn[]>([]);
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Stable manifest identity — only re-run when manifest changes by course
+  const manifestCourse = manifest?.course ?? null;
 
   useEffect(() => {
     if (!classId || !course) {
@@ -97,29 +105,35 @@ export function useClassProgress(
           progressIndex.set(key, p);
         }
 
-        // Derive columns from union of all (lesson, exercise) combos,
-        // filtered to students in this class
-        const studentIds = new Set(students.map((s) => s.id));
-        const columnSet = new Map<string, MatrixColumn>();
+        let sortedColumns: MatrixColumn[];
 
-        for (const p of progressRecords) {
-          if (!studentIds.has(p.user_id)) continue;
-          const key = cellKey(p.lesson, p.exercise);
-          if (!columnSet.has(key)) {
-            columnSet.set(key, {
-              lesson: p.lesson,
-              exercise: p.exercise,
-              label: `${p.lesson}/${p.exercise}`,
-            });
+        if (manifest && manifest.course === course) {
+          // REQ-037: Use manifest for complete column set (all exercises, manifest order)
+          sortedColumns = manifestToColumns(manifest);
+        } else {
+          // Fallback: derive columns from union of progress records
+          const studentIds = new Set(students.map((s) => s.id));
+          const columnSet = new Map<string, MatrixColumn>();
+
+          for (const p of progressRecords) {
+            if (!studentIds.has(p.user_id)) continue;
+            const key = cellKey(p.lesson, p.exercise);
+            if (!columnSet.has(key)) {
+              columnSet.set(key, {
+                lesson: p.lesson,
+                exercise: p.exercise,
+                label: `${p.lesson}/${p.exercise}`,
+              });
+            }
           }
-        }
 
-        // Sort columns: lesson alphabetically, then exercise alphabetically
-        const sortedColumns = Array.from(columnSet.values()).sort((a, b) => {
-          const lessonCmp = a.lesson.localeCompare(b.lesson);
-          if (lessonCmp !== 0) return lessonCmp;
-          return a.exercise.localeCompare(b.exercise);
-        });
+          // Sort columns: lesson alphabetically, then exercise alphabetically
+          sortedColumns = Array.from(columnSet.values()).sort((a, b) => {
+            const lessonCmp = a.lesson.localeCompare(b.lesson);
+            if (lessonCmp !== 0) return lessonCmp;
+            return a.exercise.localeCompare(b.exercise);
+          });
+        }
 
         // Build rows
         const matrixRows: MatrixRow[] = students.map((student) => {
@@ -152,7 +166,8 @@ export function useClassProgress(
     return () => {
       stale = true;
     };
-  }, [pb, classId, course]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pb, classId, course, manifestCourse]);
 
   return { columns, rows, isLoading, error };
 }

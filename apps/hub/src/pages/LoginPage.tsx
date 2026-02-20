@@ -58,7 +58,7 @@ function mapLoginError(error: unknown): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 function LoginPage() {
-  const { login } = useAuth();
+  const { login, pb } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState<FormState>({ username: '', pin: '' });
@@ -88,7 +88,8 @@ function LoginPage() {
 
     try {
       await login(form.username.trim(), form.pin);
-      navigate('/');
+      const role = pb.authStore?.record?.['role'];
+      navigate(role === 'teacher' ? '/dashboard/' : '/');
     } catch (err) {
       setErrors({ general: mapLoginError(err) });
     } finally {
@@ -188,6 +189,28 @@ function LoginPage() {
           >
             Noch kein Konto? Jetzt registrieren
           </Link>
+        </div>
+
+        {/* Testzugangsdaten */}
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <h2 className="text-sm font-semibold text-amber-800 mb-2">Testzugangsdaten</h2>
+          <div className="space-y-3 text-xs text-amber-700">
+            <div>
+              <span className="font-medium">Lehrer:</span>{' '}
+              <code className="bg-amber-100 px-1 py-0.5 rounded">testlehrer</code> / PIN:{' '}
+              <code className="bg-amber-100 px-1 py-0.5 rounded">1234</code>
+              <p className="text-amber-600 text-[11px] mt-0.5">Sieht Dashboard mit Klasse FI24A</p>
+            </div>
+            <div>
+              <span className="font-medium">Schüler:</span>{' '}
+              <code className="bg-amber-100 px-1 py-0.5 rounded">testschueler</code> / PIN:{' '}
+              <code className="bg-amber-100 px-1 py-0.5 rounded">1234</code>
+              <p className="text-amber-600 text-[11px] mt-0.5">
+                Klasse FI24A — sieht nur AP1 (3/5 Module), Pandas (2/4) und Zuul (1/4). Hat teilweisen
+                Fortschritt.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </main>

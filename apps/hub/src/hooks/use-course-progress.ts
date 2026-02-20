@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@lernplattform/shared';
+import type { CourseManifest } from '@lernplattform/shared';
 import type { SiteConfig } from '../config/sites';
 
 export interface CourseProgressItem {
@@ -24,9 +25,14 @@ interface ProgressRecord {
  * Returns a map from course slug → CourseProgressItem.
  *
  * In guest mode (not logged in): returns empty map, no API call.
- * Temporary workaround: uses totalExercises from SiteConfig until REQ-037 (Manifest) is done.
+ *
+ * When manifests are provided (REQ-037), totalExercises is taken from the manifest.
+ * Falls back to totalExercises from SiteConfig when no manifest is available.
  */
-export function useCourseProgress(sites: SiteConfig[]): UseCourseProgressReturn {
+export function useCourseProgress(
+  sites: SiteConfig[],
+  manifests?: Map<string, CourseManifest>
+): UseCourseProgressReturn {
   const { isLoggedIn, user, pb } = useAuth();
   const [progress, setProgress] = useState<Map<string, CourseProgressItem>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +74,9 @@ export function useCourseProgress(sites: SiteConfig[]): UseCourseProgressReturn 
         const result = new Map<string, CourseProgressItem>();
         for (const site of sitesRef.current) {
           const completed = completedBySlug.get(site.slug)?.size ?? 0;
-          const total = site.totalExercises;
+          // Prefer manifest totalExercises (REQ-037), fall back to sites.json value
+          const manifestTotal = manifests?.get(site.slug)?.totalExercises;
+          const total = manifestTotal ?? site.totalExercises;
           const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
           result.set(site.slug, {
             courseSlug: site.slug,

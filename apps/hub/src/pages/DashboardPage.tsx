@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { NavLink, Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, NavLink, Routes, Route, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@lernplattform/shared';
 import type { Class, User } from '@lernplattform/shared';
 import { ClassList } from '../components/class-list';
@@ -9,6 +9,8 @@ import { CreateClassForm } from '../components/create-class-form';
 import { StudentDetail } from '../components/student-detail';
 import { ProgressMatrix } from '../components/progress-matrix';
 import { useClassProgress } from '../hooks/use-class-progress';
+import { useManifests } from '../hooks/use-manifests';
+import { manifestToModuleOptions } from '../hooks/use-manifest-columns';
 import { ModuleUnlockList } from '../components/module-unlock-list';
 import { useModuleUnlocks } from '../hooks/use-module-unlocks';
 import { useSites } from '../config/sites';
@@ -169,16 +171,33 @@ function MatrixView() {
     }, { replace: true });
   }
 
-  const { columns, rows, isLoading, error } = useClassProgress(selectedClassId, selectedCourse);
+  // Load manifests for all active sites (REQ-037)
+  const { getManifest } = useManifests(activeSites);
+  const selectedManifest = selectedCourse ? getManifest(selectedCourse) : null;
 
-  // Get modules for the selected course
+  const { columns, rows, isLoading, error } = useClassProgress(
+    selectedClassId,
+    selectedCourse,
+    selectedManifest
+  );
+
+  // Get modules for the selected course:
+  // Prefer manifest modules (REQ-037) for accurate names and structure.
+  // Fall back to sites.json modules when no manifest is available.
   const selectedSite = activeSites.find((s) => s.slug === selectedCourse);
-  const courseModules = selectedSite?.modules ?? [];
+  const courseModules = selectedManifest
+    ? manifestToModuleOptions(selectedManifest)
+    : (selectedSite?.modules?.map((m) => ({ id: m.id, title: m.name })) ?? []);
 
-  // Filter columns by module (lesson prefix matches module ID)
+  // Filter columns by module
+  // With manifest: filter by lesson slug prefix (module id = first segment of slug)
+  // Without manifest: filter by lesson === module id (legacy behavior)
   const filteredColumns = useMemo(() => {
     if (!selectedModule) return columns;
-    return columns.filter((col) => col.lesson === selectedModule);
+    return columns.filter((col) => {
+      const lessonModuleId = col.lesson.split('/')[0];
+      return lessonModuleId === selectedModule || col.lesson === selectedModule;
+    });
   }, [columns, selectedModule]);
 
   // Filter rows to only include cells for visible columns
@@ -282,7 +301,7 @@ function MatrixView() {
             <option value="">— Alle Module —</option>
             {courseModules.map((mod) => (
               <option key={mod.id} value={mod.id}>
-                {mod.name}
+                {mod.title}
               </option>
             ))}
           </select>
@@ -464,6 +483,14 @@ function DashboardPage() {
               </NavLink>
             ))}
           </nav>
+          <div className="sm:ml-auto">
+            <Link
+              to="/"
+              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Zur Startseite
+            </Link>
+          </div>
         </div>
       </header>
 

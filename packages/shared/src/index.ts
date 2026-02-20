@@ -5,3 +5,4 @@ export * from './progress';
 export * from './unlock';
 export * from './validation';
 export * from './prerequisite';
+export * from './manifest';

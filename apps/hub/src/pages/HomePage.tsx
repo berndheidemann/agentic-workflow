@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 import { useSites } from '../config/sites';
 import { CourseGrid } from '../components/course-grid';
 import { useCourseProgress } from '../hooks/use-course-progress';
+import { useManifests } from '../hooks/use-manifests';
 import { useAuth, LoginBanner } from '@lernplattform/shared';
 import { ProfileSection } from '../components/profile-section';
 
 function HomePage() {
   const { sites, isLoading } = useSites();
   const { isLoggedIn } = useAuth();
-  const { progress } = useCourseProgress(isLoggedIn ? sites : []);
+  const { manifests } = useManifests(sites);
+  const { progress } = useCourseProgress(isLoggedIn ? sites : [], manifests);
 
   // Sum completed and total exercises across all courses for the profile section
   let totalCompleted = 0;

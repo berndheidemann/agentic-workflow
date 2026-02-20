@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createElement } from 'react';
 import { AuthContext } from '@lernplattform/shared';
-import type { AuthContextValue } from '@lernplattform/shared';
+import type { AuthContextValue, CourseManifest } from '@lernplattform/shared';
 import { useCourseProgress } from './use-course-progress';
 import type { SiteConfig } from '../config/sites';
 
@@ -41,11 +41,26 @@ const makeSite = (slug: string, totalExercises: number): SiteConfig => ({
   modules: [],
 });
 
-function renderWithAuth(isLoggedIn: boolean, sites: SiteConfig[]) {
+function renderWithAuth(
+  isLoggedIn: boolean,
+  sites: SiteConfig[],
+  manifests?: Map<string, CourseManifest>
+) {
   const authCtx = makeAuthContext(isLoggedIn);
   const wrapper = ({ children }: { children: React.ReactNode }) =>
     createElement(AuthContext.Provider, { value: authCtx }, children);
-  return renderHook(() => useCourseProgress(sites), { wrapper });
+  return renderHook(() => useCourseProgress(sites, manifests), { wrapper });
+}
+
+function makeManifest(courseSlug: string, totalExercises: number): CourseManifest {
+  return {
+    version: 1,
+    course: courseSlug,
+    name: `Kurs ${courseSlug}`,
+    generatedAt: '2026-02-19T00:00:00.000Z',
+    modules: [],
+    totalExercises,
+  };
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -149,5 +164,40 @@ describe('useCourseProgress', () => {
 
     expect(result.current.progress.get('ap1')?.completedExercises).toBe(0);
     expect(result.current.progress.get('pandas')?.completedExercises).toBe(1);
+  });
+
+  it('REQ-037: Manifest-totalExercises überschreibt sites.json-Wert', async () => {
+    mockGetFullList.mockResolvedValue([{ course: 'ap1', lesson: 'netzwerktechnik/lektion-1' }]);
+    const sites = [makeSite('ap1', 120)]; // sites.json sagt 120
+    const manifests = new Map([['ap1', makeManifest('ap1', 236)]]); // Manifest sagt 236
+    const { result } = renderWithAuth(true, sites, manifests);
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.progress.get('ap1')?.totalExercises).toBe(236);
+    expect(result.current.progress.get('ap1')?.completedExercises).toBe(1);
+    expect(result.current.progress.get('ap1')?.percentage).toBe(0); // 1/236 < 0.5% → rounds to 0
+  });
+
+  it('REQ-037: Fallback auf sites.json wenn kein Manifest', async () => {
+    mockGetFullList.mockResolvedValue([{ course: 'ap1', lesson: 'netzwerktechnik/lektion-1' }]);
+    const sites = [makeSite('ap1', 120)];
+    const { result } = renderWithAuth(true, sites); // kein manifests-Parameter
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.progress.get('ap1')?.totalExercises).toBe(120);
+  });
+
+  it('REQ-037: Manifest nur für bekannte Kurse — andere Kurse nutzen Fallback', async () => {
+    mockGetFullList.mockResolvedValue([]);
+    const sites = [makeSite('ap1', 120), makeSite('pandas', 40)];
+    const manifests = new Map([['ap1', makeManifest('ap1', 236)]]); // nur ap1 hat Manifest
+    const { result } = renderWithAuth(true, sites, manifests);
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.progress.get('ap1')?.totalExercises).toBe(236);
+    expect(result.current.progress.get('pandas')?.totalExercises).toBe(40); // Fallback
   });
 });

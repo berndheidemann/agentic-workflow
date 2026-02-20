@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { AuthContext } from '@lernplattform/shared';
-import type { AuthContextValue, Progress, User } from '@lernplattform/shared';
+import type { AuthContextValue, Progress, User, CourseManifest } from '@lernplattform/shared';
 import React from 'react';
 import { useClassProgress, computeCellStatus } from './use-class-progress';
 
@@ -246,5 +246,113 @@ describe('useClassProgress', () => {
 
     expect(result.current.rows[0].student.username).toBe('anna');
     expect(result.current.rows[1].student.username).toBe('zara');
+  });
+
+  // ─── REQ-037: Manifest-based columns ─────────────────────────────────────────
+
+  it('REQ-037: mit Manifest werden Spalten aus Manifest abgeleitet, nicht aus Progress', async () => {
+    const student = makeStudent();
+    const manifest: CourseManifest = {
+      version: 1,
+      course: 'ap1',
+      name: 'AP1-Trainer',
+      generatedAt: '2026-02-19T00:00:00.000Z',
+      totalExercises: 2,
+      modules: [
+        {
+          id: 'netzwerktechnik',
+          title: 'Netzwerktechnik',
+          sortOrder: 1,
+          lessons: [
+            {
+              slug: 'netzwerktechnik/ip-adressierung',
+              title: 'IP-Adressierung',
+              exercises: [
+                { id: 'netzwerktechnik-ip-adressierung-01', title: 'Aufgabe 1', type: 'DragDrop', points: 6, difficulty: 1 },
+                { id: 'netzwerktechnik-ip-adressierung-02', title: 'Aufgabe 2', type: 'MultipleChoice', points: 3, difficulty: 1 },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    // Kein Progress-Record für Aufgabe 2 — aber Manifest kennt sie
+    const prog = makeProgress({ exercise: 'netzwerktechnik-ip-adressierung-01', lesson: 'netzwerktechnik/ip-adressierung' });
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([prog]);
+
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1', manifest), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Beide Aufgaben sichtbar — auch die ohne Progress
+    expect(result.current.columns).toHaveLength(2);
+    expect(result.current.columns[0].exercise).toBe('netzwerktechnik-ip-adressierung-01');
+    expect(result.current.columns[1].exercise).toBe('netzwerktechnik-ip-adressierung-02');
+    expect(result.current.columns[0].label).toBe('Aufgabe 1');
+  });
+
+  it('REQ-037: Manifest-Spalten zeigen unattempted für Aufgaben ohne Progress', async () => {
+    const student = makeStudent();
+    const manifest: CourseManifest = {
+      version: 1,
+      course: 'ap1',
+      name: 'AP1-Trainer',
+      generatedAt: '2026-02-19T00:00:00.000Z',
+      totalExercises: 1,
+      modules: [
+        {
+          id: 'netzwerktechnik',
+          title: 'Netzwerktechnik',
+          sortOrder: 1,
+          lessons: [
+            {
+              slug: 'netzwerktechnik/ip-adressierung',
+              title: 'IP-Adressierung',
+              exercises: [
+                { id: 'netzwerktechnik-ip-adressierung-01', title: 'Nie versucht', type: 'DragDrop', points: 6, difficulty: 1 },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([]); // Kein Progress
+
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1', manifest), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.columns).toHaveLength(1);
+    const cellKey = 'netzwerktechnik/ip-adressierung::netzwerktechnik-ip-adressierung-01';
+    expect(result.current.rows[0].cells.get(cellKey)?.status).toBe('unattempted');
+  });
+
+  it('REQ-037: Manifest für anderen Kurs wird ignoriert (Fallback)', async () => {
+    const student = makeStudent();
+    const wrongCourseManifest: CourseManifest = {
+      version: 1,
+      course: 'pandas', // Anderer Kurs!
+      name: 'Pandas',
+      generatedAt: '2026-02-19T00:00:00.000Z',
+      totalExercises: 5,
+      modules: [],
+    };
+    const prog = makeProgress({ exercise: 'aufgabe-1', lesson: 'lektion-1' });
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([prog]);
+
+    // course='ap1' aber manifest für 'pandas' — Fallback auf Progress-Records
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1', wrongCourseManifest), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.columns).toHaveLength(1);
+    expect(result.current.columns[0].label).toBe('lektion-1/aufgabe-1'); // Fallback-Label
   });
 });
