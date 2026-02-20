@@ -428,6 +428,25 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ---
 
+## Phase 4c: Kurs-Sichtbarkeit
+
+### REQ-039: Kurs-Filterung nach Klassen-Zuordnung auf der Landing Page
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-012, REQ-021
+- **Hinweis:** Aktuell sehen eingeloggte Schüler alle 6 Kurse, unabhängig von ihrer Klassen-Zuordnung. Das Unlock-System arbeitet bisher nur auf Modul-Ebene innerhalb von Kursen. Für die Landing Page fehlt Kurs-Level-Filterung: Schüler sollen nur Kurse sehen, die für ihre Klasse freigeschaltet sind.
+- **Akzeptanzkriterien:**
+  - [ ] Eingeloggte Schüler sehen nur Kurse, die für ihre Klasse freigeschaltet sind
+  - [ ] Nicht freigeschaltete Kurse werden auf der Landing Page ausgeblendet (nicht ausgegraut)
+  - [ ] Ohne Login (Gast-Modus): alle Kurse sichtbar (Status Quo)
+  - [ ] Lehrer sehen immer alle Kurse
+  - [ ] Testschüler (Klasse FI24A) sieht nur AP1, Pandas und Zuul
+  - [ ] Wenn keine Freischaltungs-Records existieren: alle Kurse sichtbar (Default = offen)
+
+---
+
 ## Phase 4b: Accessibility Hardening
 
 ### REQ-035: a11y-Feinschliff bestehende Komponenten
@@ -620,6 +639,193 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
   - [ ] Sicherheitsabfrage vor Löschung ("Klasse FI24a mit 23 Schülern wirklich archivieren?")
   - [ ] Klasse wird als `is_active: false` markiert, aber Name/Schuljahr bleiben für Lehrer-Referenz erhalten
   - [ ] Löschung ist irreversibel — Hinweis im Dialog
+
+---
+
+## Phase 9: Manifest-zentrische Kursanbindung & Kursadministration
+
+> Zukunftssicheres Konzept für die automatische Verbindung zwischen Kursen und Hub.
+> Jede Site generiert beim Build ein `course-manifest.json` mit der kompletten Struktur.
+> Der Hub konsumiert diese Manifeste zur Laufzeit — keine doppelte Pflege.
+
+### REQ-056: Manifest-Schema v2 mit Erweiterungen
+
+- **Status:** planned
+- **Priorität:** P0
+- **Größe:** S
+- **Abhängig von:** REQ-037
+- **Hinweis:** Erweitert das bestehende Manifest-Schema um Felder für Freischaltung, Gruppierung und Cache-Invalidierung. Rückwärtskompatibel zu v1.
+- **Akzeptanzkriterien:**
+  - [ ] `ManifestLesson` hat neue Felder: `path` (URL-Pfad relativ zum Site-Base), `tags` (string[]), `prerequisites` (string[])
+  - [ ] `CourseManifest` hat neue Felder: `buildHash` (string), `totalLessons` (number), `allTags` (string[])
+  - [ ] `CourseManifest.version` akzeptiert `1 | 2`
+  - [ ] `validateManifest()` akzeptiert v1 und v2 und konvertiert v1 automatisch zu v2 (fehlende Felder mit Defaults: leere Arrays, leere Strings)
+  - [ ] Bestehende Konsumenten (`useManifests`, `manifestToColumns`, `useCourseProgress`) funktionieren unverändert mit v1 und v2
+  - [ ] Typen und Validierung im Shared-Package exportiert
+  - [ ] Unit-Tests für v1-zu-v2-Konvertierung und Validierung beider Versionen
+
+### REQ-055: Manifest-Generator für Astro/Starlight-Sites
+
+- **Status:** planned
+- **Priorität:** P0
+- **Größe:** L
+- **Abhängig von:** REQ-037, REQ-056
+- **Hinweis:** Erster Generator. AP1-Trainer als Pilot, danach auf pandas-lernen, REST/NoSQL und World of Zuul ausrollen. Ohne diesen Generator bleibt REQ-037 ein leeres Schema.
+- **Akzeptanzkriterien:**
+  - [ ] Astro-Integration-Plugin `astro-manifest-plugin` im Shared-Package oder als eigenständiges npm-Paket
+  - [ ] Plugin scannt `src/content/docs/` und liest Starlight-Sidebar-Config
+  - [ ] Frontmatter-Felder werden extrahiert: `title`, `exercises` (optional, default 0), `tags` (optional), `prerequisites` (optional)
+  - [ ] Aufgaben-Erkennung: Zählt React-Komponenten-Imports deren Name auf `Exercise`, `Quiz`, `Aufgabe`, `Trainer` endet (Heuristik), überschreibbar per Frontmatter `exercises: N`
+  - [ ] Generiert `course-manifest.json` als `afterBuild`-Hook in `dist/`
+  - [ ] Manifest entspricht dem `CourseManifest` v2 Schema (REQ-056)
+  - [ ] AP1-Trainer generiert beim Build ein korrektes Manifest mit allen Modulen, Lektionen und Aufgaben
+  - [ ] Build-Hash (Git-Commit oder Zeitstempel) wird ins Manifest geschrieben
+  - [ ] Plugin ist konfigurierbar: `manifestPlugin({ course: 'ap1', name: 'AP1-Trainer' })`
+
+### REQ-057: Manifest-Generator für React-SPA-Sites
+
+- **Status:** planned
+- **Priorität:** P0
+- **Größe:** M
+- **Abhängig von:** REQ-037, REQ-056
+- **Hinweis:** React-SPAs haben keine dateibasierte Content-Struktur. Stattdessen deklarative `manifest.config.ts` als Single Source of Truth im Site-Repo.
+- **Akzeptanzkriterien:**
+  - [ ] Vite-Plugin `vite-manifest-plugin` im Shared-Package oder eigenständiges Paket
+  - [ ] Plugin liest `manifest.config.ts` aus dem Site-Root
+  - [ ] `ManifestConfig`-Typ im Shared-Package exportiert (vereinfachte Eingabe-Struktur, Plugin ergänzt fehlende Felder)
+  - [ ] Plugin generiert `course-manifest.json` als `closeBundle`-Hook in `dist/`
+  - [ ] NumPy-Site hat eine `manifest.config.ts` und generiert beim Build ein korrektes Manifest
+  - [ ] UML-Site hat eine `manifest.config.ts` und generiert beim Build ein korrektes Manifest
+  - [ ] Build-Hash wird automatisch aus Git-Commit oder Zeitstempel generiert
+
+### REQ-062: Manifest-Generierung für alle bestehenden Sites ausrollen
+
+- **Status:** planned
+- **Priorität:** P0
+- **Größe:** M
+- **Abhängig von:** REQ-055, REQ-057
+- **Hinweis:** Stellt sicher dass alle 6 Sites ein Manifest generieren. Erst dann kann `total_exercises` aus `sites.json` entfernt und das Dashboard vollständig Manifest-basiert werden.
+- **Akzeptanzkriterien:**
+  - [ ] AP1-Trainer: Manifest wird beim Build generiert, deployed und vom Hub lesbar
+  - [ ] pandas-lernen: Manifest wird beim Build generiert
+  - [ ] REST/NoSQL: Manifest wird beim Build generiert
+  - [ ] World of Zuul: Manifest wird beim Build generiert
+  - [ ] NumPy: Manifest wird beim Build generiert
+  - [ ] UML: Manifest wird beim Build generiert
+  - [ ] Hub zeigt für alle Kurse Manifest-basierte Fortschrittsbalken (nicht mehr `total_exercises` aus `sites.json`)
+  - [ ] Dashboard-Matrix nutzt für alle Kurse Manifest-basierte Spalten
+  - [ ] `total_exercises` und `modules` in `sites.json` sind als deprecated markiert (Fallback bleibt erhalten)
+
+### REQ-059: Granulare Freischaltung auf Lektions-Ebene
+
+- **Status:** planned
+- **Priorität:** P0
+- **Größe:** L
+- **Abhängig von:** REQ-024, REQ-037, REQ-056
+- **Hinweis:** Erweitert die bestehende Modul-Freischaltung (REQ-024) um Lektions-Granularität. Default bleibt: alles offen. Lehrer sperren gezielt.
+- **Akzeptanzkriterien:**
+  - [ ] `course_unlocks`-Collection erweitert um Feld `scope` (enum: "module", "lesson") und `target` (string, ersetzt bisheriges `module`-Feld)
+  - [ ] PocketBase-Migration für Schema-Erweiterung, bestehende Records werden migriert (`scope: "module"`, `target: bisheriger module-Wert`)
+  - [ ] `useUnlock`-Hook im Shared-Package unterstützt granulare Abfrage: `isLessonUnlocked(course, lessonSlug)`
+  - [ ] Hierarchische Logik: Modul-Lock sperrt alle Lektionen, Lektion-Lock/Unlock überschreibt Modul innerhalb
+  - [ ] Dashboard-Freischaltungs-UI (REQ-024) zeigt Manifest-basierte Baumstruktur: Module aufklappbar, Lektionen einzeln schaltbar
+  - [ ] Bulk-Aktionen: "Ganzes Modul sperren/freischalten", "Alle bis einschließlich Lektion X freischalten"
+  - [ ] `UnlockGate`- und `SidebarUnlock`-Komponenten funktionieren mit der neuen Granularität
+  - [ ] Default-Zustand: Keine Records = alles offen (unverändert)
+  - [ ] Rückwärtskompatibilität: Alte Modul-Records funktionieren weiterhin
+
+### REQ-058: Manifest-Caching im Hub (Stale-While-Revalidate)
+
+- **Status:** planned
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-037, REQ-056
+- **Hinweis:** Performance-Optimierung. Stale-While-Revalidate verhindert Loading-Spinner, der Index reduziert Netzwerk-Traffic bei vielen Kursen.
+- **Akzeptanzkriterien:**
+  - [ ] `useManifests` cached geladene Manifeste in `localStorage` mit Key `lernplattform:manifest:{course}`
+  - [ ] Beim Laden wird zuerst der Cache gelesen (sofortige Anzeige), dann im Hintergrund aktualisiert
+  - [ ] Bei neuem `buildHash` wird der Cache aktualisiert und ein Re-Render ausgelöst
+  - [ ] Cache wird beim Logout oder nach 7 Tagen invalidiert
+  - [ ] Landing Page zeigt Kurs-Kacheln ohne Verzögerung (Manifest-Cache oder `sites.json`-Fallback)
+
+### REQ-065: Themengruppen für Lehrer (Kursadministration)
+
+- **Status:** planned
+- **Priorität:** P1
+- **Größe:** L
+- **Abhängig von:** REQ-037, REQ-056, REQ-059
+- **Hinweis:** Lehrer können kursübergreifende Themengruppen erstellen. Gruppen sind intern nutzbar (Dashboard-Filter) und optional als Lernpfad für Schüler veröffentlichbar (REQ-066).
+- **Akzeptanzkriterien:**
+  - [ ] PocketBase-Collection `topic_groups` mit: teacher_id, class_id (nullable), name, description, color, items (JSON-Array von `{course, lessonSlug}`), sort_order, published (boolean, default false)
+  - [ ] Dashboard-Route `/dashboard/themen` mit CRUD-Oberfläche für Themengruppen
+  - [ ] Themengruppe erstellen: Name vergeben, Lektionen aus Manifest-Baumansicht auswählen (kursübergreifend)
+  - [ ] Lektionen können per Checkbox hinzugefügt/entfernt werden
+  - [ ] Themengruppe ist als Filter in der Matrix-Ansicht (REQ-023b) verwendbar
+  - [ ] Fortschrittsbalken pro Themengruppe auf der Themen-Übersichtsseite
+  - [ ] Themengruppen können klassenspezifisch (nur für eine Klasse) oder global (für alle eigenen Klassen) sein
+  - [ ] Tag-basierte Quick-Grouping: Button "Themengruppe aus Tag erstellen" nutzt `allTags` aus Manifesten
+  - [ ] Maximal 50 Themengruppen pro Lehrer
+
+### REQ-066: Lernpfade für Schüler (veröffentlichte Themengruppen)
+
+- **Status:** planned
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-065
+- **Hinweis:** Lehrer entscheidet per `published`-Flag welche Themengruppen als Lernpfad für Schüler sichtbar sind. Nicht jede interne Gruppierung muss für Schüler sichtbar sein.
+- **Akzeptanzkriterien:**
+  - [ ] Themengruppen mit `published: true` erscheinen als Lernpfad auf der HomePage für Schüler der jeweiligen Klasse
+  - [ ] Lernpfad-Bereich oberhalb der Kursübersicht: Titel, Fortschrittsbalken, Liste der enthaltenen Lektionen mit Status (erledigt/offen)
+  - [ ] Klick auf eine Lektion im Lernpfad verlinkt direkt zur Seite im jeweiligen Kurs
+  - [ ] Lektionen aus verschiedenen Kursen sind visuell unterscheidbar (Kurs-Name als Badge/Tag)
+  - [ ] Mehrere Lernpfade pro Klasse möglich (z.B. "Prüfungsvorbereitung" + "Zusatzaufgaben")
+  - [ ] Lernpfad zeigt nur Lektionen die für den Schüler freigeschaltet sind (gesperrte Lektionen ausgegraut mit Hinweis)
+  - [ ] Ohne Login oder ohne Klassenzugehörigkeit: keine Lernpfade sichtbar
+  - [ ] Lehrer kann `published`-Status jederzeit im Dashboard togglen
+
+### REQ-063: Manifest-Diff und Änderungserkennung
+
+- **Status:** planned
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-058
+- **Hinweis:** Wenn Kursinhalte sich ändern, müssen Lehrer und Dashboard sinnvoll darauf reagieren. Verwaiste Progress-/Unlock-Records dürfen nicht stillschweigend verschwinden.
+- **Akzeptanzkriterien:**
+  - [ ] Hub erkennt Manifest-Änderungen anhand des `buildHash`-Feldes
+  - [ ] Bei Änderung wird ein Diff berechnet: neue Lektionen, gelöschte Lektionen, verschobene Lektionen
+  - [ ] Dashboard zeigt Hinweis wenn Manifest-Änderungen vorliegen: "Kurs [X] wurde aktualisiert: N neue Lektionen, M entfernt"
+  - [ ] Verwaiste Progress-Records (Lektion existiert nicht mehr im Manifest) werden in der Matrix mit Warnung-Icon markiert, nicht gelöscht
+  - [ ] Verwaiste Unlock-Records werden im Freischaltungs-UI mit Hinweis markiert
+  - [ ] Themengruppen (REQ-065) die gelöschte Lektionen enthalten zeigen Warnung
+
+### REQ-064: sites.json Entschlackung (Manifest-First)
+
+- **Status:** planned
+- **Priorität:** P2
+- **Größe:** S
+- **Abhängig von:** REQ-062
+- **Hinweis:** Aufräum-REQ. Wenn alle Sites Manifeste haben, kann `sites.json` auf Identitätsdaten reduziert werden. Module und Aufgabenzahlen kommen dann ausschließlich aus Manifesten.
+- **Akzeptanzkriterien:**
+  - [ ] `sites.json` enthält nur noch: slug, name, description, icon, base_path, framework_type, is_active, sort_order
+  - [ ] `total_exercises` und `modules[]` sind aus `sites.json` entfernt
+  - [ ] `SiteConfig`-TypeScript-Typ ist entsprechend verschlankt
+  - [ ] Alle Hub-Konsumenten (Landing Page, Dashboard, Freischaltung) beziehen Modul- und Aufgabendaten ausschließlich aus Manifesten
+  - [ ] Fallback bei fehlendem Manifest: Kurs wird angezeigt aber ohne Fortschrittsbalken/Matrix (statt Absturz)
+
+### REQ-067: Skalierungs-Vorbereitung für 20+ Kurse
+
+- **Status:** planned
+- **Priorität:** P2
+- **Größe:** M
+- **Abhängig von:** REQ-058, REQ-062
+- **Hinweis:** Architektur-Hardening für die Vision "deutlich mehr Lernsituationen". Nicht nötig für die aktuellen 6 Sites, aber verhindert spätere Umbauten.
+- **Akzeptanzkriterien:**
+  - [ ] `useManifests` lädt Manifeste lazy pro Kurs (nicht alle parallel beim App-Start)
+  - [ ] Landing Page zeigt Kurs-Kacheln aus `sites.json`-Cache, Manifest wird erst bei Dashboard-Zugriff geladen
+  - [ ] Dashboard Matrix-Kursfilter ist Pflichtfeld (keine "alle Kurse"-Option bei >10 Kursen)
+  - [ ] Modul-Filter wird automatisch vorausgewählt (erstes Modul) wenn >20 Spalten
+  - [ ] Virtualisiertes Scrolling für Matrizen mit >30 Spalten oder >50 Zeilen
+  - [ ] Performance-Test: Dashboard mit 20 simulierten Kursen, 100 Schülern, 500 Aufgaben lädt in <3s
 
 ---
 

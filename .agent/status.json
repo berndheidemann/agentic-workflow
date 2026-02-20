@@ -272,6 +272,16 @@
       "REQ-009"
     ]
   },
+  "REQ-039": {
+    "status": "open",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-012",
+      "REQ-021"
+    ],
+    "notes": "Feature: Kurs-Level-Filterung auf Landing Page. Unlock-System arbeitet bisher nur auf Modul-Ebene."
+  },
   "REQ-040": {
     "status": "open",
     "priority": "P1",
