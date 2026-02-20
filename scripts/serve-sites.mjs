@@ -20,9 +20,9 @@ const SITE_ROUTES = {
   '/pandas/': join(PROJECT_ROOT, 'sites/pandas-lernen/dist'),
   // Add more sites here as they get built:
   '/zuul/': join(PROJECT_ROOT, 'sites/zuul/dist'),
-  // '/numpy/': join(PROJECT_ROOT, 'sites/numpy-lernsituation/dist'),
-  // '/rest/': join(PROJECT_ROOT, 'sites/rest_noSQL_datenformate/dist'),
-  // '/uml/': join(PROJECT_ROOT, 'sites/uml-site/dist'),
+  '/numpy/': join(PROJECT_ROOT, 'sites/numpy-lernsituation/dist'),
+  '/rest/': join(PROJECT_ROOT, 'sites/rest_noSQL_datenformate/dist'),
+  '/uml/': join(PROJECT_ROOT, 'sites/uml-site/dist'),
 };
 
 const MIME_TYPES = {
