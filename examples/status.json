@@ -1,0 +1,392 @@
+{
+  "REQ-000": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": []
+  },
+  "REQ-001": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-000"
+    ]
+  },
+  "REQ-002": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-000"
+    ]
+  },
+  "REQ-003": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-004": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-000"
+    ]
+  },
+  "REQ-005": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-006": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-007": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-004"
+    ]
+  },
+  "REQ-008": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003"
+    ]
+  },
+  "REQ-009": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-001"
+    ],
+    "notes": "sites.json SSOT, getSites() async, useSites() Hook, generate-nginx.sh, validate-sites.sh"
+  },
+  "REQ-010": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-004"
+    ]
+  },
+  "REQ-011": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-010"
+    ]
+  },
+  "REQ-012": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-010"
+    ]
+  },
+  "REQ-013": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-008",
+      "REQ-010"
+    ]
+  },
+  "REQ-014": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006",
+      "REQ-011"
+    ],
+    "notes": "Validator: Docker-Blocker aufgehoben — Docker funktioniert mit sudo. Sonnet muss sudo docker compose verwenden."
+  },
+  "REQ-015": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-010"
+    ]
+  },
+  "REQ-020": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-010"
+    ]
+  },
+  "REQ-021": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-003",
+      "REQ-020"
+    ]
+  },
+  "REQ-022": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-003"
+    ]
+  },
+  "REQ-023a": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-023b": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-023a"
+    ]
+  },
+  "REQ-024": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-007",
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-025": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-020",
+      "REQ-021"
+    ]
+  },
+  "REQ-026": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-023a"
+    ]
+  },
+  "REQ-030": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-005"
+    ]
+  },
+  "REQ-031": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-007"
+    ]
+  },
+  "REQ-032": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-007"
+    ]
+  },
+  "REQ-033": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-006"
+    ]
+  },
+  "REQ-034": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006"
+    ]
+  },
+  "REQ-035": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-011",
+      "REQ-023a"
+    ]
+  },
+  "REQ-036": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-006",
+      "REQ-007"
+    ],
+    "notes": "usePrerequisites + PrerequisiteBanner + PrerequisiteInjector. Fix: Starlight v0.37 starlightRoute + client:only=react"
+  },
+  "REQ-037": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-009"
+    ]
+  },
+  "REQ-039": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-012",
+      "REQ-021"
+    ],
+    "notes": "Feature: Kurs-Level-Filterung auf Landing Page. Unlock-System arbeitet bisher nur auf Modul-Ebene."
+  },
+  "REQ-040": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-008",
+      "REQ-023a"
+    ]
+  },
+  "REQ-050": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-051": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-050"
+    ],
+    "notes": "Validator: Implementierung vollständig (Code, Tests, Build grün), aber Iteration am Turn-Limit abgebrochen. Sonnet muss: 1) Smoke-Test gegen Nginx/Docker durchführen, 2) PRD.md Checkboxen setzen, 3) Status auf done setzen."
+  },
+  "REQ-052": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-001"
+    ]
+  },
+  "REQ-053": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-052"
+    ]
+  },
+  "REQ-060": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-051"
+    ],
+    "notes": "pandas + REST/NoSQL SharedIntegration, 13+39 Tests grün, Builds 45+10 Seiten"
+  },
+  "REQ-061": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-051"
+    ]
+  },
+  "REQ-070": {
+    "status": "done",
+    "priority": "P0",
+    "size": "M",
+    "deps": [
+      "REQ-002"
+    ]
+  },
+  "REQ-071": {
+    "status": "done",
+    "priority": "P1",
+    "size": "S",
+    "deps": [
+      "REQ-070"
+    ]
+  },
+  "REQ-073": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-002",
+      "REQ-010"
+    ]
+  },
+  "REQ-074": {
+    "status": "done",
+    "priority": "P0",
+    "size": "S",
+    "deps": [
+      "REQ-073"
+    ]
+  },
+  "REQ-075": {
+    "status": "done",
+    "priority": "P1",
+    "size": "M",
+    "deps": [
+      "REQ-021",
+      "REQ-073"
+    ]
+  }
+}

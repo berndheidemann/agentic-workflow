@@ -1,0 +1,82 @@
+# [Projektname] — Product Requirements
+
+> Status-Tracking für den Agent-Loop. Der Agent ändert nur Status-Felder und Checkboxen.
+
+## Implizite Anforderungen (gelten für ALLE UI-Requirements)
+
+Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akzeptanzkriterien folgende Anforderungen erfüllen:
+
+- **a11y:** Semantisches HTML, ARIA-Labels, Keyboard-navigierbar
+- **Unit-Tests:** Mindestens ein Test pro neuer Funktion/Hook/Komponente
+- **Smoke-Test:** Verifikation gegen laufende App via Playwright MCP
+- **Responsive:** Funktioniert auf Mobile (375px) und Desktop (1280px)
+
+---
+
+## Phase 0: Setup
+
+### REQ-000: Projektstruktur & Tech-Stack
+
+- **Status:** open
+- **Priorität:** P0
+- **Größe:** M
+- **Abhängig von:** —
+- **Akzeptanzkriterien:**
+  - [ ] Projektstruktur angelegt (src/, tests/, etc.)
+  - [ ] Build-Tool konfiguriert (Vite, Webpack, etc.)
+  - [ ] Linting + Formatting konfiguriert
+  - [ ] Erster Dev-Server startet
+  - [ ] `npm run build` erfolgreich
+  - [ ] Ergebnis in `.agent/architecture.md` dokumentiert
+
+---
+
+## Phase 1: Kernfunktionalität
+
+### REQ-001: [Feature Name]
+
+- **Status:** open
+- **Priorität:** P0
+- **Größe:** S
+- **Abhängig von:** REQ-000
+- **Akzeptanzkriterien:**
+  - [ ] Kriterium 1
+  - [ ] Kriterium 2
+  - [ ] Kriterium 3
+
+### REQ-002: [Feature Name]
+
+- **Status:** open
+- **Priorität:** P0
+- **Größe:** M
+- **Abhängig von:** REQ-000
+- **Akzeptanzkriterien:**
+  - [ ] Kriterium 1
+  - [ ] Kriterium 2
+  - [ ] Kriterium 3
+  - [ ] Kriterium 4
+
+### REQ-003: [Feature Name]
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** S
+- **Abhängig von:** REQ-001, REQ-002
+- **Akzeptanzkriterien:**
+  - [ ] Kriterium 1
+  - [ ] Kriterium 2
+
+---
+
+## Phase 2: Erweiterungen
+
+### REQ-010: [Feature Name]
+
+- **Status:** open
+- **Priorität:** P1
+- **Größe:** M
+- **Abhängig von:** REQ-003
+- **Akzeptanzkriterien:**
+  - [ ] Kriterium 1
+  - [ ] Kriterium 2
+  - [ ] Kriterium 3

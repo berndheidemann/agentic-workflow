@@ -1,0 +1,80 @@
+# [Projektname] — Projektkontext
+
+> Kurze Projektbeschreibung in 1-2 Sätzen.
+
+## Projektziel
+
+Was wird gebaut? Für wen? Warum?
+
+## Tech-Stack
+
+| Komponente | Technologie |
+|-----------|------------|
+| Frontend  | React + Vite + TypeScript + Tailwind CSS |
+| Backend   | PocketBase / Supabase / Express / ... |
+| Datenbank | SQLite / PostgreSQL / ... |
+| Container | Docker Compose |
+| Linting   | ESLint |
+| Formatting| Prettier |
+
+## Konventionen
+
+- **Sprache Code:** Englisch (Variablen, Funktionen, Kommentare)
+- **Sprache UI:** Deutsch (Benutzeroberfläche, Texte, Fehlermeldungen)
+- **Sprache Docs:** Deutsch (PRD, Agent-Artefakte, Commit-Messages)
+- **Naming:** camelCase (TS/JS), kebab-case (Dateien/Ordner)
+
+## Testing
+
+| Ebene | Tool | Zweck |
+|-------|------|-------|
+| Unit-Tests | Vitest + React Testing Library | Hooks, Utility-Funktionen, Komponenten |
+| E2E-Tests | Playwright | User-Flows, Formular-Interaktionen |
+| Smoke-Tests | Playwright MCP (im Agent-Loop) | Echte Verifikation gegen laufenden Stack |
+
+**Regeln:**
+
+- Jede neue Funktion/Hook bekommt mindestens einen Unit-Test
+- Jeder User-Flow bekommt einen E2E-Test
+- Keine UI-Änderung ohne visuelle Verifikation via Playwright MCP
+- Test-Dateien neben dem Code: `foo.ts` → `foo.test.ts`
+
+## Modell-Strategie
+
+- **Sonnet** (Hauptmodell): Code, Tests, Dateien editieren, Build/Test, Git
+- **Opus** (via Task-Tool): Architektonische und planerische Entscheidungen
+
+Opus schreibt keinen Code — es liefert Entscheidungen und Pläne. Sonnet setzt um.
+
+## Projektstruktur
+
+```
+mein-projekt/
+├── CLAUDE.md              # Dieses Dokument
+├── AGENT.md               # Iterations-Prompt für den Agent-Loop
+├── PRD.md                 # Requirements mit Status
+├── .agent/                # Agent-Artefakte
+│   ├── context.md         # Projektkontext (max 50 Zeilen, Rewrite)
+│   ├── architecture.md    # ADRs (append-only)
+│   ├── learnings.md       # Erkenntnisse (append-only)
+│   ├── status.json        # REQ-Status (autoritativ)
+│   └── iterations.jsonl   # Iterations-Log
+├── loop.sh                # Shell-Orchestrator
+└── src/                   # Quellcode
+```
+
+## Referenz-Dokumente
+
+| Datei | Zweck | Wann lesen |
+|-------|-------|-----------|
+| `PRD.md` | Requirements mit Status | Jede Iteration |
+| `.agent/status.json` | REQ-Status (autoritativ) | Jede Iteration |
+| `.agent/context.md` | Projektkontext | Jede Iteration |
+| `.agent/architecture.md` | ADRs | Jede Iteration |
+| `.agent/learnings.md` | Erkenntnisse | Jede Iteration |
+
+## Wichtige Prinzipien
+
+1. **Inkrementell** — ein REQ nach dem anderen
+2. **Minimal** — nur bauen was echten Wert hat
+3. **Verifiziert** — kein `done` ohne Beweis

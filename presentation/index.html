@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentisches Vorgehensmodell — Lernplattform</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --accent: #38bdf8;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --accent4: #fb923c;
+      --accent5: #f472b6;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-bright: #f8fafc;
+      --border: #334155;
+      --sonnet: #60a5fa;
+      --opus: #c084fc;
+      --loop: #fbbf24;
+      --success: #34d399;
+      --danger: #f87171;
+      --warning: #fbbf24;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Slide Container ──────────────────────────── */
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-inner {
+      max-width: 1200px;
+      width: 100%;
+      z-index: 1;
+    }
+
+    /* ── Animated Background Shapes ───────────────── */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+      pointer-events: none;
+    }
+
+    .bg-shape-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; right: -200px; }
+    .bg-shape-2 { width: 500px; height: 500px; background: var(--accent2); bottom: -150px; left: -150px; }
+    .bg-shape-3 { width: 400px; height: 400px; background: var(--accent3); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+    /* ── Typography ────────────────────────────────── */
+    h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      color: var(--text-dim);
+      max-width: 700px;
+    }
+
+    .label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+
+    .label-sonnet { background: rgba(96,165,250,0.15); color: var(--sonnet); border: 1px solid rgba(96,165,250,0.3); }
+    .label-opus { background: rgba(192,132,252,0.15); color: var(--opus); border: 1px solid rgba(192,132,252,0.3); }
+    .label-loop { background: rgba(251,191,36,0.15); color: var(--loop); border: 1px solid rgba(251,191,36,0.3); }
+    .label-phase { background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid rgba(56,189,248,0.3); }
+
+    /* ── Cards ─────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      border-color: var(--accent);
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    .card-grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .card-grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    /* ── Icon Circles ─────────────────────────────── */
+    .icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .icon-sonnet { background: rgba(96,165,250,0.15); color: var(--sonnet); }
+    .icon-opus { background: rgba(192,132,252,0.15); color: var(--opus); }
+    .icon-loop { background: rgba(251,191,36,0.15); color: var(--loop); }
+    .icon-green { background: rgba(52,211,153,0.15); color: var(--accent3); }
+    .icon-orange { background: rgba(251,146,60,0.15); color: var(--accent4); }
+    .icon-pink { background: rgba(244,114,182,0.15); color: var(--accent5); }
+    .icon-accent { background: rgba(56,189,248,0.15); color: var(--accent); }
+    .icon-danger { background: rgba(248,113,113,0.15); color: var(--danger); }
+
+    /* ── Scroll Animations ────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+    .reveal-delay-5 { transition-delay: 0.5s; }
+
+    /* ── Flow Diagram ─────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 40px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    .flow-step:hover {
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .flow-step .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .flow-arrow {
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Phase Colors ─────────────────────────────── */
+    .phase-orient { --phase-color: var(--accent); }
+    .phase-preflight { --phase-color: var(--accent4); }
+    .phase-plan { --phase-color: var(--opus); }
+    .phase-implement { --phase-color: var(--sonnet); }
+    .phase-verify { --phase-color: var(--accent3); }
+    .phase-persist { --phase-color: var(--accent5); }
+
+    .phase-orient .step-num { background: rgba(56,189,248,0.2); color: var(--accent); }
+    .phase-preflight .step-num { background: rgba(251,146,60,0.2); color: var(--accent4); }
+    .phase-plan .step-num { background: rgba(192,132,252,0.2); color: var(--opus); }
+    .phase-implement .step-num { background: rgba(96,165,250,0.2); color: var(--sonnet); }
+    .phase-verify .step-num { background: rgba(52,211,153,0.2); color: var(--accent3); }
+    .phase-persist .step-num { background: rgba(244,114,182,0.2); color: var(--accent5); }
+
+    /* ── Timeline ─────────────────────────────────── */
+    .timeline {
+      position: relative;
+      padding-left: 40px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--accent3), var(--accent5));
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 32px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -30px;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--phase-color, var(--accent));
+      background: var(--bg);
+    }
+
+    .timeline-item.active::before {
+      background: var(--phase-color, var(--accent));
+      box-shadow: 0 0 12px var(--phase-color, var(--accent));
+    }
+
+    /* ── Document Cards ───────────────────────────── */
+    .doc-card {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .doc-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Cycle Diagram ────────────────────────────── */
+    .cycle-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .cycle-ring {
+      width: 420px;
+      height: 420px;
+      position: relative;
+    }
+
+    .cycle-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 2;
+    }
+
+    .cycle-center-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      background: rgba(251,191,36,0.15);
+      border: 2px solid var(--loop);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 8px;
+    }
+
+    .cycle-node {
+      position: absolute;
+      width: 110px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      transition: transform 0.3s ease;
+    }
+
+    .cycle-node:hover { transform: scale(1.15); }
+
+    .cycle-node-dot {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 6px;
+      font-size: 1.1rem;
+      border: 2px solid;
+    }
+
+    .cycle-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .cycle-svg path {
+      fill: none;
+      stroke-width: 2;
+      stroke-dasharray: 8 6;
+      opacity: 0.4;
+    }
+
+    /* ── Animated Pulse ───────────────────────────── */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .float { animation: float 3s ease-in-out infinite; }
+
+    @keyframes rotate-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .rotate-slow { animation: rotate-slow 20s linear infinite; }
+
+    @keyframes dash-flow {
+      to { stroke-dashoffset: -28; }
+    }
+
+    .dash-animate { animation: dash-flow 1.5s linear infinite; }
+
+    /* ── Stat Boxes ───────────────────────────────── */
+    .stat-row {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin: 32px 0;
+    }
+
+    .stat-box {
+      flex: 1;
+      min-width: 140px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Nav Dots ──────────────────────────────────── */
+    .nav-dots {
+      position: fixed;
+      right: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 100;
+    }
+
+    .nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      opacity: 0.3;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+      position: relative;
+    }
+
+    .nav-dot:hover { opacity: 0.7; transform: scale(1.3); }
+    .nav-dot.active { opacity: 1; background: var(--accent); transform: scale(1.3); }
+
+    .nav-dot .tooltip {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .nav-dot:hover .tooltip { opacity: 1; }
+
+    /* ── Separator ────────────────────────────────── */
+    .sep {
+      width: 60px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      margin: 20px 0;
+    }
+
+    /* ── List ──────────────────────────────────────── */
+    .check-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+
+    .check-list li::before {
+      content: '>';
+      color: var(--accent3);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* ── Comparison Table ─────────────────────────── */
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    .compare-table th {
+      background: rgba(56,189,248,0.1);
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table td {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Verification Layers ──────────────────────── */
+    .verify-layers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .verify-layer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      transition: all 0.3s ease;
+    }
+
+    .verify-layer:hover {
+      border-color: var(--accent3);
+      transform: translateX(8px);
+    }
+
+    .verify-layer-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(52,211,153,0.15);
+      color: var(--accent3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .verify-layer-content { flex: 1; }
+    .verify-layer-title { font-weight: 600; margin-bottom: 2px; }
+    .verify-layer-desc { font-size: 0.85rem; color: var(--text-dim); }
+
+    /* ── Safety Net Bars ──────────────────────────── */
+    .safety-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border-left: 3px solid;
+      margin-bottom: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .safety-bar:hover { transform: translateX(4px); }
+
+    .safety-bar-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    .slide-footer {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      opacity: 0.5;
+    }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 768px) {
+      .slide { padding: 40px 20px; }
+      .flow { gap: 6px; }
+      .flow-step { padding: 10px 14px; font-size: 0.8rem; }
+      .flow-arrow { font-size: 0.9rem; }
+      .cycle-ring { width: 300px; height: 300px; }
+      .stat-row { gap: 12px; }
+      .stat-box { min-width: 100px; padding: 14px; }
+      .stat-number { font-size: 1.8rem; }
+      .nav-dots { display: none; }
+      .card { padding: 20px; }
+    }
+
+    /* ── Keyboard hint ────────────────────────────── */
+    .kbd-hint {
+      position: fixed;
+      bottom: 20px;
+      right: 24px;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      opacity: 0.4;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.7rem;
+      background: var(--bg-card);
+    }
+
+    /* ── Animated connector lines ─────────────────── */
+    .connector-line {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      margin: 16px 0;
+      opacity: 0.3;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation Dots -->
+<nav class="nav-dots" aria-label="Slide-Navigation">
+  <button class="nav-dot active" data-slide="0"><span class="tooltip">Start</span></button>
+  <button class="nav-dot" data-slide="1"><span class="tooltip">Rollen</span></button>
+  <button class="nav-dot" data-slide="2"><span class="tooltip">Dokumente</span></button>
+  <button class="nav-dot" data-slide="3"><span class="tooltip">Kreislauf</span></button>
+  <button class="nav-dot" data-slide="4"><span class="tooltip">Phase 1: Orient</span></button>
+  <button class="nav-dot" data-slide="5"><span class="tooltip">Phase 2: Preflight</span></button>
+  <button class="nav-dot" data-slide="6"><span class="tooltip">Phase 2.5: Opus</span></button>
+  <button class="nav-dot" data-slide="7"><span class="tooltip">Phase 3: Implement</span></button>
+  <button class="nav-dot" data-slide="8"><span class="tooltip">Phase 4: Verify</span></button>
+  <button class="nav-dot" data-slide="9"><span class="tooltip">Phase 5: Persist</span></button>
+  <button class="nav-dot" data-slide="10"><span class="tooltip">Validation Loop</span></button>
+  <button class="nav-dot" data-slide="11"><span class="tooltip">Sicherheitsnetze</span></button>
+  <button class="nav-dot" data-slide="12"><span class="tooltip">Ergebnisse</span></button>
+</nav>
+
+<div class="kbd-hint">
+  <kbd>&larr;</kbd> <kbd>&rarr;</kbd> oder scrollen
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 0: Title -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-0">
+  <div class="bg-shape bg-shape-1"></div>
+  <div class="bg-shape bg-shape-2"></div>
+  <div class="slide-inner" style="text-align: center;">
+    <div class="reveal">
+      <div style="font-size: 4rem; margin-bottom: 24px;" class="float">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" style="display:inline-block;vertical-align:middle;">
+          <rect width="80" height="80" rx="20" fill="rgba(56,189,248,0.12)" stroke="var(--accent)" stroke-width="2"/>
+          <path d="M25 40 L35 50 L55 30" stroke="var(--accent3)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="40" cy="22" r="5" fill="var(--accent2)" opacity="0.6"/>
+          <circle cx="58" cy="52" r="4" fill="var(--accent4)" opacity="0.6"/>
+          <circle cx="22" cy="55" r="3" fill="var(--accent5)" opacity="0.6"/>
+        </svg>
+      </div>
+    </div>
+    <h1 class="reveal reveal-delay-1">
+      <span class="gradient-text">Agentisches</span><br>
+      Vorgehensmodell
+    </h1>
+    <div class="sep reveal reveal-delay-2" style="margin: 20px auto;"></div>
+    <p class="subtitle reveal reveal-delay-3" style="margin: 0 auto 32px;">
+      Wie ein autonomer KI-Agent 45 Requirements in einem Projekt
+      systematisch abarbeitet &mdash; mit Qualit&auml;tssicherung,
+      Crash Recovery und Dual-Modell-Strategie.
+    </p>
+    <div class="stat-row reveal reveal-delay-4" style="justify-content: center; max-width: 700px; margin: 0 auto;">
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent);">2</div>
+        <div class="stat-label">KI-Modelle</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent3);">5</div>
+        <div class="stat-label">Phasen</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent2);">45</div>
+        <div class="stat-label">Requirements</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent4);">7</div>
+        <div class="stat-label">Dokumente</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer">Lernplattform &mdash; learn.szut.dev</div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 1: Rollen -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-1">
+  <div class="bg-shape bg-shape-3"></div>
+  <div class="slide-inner">
+    <span class="label label-phase reveal">Die Akteure</span>
+    <h2 class="reveal reveal-delay-1">Drei Rollen, klare Verantwortung</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 40px;">
+      Jede Rolle hat fest definierte Befugnisse. Keiner &uuml;berschreitet seinen Bereich.
+    </p>
+
+    <div class="card-grid card-grid-3">
+      <!-- Sonnet -->
+      <div class="card reveal reveal-delay-2">
+        <div class="icon-circle icon-sonnet">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22" opacity="0.3"/></svg>
+        </div>
+        <span class="label label-sonnet">Sonnet</span>
+        <h3>Der Implementierer</h3>
+        <ul class="check-list">
+          <li>Schreibt allen Code</li>
+          <li>Erstellt Unit-, Integrations- &amp; E2E-Tests</li>
+          <li>F&uuml;hrt Build, Lint, Tests aus</li>
+          <li>Macht Git-Commits</li>
+          <li>Aktualisiert Artefakte</li>
+        </ul>
+      </div>
+
+      <!-- Opus -->
+      <div class="card reveal reveal-delay-3">
+        <div class="icon-circle icon-opus">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </div>
+        <span class="label label-opus">Opus</span>
+        <h3>Der Architekt &amp; Pr&uuml;fer</h3>
+        <ul class="check-list">
+          <li>Plant Implementierungen (Phase 2.5)</li>
+          <li>Definiert Architektur-Entscheidungen</li>
+          <li>Security Reviews bei Auth/API</li>
+          <li>Validiert fertige REQs (Validator Loop)</li>
+          <li>Schreibt <strong>keinen</strong> Code</li>
+        </ul>
+      </div>
+
+      <!-- loop.sh -->
+      <div class="card reveal reveal-delay-4">
+        <div class="icon-circle icon-loop">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/><polyline points="21 3 21 9 15 9"/></svg>
+        </div>
+        <span class="label label-loop">loop.sh</span>
+        <h3>Der Orchestrator</h3>
+        <ul class="check-list">
+          <li>Startet Iterationen automatisch</li>
+          <li>Injiziert Kontext + n&auml;chstes REQ</li>
+          <li>Trackt Kosten, Dauer, Tool-Calls</li>
+          <li>Crash Recovery &amp; Rollback</li>
+          <li>L&ouml;st Validierungen aus</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 2: Dokumente -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-2">
+  <div class="bg-shape bg-shape-1" style="opacity: 0.1;"></div>
+  <div class="slide-inner">
+    <span class="label label-phase reveal">Wissensbasis</span>
+    <h2 class="reveal reveal-delay-1">7 lebende Dokumente</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 40px;">
+      Jede Iteration liest und schreibt spezifische Dokumente. So bleibt Wissen &uuml;ber Sessions hinweg erhalten.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card reveal reveal-delay-2">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(56,189,248,0.12); color: var(--accent);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--accent);">PRD.md</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              Requirements mit Status, Priorit&auml;t, Gr&ouml;&szlig;e, Abh&auml;ngigkeiten und Akzeptanzkriterien.
+              Wird <strong>jede Iteration</strong> gelesen, Status aktualisiert.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-2">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(251,191,36,0.12); color: var(--loop);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--loop);">status.json</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              <strong>Autoritative</strong> Statusquelle. Maschinenlesbar.
+              Wird zuletzt geschrieben (nach Git-Commit) um Korruption zu vermeiden.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-3">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(52,211,153,0.12); color: var(--accent3);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--accent3);">context.md</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              Kurzer Projektkontext (max 50 Zeilen). Wird jede Iteration
+              <strong>komplett neu geschrieben</strong>. Enth&auml;lt: was existiert, was als n&auml;chstes kommt.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-3">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(192,132,252,0.12); color: var(--accent2);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--accent2);">architecture.md</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              Architektur-Entscheidungen als ADRs. <strong>Append-only</strong> &mdash;
+              bestehende Eintr&auml;ge werden nie ge&auml;ndert oder gel&ouml;scht.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(244,114,182,0.12); color: var(--accent5);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--accent5);">learnings.md</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              Persistente Erkenntnisse aus fr&uuml;heren Iterationen. <strong>Append-only.</strong>
+              Bugs, Workarounds, Muster die nicht vergessen werden d&uuml;rfen.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <div class="doc-card">
+          <div class="doc-icon" style="background: rgba(251,146,60,0.12); color: var(--accent4);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div>
+            <h3 style="color: var(--accent4);">AGENT.md &amp; VALIDATOR.md</h3>
+            <p style="font-size: 0.9rem; color: var(--text-dim);">
+              Gesch&uuml;tzte Instruktions-Dateien. Der Agent darf sie <strong>nicht ver&auml;ndern</strong>.
+              Definieren Phasen, Regeln, Ablauf.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 3: Kreislauf-Überblick -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-3">
+  <div class="bg-shape bg-shape-2" style="opacity: 0.08;"></div>
+  <div class="slide-inner" style="text-align: center;">
+    <span class="label label-phase reveal">Der Kreislauf</span>
+    <h2 class="reveal reveal-delay-1">Eine Iteration = Ein Requirement</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin: 0 auto 16px;">
+      Jede Iteration durchl&auml;uft 5 Phasen. Der Orchestrator startet die n&auml;chste automatisch.
+    </p>
+
+    <!-- Flow Diagram -->
+    <div class="flow reveal reveal-delay-3">
+      <div class="flow-step phase-orient">
+        <span class="step-num">1</span> Orient
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step phase-preflight">
+        <span class="step-num">2</span> Preflight
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step phase-plan">
+        <span class="step-num">2.5</span> Opus-Plan
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step phase-implement">
+        <span class="step-num">3</span> Implement
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step phase-verify">
+        <span class="step-num">4</span> Verify
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step phase-persist">
+        <span class="step-num">5</span> Persist
+      </div>
+    </div>
+
+    <!-- Cycle Diagram -->
+    <div class="cycle-container reveal reveal-delay-4">
+      <div class="cycle-ring">
+        <svg class="cycle-svg" viewBox="0 0 420 420">
+          <circle cx="210" cy="210" r="160" stroke="var(--border)" stroke-width="1" fill="none" stroke-dasharray="6 6" class="rotate-slow" style="transform-origin: center;"/>
+          <!-- Arrows between nodes -->
+          <path d="M 300 90 A 160 160 0 0 1 360 210" stroke="var(--accent4)" class="dash-animate"/>
+          <path d="M 360 230 A 160 160 0 0 1 300 340" stroke="var(--opus)" class="dash-animate"/>
+          <path d="M 280 350 A 160 160 0 0 1 140 350" stroke="var(--sonnet)" class="dash-animate"/>
+          <path d="M 120 340 A 160 160 0 0 1 60 210" stroke="var(--accent3)" class="dash-animate"/>
+          <path d="M 60 190 A 160 160 0 0 1 140 80" stroke="var(--accent5)" class="dash-animate"/>
+          <path d="M 160 75 A 160 160 0 0 1 280 75" stroke="var(--accent)" class="dash-animate"/>
+        </svg>
+
+        <div class="cycle-center">
+          <div class="cycle-center-icon float">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--loop)" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.2-8.6"/><polyline points="21 3 21 9 15 9"/></svg>
+          </div>
+          <div style="font-weight: 700; font-size: 0.9rem;">loop.sh</div>
+          <div style="font-size: 0.75rem; color: var(--text-dim);">Orchestrator</div>
+        </div>
+
+        <!-- Nodes positioned around the circle -->
+        <div class="cycle-node" style="top: 30px; left: 50%; transform: translateX(-50%);">
+          <div class="cycle-node-dot" style="background: rgba(56,189,248,0.15); border-color: var(--accent); color: var(--accent);">1</div>
+          <div>Orient</div>
+        </div>
+        <div class="cycle-node" style="top: 120px; right: 10px;">
+          <div class="cycle-node-dot" style="background: rgba(251,146,60,0.15); border-color: var(--accent4); color: var(--accent4);">2</div>
+          <div>Preflight</div>
+        </div>
+        <div class="cycle-node" style="bottom: 80px; right: 15px;">
+          <div class="cycle-node-dot" style="background: rgba(192,132,252,0.15); border-color: var(--opus); color: var(--opus);">2.5</div>
+          <div>Opus-Plan</div>
+        </div>
+        <div class="cycle-node" style="bottom: 20px; left: 50%; transform: translateX(-50%);">
+          <div class="cycle-node-dot" style="background: rgba(96,165,250,0.15); border-color: var(--sonnet); color: var(--sonnet);">3</div>
+          <div>Implement</div>
+        </div>
+        <div class="cycle-node" style="bottom: 80px; left: 15px;">
+          <div class="cycle-node-dot" style="background: rgba(52,211,153,0.15); border-color: var(--accent3); color: var(--accent3);">4</div>
+          <div>Verify</div>
+        </div>
+        <div class="cycle-node" style="top: 120px; left: 10px;">
+          <div class="cycle-node-dot" style="background: rgba(244,114,182,0.15); border-color: var(--accent5); color: var(--accent5);">5</div>
+          <div>Persist</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 4: Phase 1 — Orient -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-4">
+  <div class="bg-shape bg-shape-1" style="background: var(--accent); opacity: 0.08;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label" style="background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid rgba(56,189,248,0.3);">Phase 1</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--accent);">Orient</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Der Agent liest den aktuellen Stand und w&auml;hlt das n&auml;chste Requirement.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card reveal reveal-delay-2">
+        <h3>Was wird gelesen?</h3>
+        <div class="timeline" style="margin-top: 20px;">
+          <div class="timeline-item active phase-orient">
+            <strong>context.md</strong>
+            <p style="font-size: 0.85rem; color: var(--text-dim);">Was existiert? Was passierte zuletzt?</p>
+          </div>
+          <div class="timeline-item active phase-orient">
+            <strong>architecture.md</strong>
+            <p style="font-size: 0.85rem; color: var(--text-dim);">Bestehende Architektur-Entscheidungen</p>
+          </div>
+          <div class="timeline-item active phase-orient">
+            <strong>learnings.md</strong>
+            <p style="font-size: 0.85rem; color: var(--text-dim);">Erkenntnisse aus fr&uuml;heren Iterationen</p>
+          </div>
+          <div class="timeline-item active phase-orient">
+            <strong>PRD.md + status.json</strong>
+            <p style="font-size: 0.85rem; color: var(--text-dim);">N&auml;chstes offenes REQ finden</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-3">
+        <h3>REQ-Auswahl-Logik</h3>
+        <div style="margin-top: 16px;">
+          <div class="safety-bar" style="border-color: var(--danger);">
+            <span class="safety-bar-icon">P0</span>
+            <div>
+              <strong>H&ouml;chste Priorit&auml;t zuerst</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">P0 &gt; P1 &gt; P2</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--warning);">
+            <span class="safety-bar-icon">#</span>
+            <div>
+              <strong>Niedrigste REQ-Nummer</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Bei gleicher Priorit&auml;t</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent3);">
+            <span class="safety-bar-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div>
+              <strong>Abh&auml;ngigkeiten erf&uuml;llt</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Alle Deps m&uuml;ssen <code>done</code> sein</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent);">
+            <span class="safety-bar-icon">S</span>
+            <div>
+              <strong>S-Batching m&ouml;glich</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Bis zu 3 kleine REQs pro Iteration</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 5: Phase 2 — Preflight -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-5">
+  <div class="bg-shape bg-shape-2" style="background: var(--accent4); opacity: 0.06;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label" style="background: rgba(251,146,60,0.15); color: var(--accent4); border: 1px solid rgba(251,146,60,0.3);">Phase 2</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--accent4);">Preflight</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Bevor Code geschrieben wird: Ist die Umgebung gesund?
+    </p>
+
+    <div class="verify-layers reveal reveal-delay-3">
+      <div class="verify-layer">
+        <div class="verify-layer-num">1</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title">Projektstruktur</div>
+          <div class="verify-layer-desc">Verzeichnisse, node_modules, package.json vorhanden?</div>
+        </div>
+      </div>
+      <div class="verify-layer">
+        <div class="verify-layer-num">2</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title">Build</div>
+          <div class="verify-layer-desc"><code>npm run build</code> muss erfolgreich durchlaufen</div>
+        </div>
+      </div>
+      <div class="verify-layer">
+        <div class="verify-layer-num">3</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title">Tests</div>
+          <div class="verify-layer-desc">Alle bestehenden Tests m&uuml;ssen gr&uuml;n sein</div>
+        </div>
+      </div>
+      <div class="verify-layer">
+        <div class="verify-layer-num">4</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title">Linter</div>
+          <div class="verify-layer-desc">Keine ESLint-Fehler (Warnungen ok)</div>
+        </div>
+      </div>
+      <div class="verify-layer" style="border-color: var(--danger);">
+        <div class="verify-layer-num" style="background: rgba(248,113,113,0.15); color: var(--danger);">5</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title" style="color: var(--danger);">Playwright MCP (IMMER Pflicht)</div>
+          <div class="verify-layer-desc">Browser-Verifikation muss erreichbar sein. Ohne Playwright &rarr; sofort blocked.</div>
+        </div>
+      </div>
+      <div class="verify-layer">
+        <div class="verify-layer-num">6</div>
+        <div class="verify-layer-content">
+          <div class="verify-layer-title">Docker Stack</div>
+          <div class="verify-layer-desc">PocketBase + Nginx m&uuml;ssen laufen (entf&auml;llt bei SANDBOX_MODE)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card reveal reveal-delay-4" style="border-color: var(--danger); background: rgba(248,113,113,0.05);">
+      <p style="font-size: 0.95rem; text-align: center;">
+        <strong style="color: var(--danger);">Preflight-Failure?</strong>
+        &mdash; Regressions-Check: War es die letzte Iteration? Fix oder Rollback.
+        Nie implementieren auf kaputtem Fundament.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 6: Phase 2.5 — Opus Planning -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-6">
+  <div class="bg-shape bg-shape-3" style="background: var(--opus); opacity: 0.08;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label label-opus">Phase 2.5 &mdash; Nur f&uuml;r M-REQs</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--opus);">Opus plant, Sonnet setzt um</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      F&uuml;r mittelgro&szlig;e Requirements erstellt Opus einen verbindlichen Implementierungsplan.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card reveal reveal-delay-3">
+        <h3>Was Opus bekommt</h3>
+        <ul class="check-list" style="margin-top: 12px;">
+          <li>Vollen Codebase-Zugriff (liest selbst)</li>
+          <li>context.md, architecture.md, learnings.md</li>
+          <li>Akzeptanzkriterien des REQs</li>
+          <li>Pfade relevanter bestehender Dateien</li>
+        </ul>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <h3>Was Opus liefert</h3>
+        <ul class="check-list" style="margin-top: 12px;">
+          <li>Welche Dateien erstellen/&auml;ndern (exakte Pfade)</li>
+          <li>Welche Patterns &amp; Signaturen verwenden</li>
+          <li>Welche Tests schreiben</li>
+          <li>Neue Architektur-Entscheidungen (ADRs)</li>
+          <li><strong>User Journeys f&uuml;r den Smoke-Test</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card reveal reveal-delay-5" style="margin-top: 24px; border-color: var(--opus); text-align: center;">
+      <p style="font-size: 1.05rem;">
+        <strong style="color: var(--opus);">Opus' Plan ist verbindlich.</strong><br>
+        <span style="color: var(--text-dim);">Sonnet weicht nur ab wenn technisch unm&ouml;glich.</span>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 7: Phase 3 — Implement -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-7">
+  <div class="bg-shape bg-shape-1" style="background: var(--sonnet); opacity: 0.06;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label label-sonnet">Phase 3</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--sonnet);">Implement</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Sonnet schreibt Code, Tests und einen Sicherheits-Checkpoint-Commit.
+    </p>
+
+    <div class="card-grid card-grid-3 reveal reveal-delay-3">
+      <div class="card">
+        <div class="icon-circle icon-sonnet">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>Code</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Implementierung gem&auml;&szlig; Opus-Plan.
+          Status in PRD.md auf <code>in_progress</code>.
+          Akzeptanzkriterien abhaken.
+        </p>
+      </div>
+      <div class="card">
+        <div class="icon-circle icon-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Tests</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Unit-Tests (Vitest), E2E-Tests (Playwright).
+          Mocks nur f&uuml;r externe APIs &mdash; eigene Module werden real getestet.
+        </p>
+      </div>
+      <div class="card">
+        <div class="icon-circle icon-orange">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Checkpoint</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          WIP-Commit als Sicherheitsnetz.
+          Bei Timeout geht keine Arbeit verloren.
+          Kein <code>git add -A</code>!
+        </p>
+      </div>
+    </div>
+
+    <table class="compare-table reveal reveal-delay-4" style="margin-top: 32px;">
+      <thead>
+        <tr>
+          <th>Test-Ebene</th>
+          <th>Tool</th>
+          <th>Mock-Regeln</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Unit</strong></td>
+          <td>Vitest + React Testing Library</td>
+          <td>PocketBase SDK, fetch, localStorage &mdash; OK</td>
+        </tr>
+        <tr>
+          <td><strong>Integration</strong></td>
+          <td>Vitest + echte Module</td>
+          <td>Eigene Module NICHT mocken</td>
+        </tr>
+        <tr>
+          <td><strong>E2E</strong></td>
+          <td>Playwright</td>
+          <td>Kein Mocking &mdash; echte App im Browser</td>
+        </tr>
+        <tr>
+          <td><strong>Smoke</strong></td>
+          <td>Playwright MCP</td>
+          <td>Echte App + Docker Stack</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 8: Phase 4 — Verify -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-8">
+  <div class="bg-shape bg-shape-2" style="background: var(--accent3); opacity: 0.06;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label" style="background: rgba(52,211,153,0.15); color: var(--accent3); border: 1px solid rgba(52,211,153,0.3);">Phase 4</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--accent3);">Verify</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Mehrstufige Verifikation. Kein <code>done</code> ohne bestandenen Smoke-Test.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="reveal reveal-delay-3">
+        <div class="verify-layers">
+          <div class="verify-layer" style="border-color: var(--accent3);">
+            <div class="verify-layer-num">4.1</div>
+            <div class="verify-layer-content">
+              <div class="verify-layer-title">Build + Tests + Lint</div>
+              <div class="verify-layer-desc">Automatisierte Checks m&uuml;ssen alle gr&uuml;n sein</div>
+            </div>
+          </div>
+          <div class="verify-layer" style="border-color: var(--accent);">
+            <div class="verify-layer-num" style="background: rgba(56,189,248,0.15); color: var(--accent);">4.1b</div>
+            <div class="verify-layer-content">
+              <div class="verify-layer-title">Akzeptanzkriterien-Gate</div>
+              <div class="verify-layer-desc">Jedes Kriterium einzeln abgehakt? Sonst kein <code>done</code>.</div>
+            </div>
+          </div>
+          <div class="verify-layer" style="border-color: var(--danger);">
+            <div class="verify-layer-num" style="background: rgba(248,113,113,0.15); color: var(--danger);">4.2a</div>
+            <div class="verify-layer-content">
+              <div class="verify-layer-title" style="color: var(--danger);">Core-App-Smoke-Test (PFLICHT)</div>
+              <div class="verify-layer-desc">App im Browser &ouml;ffnen. Kein Crash. Keine Console-Errors. Navigation funktioniert.</div>
+            </div>
+          </div>
+          <div class="verify-layer" style="border-color: var(--accent2);">
+            <div class="verify-layer-num" style="background: rgba(192,132,252,0.15); color: var(--accent2);">4.2b</div>
+            <div class="verify-layer-content">
+              <div class="verify-layer-title">REQ-spezifische User Journeys</div>
+              <div class="verify-layer-desc">Von Opus definierte Szenarien durchspielen</div>
+            </div>
+          </div>
+          <div class="verify-layer" style="border-color: var(--accent5);">
+            <div class="verify-layer-num" style="background: rgba(244,114,182,0.15); color: var(--accent5);">4.3</div>
+            <div class="verify-layer-content">
+              <div class="verify-layer-title">Full Verification (alle 3 Iterationen)</div>
+              <div class="verify-layer-desc">Responsive, Accessibility, visuelle Pr&uuml;fung</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-4" style="display: flex; flex-direction: column; justify-content: center;">
+        <h3 style="color: var(--danger); margin-bottom: 16px;">Kardinalregel</h3>
+        <div style="background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+          <p style="font-size: 1.05rem; font-weight: 600; margin-bottom: 8px;">Teste wie ein ECHTER Nutzer</p>
+          <ul class="check-list">
+            <li>Kein internes Wissen verwenden</li>
+            <li>Bei jedem Feld fragen: "W&uuml;sste ein Nutzer das?"</li>
+            <li>UX-Bugs melden statt umgehen</li>
+            <li>Nicht nur den Happy-Path testen</li>
+          </ul>
+        </div>
+        <div style="text-align: center; padding: 12px; border-radius: 8px; background: rgba(52,211,153,0.08); border: 1px solid rgba(52,211,153,0.2);">
+          <p style="font-size: 0.9rem; color: var(--accent3); font-weight: 600;">
+            Kein done ohne Playwright-Smoke-Test. Keine Ausnahmen.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 9: Phase 5 — Persist -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-9">
+  <div class="bg-shape bg-shape-3" style="background: var(--accent5); opacity: 0.06;"></div>
+  <div class="slide-inner">
+    <div class="reveal">
+      <span class="label" style="background: rgba(244,114,182,0.15); color: var(--accent5); border: 1px solid rgba(244,114,182,0.3);">Phase 5</span>
+    </div>
+    <h2 class="reveal reveal-delay-1" style="color: var(--accent5);">Persist</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Ergebnisse sichern. Die Schreibreihenfolge ist kritisch.
+    </p>
+
+    <div class="card reveal reveal-delay-3" style="max-width: 700px; margin: 0 auto;">
+      <h3 style="margin-bottom: 20px;">Atomare Schreibreihenfolge</h3>
+      <div class="timeline">
+        <div class="timeline-item active phase-persist">
+          <strong>1. Artefakte aktualisieren</strong>
+          <p style="font-size: 0.85rem; color: var(--text-dim);">context.md neu schreiben, learnings.md + architecture.md appenden</p>
+        </div>
+        <div class="timeline-item active phase-persist">
+          <strong>2. PRD.md updaten</strong>
+          <p style="font-size: 0.85rem; color: var(--text-dim);">Status auf <code>done</code>, Checkboxen abhaken (best-effort)</p>
+        </div>
+        <div class="timeline-item active phase-persist">
+          <strong>3. Git Commit (ohne status.json!)</strong>
+          <p style="font-size: 0.85rem; color: var(--text-dim);">Code + Artefakte committen. Kein <code>--amend</code>.</p>
+        </div>
+        <div class="timeline-item active" style="--phase-color: var(--danger);">
+          <strong style="color: var(--danger);">4. status.json finalisieren (LETZTER Schritt)</strong>
+          <p style="font-size: 0.85rem; color: var(--text-dim);">
+            Erst <strong>nach</strong> dem Commit. Atomic Write (temp + mv).
+            Bei Crash/Timeout bleibt das REQ auf <code>in_progress</code> statt f&auml;lschlich <code>done</code>.
+          </p>
+        </div>
+        <div class="timeline-item active phase-persist">
+          <strong>5. Status-Block ausgeben</strong>
+          <p style="font-size: 0.85rem; color: var(--text-dim);">Maschinenlesbarer Block f&uuml;r loop.sh (REQ, Status, Metriken)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 10: Validation Loop -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-10">
+  <div class="bg-shape bg-shape-1" style="background: var(--opus); opacity: 0.08;"></div>
+  <div class="slide-inner">
+    <span class="label label-opus reveal">Qualit&auml;tssicherung</span>
+    <h2 class="reveal reveal-delay-1">Der <span style="color: var(--opus);">Opus</span> Validation Loop</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Alle 5 Iterationen pr&uuml;ft Opus die Arbeit von Sonnet. Opus schreibt keinen Code &mdash; es validiert und korrigiert.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card reveal reveal-delay-3">
+        <h3>Was Opus pr&uuml;ft</h3>
+        <div style="margin-top: 16px;">
+          <div class="safety-bar" style="border-color: var(--accent3);">
+            <span class="safety-bar-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <div>
+              <strong>Akzeptanzkriterien</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Jedes einzelne Kriterium gegen Code verifiziert</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent);">
+            <span class="safety-bar-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </span>
+            <div>
+              <strong>Echte Playwright-Smoke-Tests</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">App im Browser &ouml;ffnen, klicken, pr&uuml;fen</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent4);">
+            <span class="safety-bar-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent4)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </span>
+            <div>
+              <strong>Log-Analyse</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Regel-Umgehungen? Tests &uuml;bersprungen? Mocks-Missbrauch?</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent2);">
+            <span class="safety-bar-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <div>
+              <strong>Security Review</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Bei Auth/API-REQs: XSS, Injection, Auth-Bypass</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <h3>Korrekturen</h3>
+        <div style="margin-top: 16px;">
+          <div class="safety-bar" style="border-color: var(--danger);">
+            <span class="safety-bar-icon" style="color: var(--danger);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+            </span>
+            <div>
+              <strong>REQ zur&uuml;cksetzen</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">done &rarr; open (Sonnet muss nacharbeiten)</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--warning);">
+            <span class="safety-bar-icon" style="color: var(--warning);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+            <div>
+              <strong>REQ blocken</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Bei fundamentalen Problemen</p>
+            </div>
+          </div>
+          <div class="safety-bar" style="border-color: var(--accent3);">
+            <span class="safety-bar-icon" style="color: var(--accent3);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </span>
+            <div>
+              <strong>Learnings dokumentieren</strong>
+              <p style="font-size: 0.8rem; color: var(--text-dim);">Muster f&uuml;r zuk&uuml;nftige Iterationen festhalten</p>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px; padding: 14px; border-radius: 8px; background: rgba(192,132,252,0.08); border: 1px solid rgba(192,132,252,0.2); text-align: center;">
+          <p style="font-size: 0.85rem;">
+            <strong style="color: var(--opus);">Dynamisches Intervall:</strong><br>
+            <span style="color: var(--text-dim);">Alles sauber? &rarr; N&auml;chste Pr&uuml;fung in 5 Iterationen<br>
+            Korrekturen n&ouml;tig? &rarr; N&auml;chste Pr&uuml;fung in 3 Iterationen</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 11: Sicherheitsnetze -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-11">
+  <div class="bg-shape bg-shape-2" style="background: var(--warning); opacity: 0.06;"></div>
+  <div class="slide-inner">
+    <span class="label label-loop reveal">Robustheit</span>
+    <h2 class="reveal reveal-delay-1">Sicherheitsnetze</h2>
+    <p class="subtitle reveal reveal-delay-2" style="margin-bottom: 36px;">
+      Autonome Agenten scheitern. Das System ist darauf ausgelegt.
+    </p>
+
+    <div class="card-grid card-grid-2">
+      <div class="card reveal reveal-delay-3">
+        <div class="icon-circle icon-loop">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 3 3 9 9 9" transform="translate(0,0.5)"/></svg>
+        </div>
+        <h3>Crash Recovery</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          In-progress REQs werden automatisch auf <code>open</code> zur&uuml;ckgesetzt.
+          WIP-Checkpoint-Commits &uuml;berleben Abst&uuml;rze.
+          status.json-Backup vor jeder Iteration.
+        </p>
+      </div>
+
+      <div class="card reveal reveal-delay-3">
+        <div class="icon-circle icon-danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </div>
+        <h3>Repeat Detection</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          Gleiches REQ 3x hintereinander versucht?
+          Automatisch <code>blocked</code>. Endlos-Schleifen vermeiden.
+        </p>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <div class="icon-circle icon-orange">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <h3>Timeout &amp; Turn-Budget</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          30 Min. pro Iteration. 100 Turns pro Agent-Session.
+          Ab Turn 80: nur noch abschlie&szlig;en.
+          2x Low-Activity? Loop stoppt automatisch.
+        </p>
+      </div>
+
+      <div class="card reveal reveal-delay-4">
+        <div class="icon-circle icon-green">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
+        <h3>Scope Guard</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          Gesch&uuml;tzte Dateien: AGENT.md, VALIDATOR.md, loop.sh, CLAUDE.md.
+          Der Agent darf sie lesen, aber <strong>nie ver&auml;ndern</strong>.
+        </p>
+      </div>
+
+      <div class="card reveal reveal-delay-5">
+        <div class="icon-circle icon-accent">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3>Cost Tracking</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          Kosten pro Iteration &amp; kumuliert.
+          Token-Breakdown pro Modell (Opus, Sonnet, Haiku).
+          JSONL-Log f&uuml;r sp&auml;tere Analyse.
+        </p>
+      </div>
+
+      <div class="card reveal reveal-delay-5">
+        <div class="icon-circle icon-pink">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        </div>
+        <h3>Git Tags &amp; Branches</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim); margin-top: 8px;">
+          Automatischer Agent-Branch (nicht auf main).
+          Tags pro Iteration f&uuml;r Rollback.
+          Kein force-push, kein amend.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SLIDE 12: Ergebnisse & Summary -->
+<!-- ═══════════════════════════════════════════════ -->
+<section class="slide" id="slide-12">
+  <div class="bg-shape bg-shape-1"></div>
+  <div class="bg-shape bg-shape-2"></div>
+  <div class="slide-inner" style="text-align: center;">
+    <span class="label label-phase reveal">Zusammenfassung</span>
+    <h2 class="reveal reveal-delay-1">
+      <span class="gradient-text">Autonome Entwicklung</span><br>mit Qualit&auml;tsgarantie
+    </h2>
+    <div class="sep reveal reveal-delay-2" style="margin: 20px auto;"></div>
+
+    <div class="stat-row reveal reveal-delay-3" style="justify-content: center; max-width: 900px; margin: 32px auto;">
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent3);">45/45</div>
+        <div class="stat-label">Requirements done</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--sonnet);">600+</div>
+        <div class="stat-label">Tests</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--opus);">19</div>
+        <div class="stat-label">ADRs</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" style="color: var(--accent4);">50+</div>
+        <div class="stat-label">Learnings</div>
+      </div>
+    </div>
+
+    <div class="card-grid card-grid-3 reveal reveal-delay-4" style="margin-top: 24px; text-align: left;">
+      <div class="card" style="border-top: 3px solid var(--sonnet);">
+        <h3 style="color: var(--sonnet);">Sonnet implementiert</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Code, Tests, Commits, Artefakte.
+          Folgt dem Plan, befolgt Regeln,
+          wird bei Abweichungen korrigiert.
+        </p>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--opus);">
+        <h3 style="color: var(--opus);">Opus kontrolliert</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Architektur, Security, Validierung.
+          Setzt REQs zur&uuml;ck, dokumentiert Muster,
+          sch&uuml;tzt vor Qualit&auml;tsverlust.
+        </p>
+      </div>
+      <div class="card" style="border-top: 3px solid var(--loop);">
+        <h3 style="color: var(--loop);">loop.sh orchestriert</h3>
+        <p style="font-size: 0.9rem; color: var(--text-dim);">
+          Crash Recovery, Timeouts, Kosten-Tracking.
+          Startet Validierungen, erkennt Schleifen,
+          h&auml;lt den Prozess am Laufen.
+        </p>
+      </div>
+    </div>
+
+    <p class="reveal reveal-delay-5" style="margin-top: 40px; color: var(--text-dim); font-size: 0.95rem;">
+      Lernplattform &mdash; learn.szut.dev
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- JavaScript: Scroll Reveal + Nav + Keyboard -->
+<!-- ═══════════════════════════════════════════════ -->
+<script>
+(function() {
+  // ── Scroll Reveal ──────────────────────────────
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // ── Nav Dots ───────────────────────────────────
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.nav-dot');
+
+  const slideObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(slides).indexOf(entry.target);
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(slide => slideObserver.observe(slide));
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const idx = parseInt(dot.dataset.slide);
+      slides[idx].scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+
+  // ── Keyboard Navigation ────────────────────────
+  let currentSlide = 0;
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      currentSlide = Math.min(currentSlide + 1, slides.length - 1);
+      slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      currentSlide = Math.max(currentSlide - 1, 0);
+      slides[currentSlide].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  // Sync currentSlide with scroll
+  const scrollObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        currentSlide = Array.from(slides).indexOf(entry.target);
+      }
+    });
+  }, { threshold: 0.6 });
+
+  slides.forEach(slide => scrollObserver.observe(slide));
+})();
+</script>
+
+</body>
+</html>

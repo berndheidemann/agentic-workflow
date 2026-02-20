@@ -1,0 +1,15 @@
+# Architecture Decision Log
+
+> Append-only. Neue Einträge am Ende anfügen, niemals bestehende ändern oder löschen.
+
+---
+
+## ADR-001: [Titel] ([Datum], REQ-XXX)
+
+**Kontext:** Warum war eine Entscheidung nötig?
+
+**Entscheidung:** Was wurde entschieden?
+
+**Begründung:** Warum diese Option?
+
+**Konsequenzen:** Was folgt daraus?

@@ -1,0 +1,19 @@
+# Agent runtime artifacts
+.agent/logs/
+.agent/loop.lock
+.agent/iterations.jsonl
+.agent/*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (if applicable)
+node_modules/
+dist/

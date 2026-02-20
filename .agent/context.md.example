@@ -1,0 +1,18 @@
+# Agent Context
+
+> 2026-01-15 | 0/5 done, 0 blocked, 0 in_progress, 5 open | Neues Projekt
+
+## Was zuletzt passiert ist
+
+Noch keine Iteration gelaufen. Projekt wurde gerade aufgesetzt.
+
+## Was existiert
+
+- Projektstruktur mit src/, tests/
+- Build-Tool (Vite) konfiguriert
+- ESLint + Prettier konfiguriert
+
+## Nächste Schritte
+
+- REQ-000 (Projektstruktur) ist das erste offene REQ
+- Danach REQ-001 und REQ-002 (keine Abhängigkeiten untereinander)
