@@ -501,17 +501,17 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-053: World of Zuul — Shared-Integration
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-005, REQ-006, REQ-007, REQ-052
 - **Akzeptanzkriterien:**
-  - [ ] `@lernplattform/shared` als Dependency
-  - [ ] `AuthProvider` im Layout eingebunden
-  - [ ] `ProgressTracker` lauscht auf `exercise-complete` Events
-  - [ ] Sidebar zeigt Unlock-Status
-  - [ ] Gast-Modus funktioniert (alles offen, kein Tracking)
-  - [ ] Checkbox-basiertes Progress-Tracking mit `exercise-complete` Events kompatibel
+  - [x] `@lernplattform/shared` als Dependency
+  - [x] `AuthProvider` im Layout eingebunden
+  - [x] `ProgressTracker` lauscht auf `exercise-complete` Events
+  - [x] Sidebar zeigt Unlock-Status
+  - [x] Gast-Modus funktioniert (alles offen, kein Tracking)
+  - [x] Checkbox-basiertes Progress-Tracking mit `exercise-complete` Events kompatibel
 
 ---
 
@@ -560,16 +560,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-061: React-SPA-Sites integrieren (NumPy, UML)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-051
 - **Hinweis:** Erfordert Zugriff auf die Repos `numpy-lernsituation` und `uml-site`
 - **Akzeptanzkriterien:**
-  - [ ] NumPy: Vite `base: '/numpy'`, AuthProvider in Root, Router basename, Build erfolgreich
-  - [ ] UML: Vite `base: '/uml'`, AuthProvider in Root, Build erfolgreich
-  - [ ] UML: Bestehendes Achievement-System mit Progress-Tracking kompatibel machen
-  - [ ] Exercise-Events werden in beiden Sites getrackt
+  - [x] NumPy: Vite `base: '/numpy'`, AuthProvider in Root, Router basename, Build erfolgreich
+  - [x] UML: Vite `base: '/uml'`, AuthProvider in Root, Build erfolgreich
+  - [x] UML: Bestehendes Achievement-System mit Progress-Tracking kompatibel machen
+  - [x] Exercise-Events werden in beiden Sites getrackt
 
 ---
 
@@ -590,14 +590,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-071: Ops-Scripts (Backup + Deploy)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-070
 - **Akzeptanzkriterien:**
-  - [ ] `scripts/backup.sh` sichert PocketBase SQLite-DB, gzip, 30-Tage-Rotation, Cron-fähig
-  - [ ] `scripts/deploy.sh <site-name>` deployt eine einzelne Site (Build + rsync)
-  - [ ] Deploy-Script validiert Site-Name gegen Site-Registry (REQ-009), nicht gegen hartcodierte Liste
+  - [x] `scripts/backup.sh` sichert PocketBase SQLite-DB, gzip, 30-Tage-Rotation, Cron-fähig
+  - [x] `scripts/deploy.sh <site-name>` deployt eine einzelne Site (Build + rsync)
+  - [x] Deploy-Script validiert Site-Name gegen Site-Registry (REQ-009), nicht gegen hartcodierte Liste
 
 ### REQ-073: DSGVO & Security Hardening
 
