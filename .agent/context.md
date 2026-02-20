@@ -1,18 +1,18 @@
 # Agent Context
 
-> 2026-02-20 | 40/44 done, 0 blocked, 0 in_progress, 4 open | REQ-052: World of Zuul Migration
+> 2026-02-20 | 42/44 done, 0 blocked, 0 in_progress, 2 open | REQ-060: Starlight-Sites pandas + REST/NoSQL
 
 ## Was zuletzt passiert ist
 
-**REQ-052 (World of Zuul — Docusaurus → Astro/Starlight Migration):** Crash Recovery — Implementierung war bereits vollständig vorhanden.
-- `sites/zuul/` Astro/Starlight-Projekt mit `base: '/zuul'` existierte bereits
-- 25 Markdown-Seiten migriert (13 Arbeitsblätter + 11 Infoblätter + Index = 26 Seiten)
-- 22 React-Komponenten übernommen (AbstractClassBuilder, ClassExtractionVisualizer etc.)
-- Sidebar-Struktur aus `sidebars.js` korrekt übertragen
-- localStorage-Progress-Tracking via `public/progress-script.js` (Starlight-kompatibel, gleicher Storage-Key)
-- Build-Problem durch stale Dist-Cache — `rm -rf dist/` + sauberer Rebuild → 26 Seiten OK
-- `scripts/serve-sites.mjs`: `/zuul/` Route eingetragen (war auskommentiert)
-- Smoke-Test bestanden: Site lädt, Checkboxen funktionieren, keine Console-Fehler
+**REQ-060 (pandas + REST/NoSQL — Starlight-Sites):** Vollständig implementiert und verifiziert.
+- `@lernplattform/shared` + `pocketbase` als Dependency in beiden Sites
+- `SharedIntegration` + `ProgressBridge` React-Islands (identisch zu AP1-Trainer/Zuul-Pattern, ADR-009)
+- `Head.astro` Override: `<SharedIntegration client:load />` in beiden Sites
+- `Sidebar.astro` Override: `<SidebarUnlockInjector client:load />` für Lock-Icons
+- pandas: `exerciseProgress.ts` + `useExercise.ts` dispatchen `exercise-complete` CustomEvents (ADR-017)
+- REST/NoSQL: `useExerciseTracking.ts` dispatcht `exercise-complete` CustomEvents (ADR-017)
+- 13 pandas-Tests + 39 REST/NoSQL-Tests alle grün, beide Builds erfolgreich (45 + 10 Seiten)
+- TS-Fix in REST `useExerciseTracking.test.ts`: `[0]` → `.at(0)?.` (strict undefined check)
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -23,35 +23,32 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 - Monorepo npm Workspaces: `packages/shared`, `apps/hub`
 - `@lernplattform/shared`: Auth + Progress + Unlock + Validation + LoginBanner + SidebarUnlock + Prerequisite + Manifest
-  - `manifest/types.ts` — CourseManifest, ManifestModule, ManifestLesson, ManifestExercise
-  - SyncEngine: Offline-Detection, Auto-Reconnect, persistente Queue
 - `apps/hub`: Vite + React + TS + Tailwind + React Router (323 Tests)
-  - `use-class-progress.ts` (MatrixCell + suspicious-Flag), `use-course-visibility.ts`
-  - `progress-matrix.tsx`, `cell-detail-modal.tsx`
-  - Dashboard/MatrixView: Manifest-basierte Modul-Filter und Spalten
-- `sites/AP1-Trainer`: Astro/Starlight (eigenes .git), manifest-generator, SharedIntegration
-- `sites/pandas-lernen`: Astro/Starlight, gebaut, unter `/pandas/` erreichbar
-- `sites/zuul`: Astro/Starlight (FERTIG), base `/zuul`, 26 Seiten gebaut, Progress-Script vorhanden
-- `scripts/serve-sites.mjs`: serviert /ap1/, /pandas/, /zuul/ auf Port 8080
+- `sites/AP1-Trainer`: Astro/Starlight (eigenes .git), vollständige SharedIntegration
+- `sites/pandas-lernen`: Astro/Starlight, SharedIntegration FERTIG, Build 45 Seiten, `/pandas/`
+- `sites/rest_noSQL_datenformate`: Astro/Starlight, SharedIntegration FERTIG, Build 10 Seiten, `/rest/`
+- `sites/zuul`: Astro/Starlight (FERTIG + SharedIntegration), base `/zuul`, 26 Seiten
+- `sites/numpy-lernsituation`: React SPA (Vite) — REQ-061 ausstehend
+- `sites/uml-site`: React SPA (Vite) — REQ-061 ausstehend
 - Docker Compose: PocketBase + Nginx + Traefik-Labels
 - E2E: 32+ Playwright-Tests
 
 ## Nächste Prioritäten
 
-1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL) (dep: REQ-051 done)
-2. **REQ-053** (P1, M) — World of Zuul Shared-Integration (dep: REQ-052 → jetzt done)
-3. **REQ-061** (P1, M) — NumPy/UML-Sites integrieren (dep: REQ-051 done)
+1. **REQ-061** (P1, M) — React-SPA-Sites integrieren (NumPy, UML) (dep: REQ-051 done)
+2. **REQ-071** (P1, S) — Ops-Scripts (Backup + Deploy)
+3. **REQ-075** (P1, M) — Löschkonzept & Klasse archivieren
 
 ## Wichtige Architektur-Details
 
 - AP1-Trainer hat **eigenes `.git`-Repo** (`sites/AP1-Trainer/.git`) — Commits dort separat!
-- `sites/zuul/` ist KEIN eigenes git-Repo — Commits im Monorepo-Root
-- `sites.json` ist SSOT — bei neuer Site: 1 Eintrag + generate-nginx.sh ausführen
+- `sites/zuul/`, `sites/pandas-lernen/`, `sites/rest_noSQL_datenformate/` sind KEINE eigenen git-Repos
+- `sites/` ist im .gitignore (separate repos) — Site-Dateien werden nicht im Root-Repo committed
 - **Test-Ausführung:** `npm run test` (workspace-aware), nie `npx vitest run` im Root!
 - **Starlight v0.37+:** `Astro.locals.starlightRoute.entry.data` für Frontmatter (NICHT `Astro.props.entry`)
-- **PrerequisiteInjector:** `client:only="react"` (nicht `client:load`) — DOM-Zugriff im Funktionskörper
-- **Zuul Build:** Bei Build-Fehler "slug not found" → stale cache. Fix: `rm -rf sites/zuul/dist/` dann rebuild.
-- **serve-sites.mjs:** Neue Sites hier als Route eintragen wenn dist/ gebaut
+- **ADR-017:** Exercise-Event-Bridge: Sites dispatchen `exercise-complete` CustomEvents → `useProgress()` picked up
+- **REST/NoSQL Tests:** `cd sites/rest_noSQL_datenformate && npx vitest run` (eigene Config)
+- **pandas Tests:** `cd sites/pandas-lernen && npx vitest run`
 
 ## Credentials
 

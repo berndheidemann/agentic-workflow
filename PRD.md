@@ -547,16 +547,16 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-060: Starlight-Sites integrieren (pandas, REST/NoSQL)
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-051
 - **Hinweis:** Erfordert Zugriff auf die Repos `pandas-lernen` und `rest_noSQL_datenformate`
 - **Akzeptanzkriterien:**
-  - [ ] pandas-lernen: Base-Path `/pandas/`, Shared-Komponente integriert, Build erfolgreich
-  - [ ] REST/NoSQL: Base-Path `/rest/`, Shared-Komponente integriert, Build erfolgreich
-  - [ ] Exercise-Events werden in beiden Sites getrackt
-  - [ ] Gast-Modus funktioniert in beiden Sites
+  - [x] pandas-lernen: Base-Path `/pandas/`, Shared-Komponente integriert, Build erfolgreich
+  - [x] REST/NoSQL: Base-Path `/rest/`, Shared-Komponente integriert, Build erfolgreich
+  - [x] Exercise-Events werden in beiden Sites getrackt
+  - [x] Gast-Modus funktioniert in beiden Sites
 
 ### REQ-061: React-SPA-Sites integrieren (NumPy, UML)
 
