@@ -6,6 +6,15 @@ import type { AuthContextValue } from '@lernplattform/shared';
 import type { Class, User } from '@lernplattform/shared';
 import { ClassDetail } from './class-detail';
 
+// Mock useArchiveClass to avoid real pb.send in unit tests
+vi.mock('../hooks/use-archive-class', () => ({
+  useArchiveClass: () => ({
+    archiveClass: vi.fn().mockResolvedValue({ archived: true, deletedStudents: 2 }),
+    isArchiving: false,
+    error: null,
+  }),
+}));
+
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
 const mockClass: Class = {
@@ -210,6 +219,56 @@ describe('ClassDetail', () => {
 
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith('ABCDEF');
+    });
+  });
+
+  it('zeigt "Klasse archivieren"-Button für aktive Klassen', async () => {
+    mockGetOne.mockResolvedValueOnce({ ...mockClass, is_active: true });
+    mockGetFullList.mockResolvedValueOnce([]);
+
+    renderDetail();
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /Klasse.*archivieren/i })).toBeInTheDocument();
+    });
+  });
+
+  it('zeigt keinen Archivierungs-Button für archivierte Klassen', async () => {
+    mockGetOne.mockResolvedValueOnce({ ...mockClass, is_active: false });
+    mockGetFullList.mockResolvedValueOnce([]);
+
+    renderDetail();
+
+    await waitFor(() => screen.getByText('FI24a'));
+    expect(screen.queryByRole('button', { name: /Klasse.*archivieren/i })).not.toBeInTheDocument();
+  });
+
+  it('öffnet ArchiveClassDialog bei Klick auf Archivieren-Button', async () => {
+    HTMLDialogElement.prototype.showModal = vi.fn();
+    HTMLDialogElement.prototype.close = vi.fn();
+
+    mockGetOne.mockResolvedValueOnce({ ...mockClass, is_active: true });
+    mockGetFullList.mockResolvedValueOnce(mockStudents);
+
+    renderDetail();
+
+    await waitFor(() => screen.getByRole('button', { name: /Klasse.*archivieren/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Klasse.*archivieren/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/irreversibel/i)).toBeInTheDocument();
+    });
+  });
+
+  it('zeigt "Archiviert"-Info-Text für archivierte Klassen', async () => {
+    mockGetOne.mockResolvedValueOnce({ ...mockClass, is_active: false });
+    mockGetFullList.mockResolvedValueOnce([]);
+
+    renderDetail();
+
+    await waitFor(() => {
+      // Multiple elements may contain "archiviert" (badge + info text) — use DSGVO as unique marker
+      expect(screen.getByText(/DSGVO/i)).toBeInTheDocument();
     });
   });
 });

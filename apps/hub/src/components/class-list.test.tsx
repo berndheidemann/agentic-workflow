@@ -98,4 +98,51 @@ describe('ClassList', () => {
     );
     expect(screen.getByRole('heading', { name: 'Klassen', level: 2 })).toBeInTheDocument();
   });
+
+  it('zeigt "Archiviert"-Badge für inaktive Klassen', () => {
+    const classes: ClassWithCount[] = [
+      { classData: makeClass({ id: 'cls-3', name: 'FI23a', is_active: false }), studentCount: 0 },
+    ];
+    render(
+      <ClassList classes={classes} isLoading={false} onSelectClass={vi.fn()} onCreateNew={vi.fn()} />
+    );
+    expect(screen.getByText('Archiviert')).toBeInTheDocument();
+  });
+
+  it('archivierte Klassen erscheinen nach aktiven in der Liste', () => {
+    const mixed: ClassWithCount[] = [
+      { classData: makeClass({ id: 'cls-a', name: 'ZZZ-Archiviert', is_active: false }), studentCount: 0 },
+      { classData: makeClass({ id: 'cls-b', name: 'AAA-Aktiv', is_active: true }), studentCount: 5 },
+    ];
+    const { container } = render(
+      <ClassList classes={mixed} isLoading={false} onSelectClass={vi.fn()} onCreateNew={vi.fn()} />
+    );
+    const listItems = container.querySelectorAll('li');
+    const texts = Array.from(listItems).map((li) => li.textContent ?? '');
+    const aktivIndex = texts.findIndex((t) => t.includes('AAA-Aktiv'));
+    const archiviertIndex = texts.findIndex((t) => t.includes('ZZZ-Archiviert'));
+    expect(aktivIndex).toBeGreaterThanOrEqual(0);
+    expect(archiviertIndex).toBeGreaterThan(aktivIndex);
+  });
+
+  it('archivierte Klassen haben reduzierten Kontrast (opacity)', () => {
+    const classes: ClassWithCount[] = [
+      { classData: makeClass({ id: 'cls-arch', name: 'FI22a', is_active: false }), studentCount: 0 },
+    ];
+    render(
+      <ClassList classes={classes} isLoading={false} onSelectClass={vi.fn()} onCreateNew={vi.fn()} />
+    );
+    const btn = screen.getByRole('button', { name: /FI22a/i });
+    expect(btn.className).toMatch(/opacity/);
+  });
+
+  it('versteckt Klassen-Code für archivierte Klassen', () => {
+    const classes: ClassWithCount[] = [
+      { classData: makeClass({ id: 'cls-arch2', name: 'FI21a', join_code: 'SECRET', is_active: false }), studentCount: 0 },
+    ];
+    render(
+      <ClassList classes={classes} isLoading={false} onSelectClass={vi.fn()} onCreateNew={vi.fn()} />
+    );
+    expect(screen.queryByText('SECRET')).not.toBeInTheDocument();
+  });
 });

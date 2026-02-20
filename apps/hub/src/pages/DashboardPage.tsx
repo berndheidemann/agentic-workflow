@@ -119,6 +119,7 @@ function KlassenDetailView() {
       classId={classId}
       onBack={() => navigate('/dashboard/klassen')}
       onSelectStudent={(studentId) => navigate(`/dashboard/klassen/${classId}/schueler/${studentId}`)}
+      onArchived={() => navigate('/dashboard/klassen')}
     />
   );
 }
