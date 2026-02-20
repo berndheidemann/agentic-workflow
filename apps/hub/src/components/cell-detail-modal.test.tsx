@@ -251,6 +251,81 @@ describe('CellDetailModal', () => {
     expect(dialog).toHaveAttribute('aria-labelledby', 'cell-detail-title');
     expect(dialog).toHaveAttribute('aria-describedby', 'cell-detail-desc');
   });
+
+  // ── Suspicious-Anzeige ────────────────────────────────────────────────────
+
+  it('zeigt "Verdächtig"-Badge wenn suspicious=true', () => {
+    const cell = makeCell({ suspicious: true });
+    render(
+      <CellDetailModal
+        cell={cell}
+        column={col}
+        studentName="anna"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Verdächtig')).toBeInTheDocument();
+  });
+
+  it('zeigt keinen "Verdächtig"-Badge wenn suspicious=false', () => {
+    const cell = makeCell({ suspicious: false });
+    render(
+      <CellDetailModal
+        cell={cell}
+        column={col}
+        studentName="anna"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByText('Verdächtig')).not.toBeInTheDocument();
+  });
+
+  it('zeigt Hinweis-Note wenn suspicious=true', () => {
+    const cell = makeCell({ suspicious: true });
+    render(
+      <CellDetailModal
+        cell={cell}
+        column={col}
+        studentName="anna"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+    const note = screen.getByRole('note');
+    expect(note).toBeInTheDocument();
+    expect(note).toHaveTextContent(/ungewöhnlich schnell/i);
+  });
+
+  it('zeigt keinen Hinweis-Note wenn suspicious=false', () => {
+    const cell = makeCell({ suspicious: false });
+    render(
+      <CellDetailModal
+        cell={cell}
+        column={col}
+        studentName="anna"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('note')).not.toBeInTheDocument();
+  });
+
+  it('zeigt Hinweis dass kein harter Block erfolgt', () => {
+    const cell = makeCell({ suspicious: true });
+    render(
+      <CellDetailModal
+        cell={cell}
+        column={col}
+        studentName="anna"
+        isOpen={true}
+        onClose={vi.fn()}
+      />
+    );
+    const note = screen.getByRole('note');
+    expect(note).toHaveTextContent(/kein automatischer Block/i);
+  });
 });
 
 describe('ProgressMatrix Zell-Klick', () => {

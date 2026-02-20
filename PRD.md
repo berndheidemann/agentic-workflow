@@ -469,14 +469,14 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-040: Dashboard zeigt verdächtige Einträge
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** S
 - **Abhängig von:** REQ-008, REQ-023a
 - **Akzeptanzkriterien:**
-  - [ ] Dashboard-Matrix zeigt Einträge mit `suspicious: true` mit Warnung-Icon
-  - [ ] Tooltip oder Hinweis erklärt warum verdächtig
-  - [ ] Kein harter Block — nur visuelle Markierung
+  - [x] Dashboard-Matrix zeigt Einträge mit `suspicious: true` mit Warnung-Icon
+  - [x] Tooltip oder Hinweis erklärt warum verdächtig
+  - [x] Kein harter Block — nur visuelle Markierung
 
 ---
 

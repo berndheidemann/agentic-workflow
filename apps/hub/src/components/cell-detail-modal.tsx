@@ -142,13 +142,34 @@ export function CellDetailModal({
         </div>
 
         {/* Status badge */}
-        <div className="mb-4">
+        <div className="mb-4 flex flex-wrap gap-2 items-center">
           <span
             className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${statusClass(cell.status)}`}
           >
             {statusLabel(cell.status)}
           </span>
+          {cell.suspicious && (
+            <span
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800"
+              aria-label="Verdächtige Aktivität"
+            >
+              <span aria-hidden="true">⚠</span>
+              Verdächtig
+            </span>
+          )}
         </div>
+
+        {/* Suspicious hint */}
+        {cell.suspicious && (
+          <div
+            role="note"
+            className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800"
+          >
+            <strong>Hinweis:</strong> Diese Aufgabe wurde als verdächtig markiert, weil sie
+            ungewöhnlich schnell gelöst wurde (mehr als 5 Aufgaben pro Minute). Kein automatischer
+            Block — nur zur Information.
+          </div>
+        )}
 
         {/* Detail rows */}
         <dl className="space-y-3 text-sm">

@@ -141,11 +141,15 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
                 const key = `${col.lesson}::${col.exercise}`;
                 const cell = row.cells.get(key) ?? { status: 'unattempted' as CellStatus };
                 const style = CELL_STYLES[cell.status];
+                const isSuspicious = cell.suspicious === true;
+                const cellAriaLabel = isSuspicious
+                  ? `${row.student.username}, ${col.label}: ${style.label} (verdächtig)`
+                  : `${row.student.username}, ${col.label}: ${style.label}`;
                 return (
                   <td
                     key={key}
                     className={`px-2 py-2 text-center border-b border-gray-100 ${style.bg}`}
-                    aria-label={`${row.student.username}, ${col.label}: ${style.label}`}
+                    aria-label={cellAriaLabel}
                   >
                     <button
                       type="button"
@@ -156,10 +160,19 @@ export function ProgressMatrix({ columns, rows, isLoading, error }: ProgressMatr
                           studentName: row.student.username,
                         })
                       }
-                      aria-label={`Detail anzeigen: ${row.student.username}, ${col.label}`}
-                      className="w-full h-full min-w-[2rem] min-h-[1.5rem] rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                      aria-label={`Detail anzeigen: ${row.student.username}, ${col.label}${isSuspicious ? ' (verdächtig)' : ''}`}
+                      className="relative w-full h-full min-w-[2rem] min-h-[1.5rem] rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                     >
-                      <span className="sr-only">{style.label}</span>
+                      <span className="sr-only">{style.label}{isSuspicious ? ' (verdächtig)' : ''}</span>
+                      {isSuspicious && (
+                        <span
+                          aria-hidden="true"
+                          title="Verdächtige Aktivität: Aufgaben wurden ungewöhnlich schnell gelöst"
+                          className="inline-block text-amber-600 text-base leading-none"
+                        >
+                          ⚠
+                        </span>
+                      )}
                     </button>
                   </td>
                 );

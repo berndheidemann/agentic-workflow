@@ -1,14 +1,15 @@
 # Agent Context
 
-> 2026-02-20 | 38/44 done, 0 blocked, 0 in_progress, 6 open | REQ-039: Kurs-Filterung abgeschlossen
+> 2026-02-20 | 39/44 done, 0 blocked, 0 in_progress, 5 open | REQ-040: Suspicious-Markierung im Dashboard
 
 ## Was zuletzt passiert ist
 
-**REQ-039 (Kurs-Filterung nach Klassen-Zuordnung):** Fertiggestellt.
-- `useCourseVisibility` Hook in `apps/hub/src/hooks/` erstellt
-- `HomePage.tsx` nutzt Hook um `visibleSites` zu berechnen, die an `CourseGrid` übergeben werden
-- 14 neue Tests (9 Hook-Tests + 5 HomePage-Tests), gesamt 311 Tests grün
-- Smoke-Test bestätigt: testschueler (FI24A) sieht nur AP1, Pandas, Zuul — REST, NumPy, UML ausgeblendet
+**REQ-040 (Dashboard zeigt verdächtige Einträge):** Fertiggestellt.
+- `MatrixCell`-Interface um `suspicious?: boolean` erweitert
+- `useClassProgress`-Hook setzt `suspicious` aus `progress.suspicious`
+- `ProgressMatrix`: zeigt ⚠-Icon mit `title`-Tooltip bei `suspicious: true`
+- `CellDetailModal`: zeigt "Verdächtig"-Badge + `role="note"` mit Erklärung + "kein automatischer Block"
+- 12 neue Tests, gesamt 323 Tests grün
 
 ## KRITISCH: Docker braucht `sudo`
 
@@ -22,12 +23,14 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
   - `manifest/types.ts` — CourseManifest, ManifestModule, ManifestLesson, ManifestExercise
   - `manifest/index.ts` — validateManifest() + Re-Exports
   - SyncEngine: Offline-Detection, Auto-Reconnect, persistente Queue
-- `apps/hub`: Vite + React + TS + Tailwind + React Router (311 Tests)
+- `apps/hub`: Vite + React + TS + Tailwind + React Router (323 Tests)
   - `use-manifests.ts` — fetcht course-manifest.json pro Site
   - `use-manifest-columns.ts` — manifestToColumns(), manifestToModuleOptions()
   - `use-course-progress.ts` — nutzt Manifest-totalExercises statt sites.json-Fallback
-  - `use-class-progress.ts` — Matrix-Spalten aus Manifest (alle Exercises sichtbar)
+  - `use-class-progress.ts` — Matrix-Spalten aus Manifest, MatrixCell mit `suspicious`-Flag
   - `use-course-visibility.ts` — Kurs-Level-Filterung nach Klassen-Zuordnung (REQ-039)
+  - `progress-matrix.tsx` — ⚠-Icon mit Tooltip für suspicious Zellen
+  - `cell-detail-modal.tsx` — "Verdächtig"-Badge + note-Region mit Erklärung
   - Dashboard/MatrixView: Manifest-basierte Modul-Filter und Spalten
   - HomePage: useCourseVisibility → visibleSites → CourseGrid + useCourseProgress
 - `sites/AP1-Trainer`: Astro/Starlight (eigenes .git)
@@ -40,7 +43,6 @@ Tests korrekt via `npm run test` ausführen (workspace-aware), NICHT `npx vitest
 
 1. **REQ-060** (P1, M) — Starlight-Sites integrieren (pandas, REST/NoSQL) (dep: REQ-051 done)
 2. **REQ-052** (P1, M) — Benutzerprofil (dep: REQ-001 done)
-3. **REQ-040** (P1, S) — Dashboard zeigt verdächtige Einträge (dep: REQ-008, REQ-023a)
 
 ## Wichtige Architektur-Details
 

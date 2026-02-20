@@ -25,9 +25,16 @@ function makeStudent(id: string, username: string): User {
 const col1: MatrixColumn = { lesson: 'lektion-1', exercise: 'aufgabe-1', label: 'lektion-1/aufgabe-1' };
 const col2: MatrixColumn = { lesson: 'lektion-1', exercise: 'aufgabe-2', label: 'lektion-1/aufgabe-2' };
 
-function makeRow(student: User, statuses: Record<string, 'correct' | 'incorrect' | 'unattempted'>): MatrixRow {
+function makeRow(
+  student: User,
+  statuses: Record<string, 'correct' | 'incorrect' | 'unattempted'>,
+  suspicious?: Record<string, boolean>
+): MatrixRow {
   const cells = new Map(
-    Object.entries(statuses).map(([key, status]) => [key, { status }])
+    Object.entries(statuses).map(([key, status]) => [
+      key,
+      { status, suspicious: suspicious?.[key] ?? false },
+    ])
   );
   return { student, cells };
 }
@@ -203,6 +210,56 @@ describe('ProgressMatrix', () => {
   it('zeigt keine Aggregat-Zeile wenn keine Daten', () => {
     render(<ProgressMatrix columns={[]} rows={[]} isLoading={false} error={null} />);
     expect(screen.queryByText(/Klasse gesamt/i)).not.toBeInTheDocument();
+  });
+
+  // ── Suspicious-Markierung ──────────────────────────────────────────────────
+
+  it('zeigt Warnung-Icon für verdächtige Zelle', () => {
+    const student = makeStudent('s1', 'anna');
+    const row = makeRow(
+      student,
+      { 'lektion-1::aufgabe-1': 'correct' },
+      { 'lektion-1::aufgabe-1': true }
+    );
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    // Warning icon visible
+    const icon = screen.getByText('⚠');
+    expect(icon).toBeInTheDocument();
+  });
+
+  it('zeigt kein Warnung-Icon für nicht-verdächtige Zelle', () => {
+    const student = makeStudent('s1', 'anna');
+    const row = makeRow(student, { 'lektion-1::aufgabe-1': 'correct' });
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    expect(screen.queryByText('⚠')).not.toBeInTheDocument();
+  });
+
+  it('Warnung-Icon hat Tooltip mit Erklärung', () => {
+    const student = makeStudent('s1', 'anna');
+    const row = makeRow(
+      student,
+      { 'lektion-1::aufgabe-1': 'correct' },
+      { 'lektion-1::aufgabe-1': true }
+    );
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    const icon = screen.getByText('⚠');
+    expect(icon).toHaveAttribute('title', expect.stringContaining('erdächtig'));
+  });
+
+  it('verdächtige Zelle hat aria-label mit Hinweis auf Verdacht', () => {
+    const student = makeStudent('s1', 'anna');
+    const row = makeRow(
+      student,
+      { 'lektion-1::aufgabe-1': 'correct' },
+      { 'lektion-1::aufgabe-1': true }
+    );
+    render(<ProgressMatrix columns={[col1]} rows={[row]} isLoading={false} error={null} />);
+
+    const cell = screen.getByRole('cell', { name: /anna.*lektion-1\/aufgabe-1.*verdächtig/i });
+    expect(cell).toBeInTheDocument();
   });
 
   // ── Keyboard-Navigation ───────────────────────────────────────────────────

@@ -10,6 +10,7 @@ export type CellStatus = 'correct' | 'incorrect' | 'unattempted';
 export interface MatrixCell {
   status: CellStatus;
   progress?: Progress;
+  suspicious?: boolean;
 }
 
 export interface MatrixColumn {
@@ -144,6 +145,7 @@ export function useClassProgress(
             cells.set(key, {
               status: computeCellStatus(progressEntry),
               progress: progressEntry,
+              suspicious: progressEntry?.suspicious ?? false,
             });
           }
           return { student, cells };

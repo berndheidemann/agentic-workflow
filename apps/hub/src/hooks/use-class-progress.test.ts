@@ -332,6 +332,64 @@ describe('useClassProgress', () => {
     expect(result.current.rows[0].cells.get(cellKey)?.status).toBe('unattempted');
   });
 
+  // ─── REQ-040: Suspicious flag ─────────────────────────────────────────────────
+
+  it('REQ-040: setzt suspicious=true in Zelle wenn Progress.suspicious=true', async () => {
+    const student = makeStudent();
+    const prog = makeProgress({ suspicious: true, status: 'completed', score: 10, max_score: 10 });
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([prog]);
+
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1'), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const key = 'lektion-1::aufgabe-1';
+    expect(result.current.rows[0].cells.get(key)?.suspicious).toBe(true);
+  });
+
+  it('REQ-040: setzt suspicious=false wenn Progress.suspicious=false', async () => {
+    const student = makeStudent();
+    const prog = makeProgress({ suspicious: false });
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([prog]);
+
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1'), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const key = 'lektion-1::aufgabe-1';
+    expect(result.current.rows[0].cells.get(key)?.suspicious).toBe(false);
+  });
+
+  it('REQ-040: setzt suspicious=false wenn kein Progress-Eintrag (unattempted)', async () => {
+    const student = makeStudent();
+
+    mockGetFullList
+      .mockResolvedValueOnce([student])
+      .mockResolvedValueOnce([]); // Kein Progress
+
+    // Wir brauchen eine Spalte — also fügen wir einen zweiten Schüler mit Progress hinzu
+    // um einen Column-Key zu erzeugen
+    const otherStudent = makeStudent({ id: 'stu-2', username: 'bert' });
+    const prog = makeProgress({ user_id: 'stu-2' });
+
+    mockGetFullList.mockReset();
+    mockGetFullList
+      .mockResolvedValueOnce([student, otherStudent])
+      .mockResolvedValueOnce([prog]);
+
+    const { result } = renderHook(() => useClassProgress('cls-1', 'ap1'), { wrapper });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const key = 'lektion-1::aufgabe-1';
+    // anna (stu-1) hat keinen Progress — suspicious sollte false sein
+    const annaRow = result.current.rows.find((r) => r.student.username === 'anna');
+    expect(annaRow?.cells.get(key)?.suspicious).toBe(false);
+  });
+
   it('REQ-037: Manifest für anderen Kurs wird ignoriert (Fallback)', async () => {
     const student = makeStudent();
     const wrongCourseManifest: CourseManifest = {
