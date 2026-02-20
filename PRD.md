@@ -432,18 +432,18 @@ Jedes REQ das UI erzeugt oder ändert muss zusätzlich zu seinen expliziten Akze
 
 ### REQ-039: Kurs-Filterung nach Klassen-Zuordnung auf der Landing Page
 
-- **Status:** open
+- **Status:** done
 - **Priorität:** P1
 - **Größe:** M
 - **Abhängig von:** REQ-012, REQ-021
 - **Hinweis:** Aktuell sehen eingeloggte Schüler alle 6 Kurse, unabhängig von ihrer Klassen-Zuordnung. Das Unlock-System arbeitet bisher nur auf Modul-Ebene innerhalb von Kursen. Für die Landing Page fehlt Kurs-Level-Filterung: Schüler sollen nur Kurse sehen, die für ihre Klasse freigeschaltet sind.
 - **Akzeptanzkriterien:**
-  - [ ] Eingeloggte Schüler sehen nur Kurse, die für ihre Klasse freigeschaltet sind
-  - [ ] Nicht freigeschaltete Kurse werden auf der Landing Page ausgeblendet (nicht ausgegraut)
-  - [ ] Ohne Login (Gast-Modus): alle Kurse sichtbar (Status Quo)
-  - [ ] Lehrer sehen immer alle Kurse
-  - [ ] Testschüler (Klasse FI24A) sieht nur AP1, Pandas und Zuul
-  - [ ] Wenn keine Freischaltungs-Records existieren: alle Kurse sichtbar (Default = offen)
+  - [x] Eingeloggte Schüler sehen nur Kurse, die für ihre Klasse freigeschaltet sind
+  - [x] Nicht freigeschaltete Kurse werden auf der Landing Page ausgeblendet (nicht ausgegraut)
+  - [x] Ohne Login (Gast-Modus): alle Kurse sichtbar (Status Quo)
+  - [x] Lehrer sehen immer alle Kurse
+  - [x] Testschüler (Klasse FI24A) sieht nur AP1, Pandas und Zuul
+  - [x] Wenn keine Freischaltungs-Records existieren: alle Kurse sichtbar (Default = offen)
 
 ---
 

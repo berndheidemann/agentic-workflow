@@ -289,3 +289,15 @@
 **Begründung:** Vermeidet Props-Drilling durch Astro-Layouts, funktioniert unabhängig von Island-Mounting-Reihenfolge, klar abgegrenzte Datenübergabe-Schnittstelle. Pattern ist unabhängig von Starlight-Internals.
 
 **Konsequenzen:** Islands die DOM direkt lesen müssen `client:only="react"` nutzen (kein SSR). Frontmatter-Daten müssen JSON-serialisierbar sein. Pro Seite ein Script-Tag pro Datentyp (kein Zusammenmischen).
+
+---
+
+## ADR-015: Kurs-Sichtbarkeit via course_unlocks-Präsenz (2026-02-20, REQ-039)
+
+**Kontext:** REQ-039 fordert Kurs-Level-Filterung auf der Landing Page. Eingeloggte Schüler sollen nur Kurse sehen, die für ihre Klasse freigeschaltet sind. Das bestehende Unlock-System (ADR-005) arbeitet ausschließlich auf Modul-Ebene innerhalb einzelner Kurse.
+
+**Entscheidung:** Kein neues DB-Schema. Kurs-Sichtbarkeit wird aus der **Präsenz von `course_unlocks`-Records** abgeleitet: Hat eine Klasse mindestens einen Record für einen Kurs → Kurs sichtbar. Keine Records für irgendeinen Kurs → alle Kurse sichtbar (Default-offen). Neuer Hub-Hook `useCourseVisibility()` (nicht im Shared-Package).
+
+**Begründung:** Kein Schema-Änderung nötig — nutzt bestehende Daten. Konsistent mit Default-Offenheit (ADR-005). Separater Hook statt Erweiterung von `useUnlock`: unterschiedliches Zugriffsmuster (Bulk-Lookup vs. Lazy per Kurs), unterschiedlicher Scope (Landing Page vs. Site-intern). Graceful Degradation bei API-Fehler → alle Kurse sichtbar.
+
+**Konsequenzen:** Lehrer schalten Kurs-Sichtbarkeit implizit durch Modul-Freischaltung frei (mindestens ein Modul-Record = Kurs sichtbar). Bei API-Fehler: alle Kurse sichtbar (sicherer Fallback). Filter: `class_id = "{id}" && user_id = ""` (nur Klassen-Records, keine benutzer-spezifischen).
