@@ -356,7 +356,7 @@
     ]
   },
   "REQ-071": {
-    "status": "in_progress",
+    "status": "done",
     "priority": "P1",
     "size": "S",
     "deps": [
